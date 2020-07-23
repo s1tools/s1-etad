@@ -12,11 +12,11 @@ The new credentials are :
 
 **esaf / SW0e#`R@**
 
-However, you shouldn't need them.
+However, you shouldn't need them at all now because I managed to get the API key to make the defaults scripts working.
 
 
 ## Query with the API client
-Following instruction in https://github.com/ecmwf/ecmwf-api-client, I retrieve a
+Following instruction in https://github.com/ecmwf/ecmwf-api-client, I retrieved an API
 key at https://api.ecmwf.int/v1/key/
 
 This gave me the Following json string that you need to write in ~/.ecmwfapirc:

@@ -77,6 +77,8 @@ Process '['nice', 'mars', '/tmp/20200723-1330/af/tmp-_marsFO6LbO.req']' finished
 ## Resource to interpret the query 
 Overal MARS documentation here: https://confluence.ecmwf.int/display/UDOC/MARS+user+documentation
 The meaning of each  keyword can be found here :  https://confluence.ecmwf.int/display/UDOC/Keywords+in+MARS+and+Dissemination+requests
+
+```
 server.execute(
     {
     "class"   : "od",  #routine operations (od)
@@ -91,3 +93,4 @@ server.execute(
     "type"    : "an",
     "area"    : "90/-180/-90/180",
     },
+```

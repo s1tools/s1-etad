@@ -22,6 +22,9 @@ class Sentinel1Etad:
         Class to decode and access the elements of the Sentinel ETAD product
         which specification is governed by ETAD-DLR-PS-0014
 
+        The index operator [] implemented with the __getitem__ method returns a
+        Sentinel1EtadSwath class
+
     """
     def __init__(self, etadProduct):
         self.product = pathlib.Path(etadProduct)
@@ -31,12 +34,14 @@ class Sentinel1Etad:
 
     @property
     def __measurement_dataset(self):
+        """ open the nc dataset  """
         list_ = [ i for i in self.product.glob("measurement/*.nc")]
         rootgrp = Dataset(list_[0], "r", set_auto_mask=False)
         return(rootgrp)
 
     @property
     def __annotation_dataset(self):
+        """ open the xml annotation dataset  """
         list_ = [ i for i in self.product.glob("annotation/*.xml")]
         xml_file = str(list_[0])
         root = etree.parse(xml_file).getroot()
@@ -61,17 +66,20 @@ class Sentinel1Etad:
         Read the list of S-1 products that have beenn used to compose the ETAD one
 
         """
-        xp='productComponents/inputProductList/inputProduct/productID'
-        dd =self._xpath_to_list(self._annot,xp)
+        xp = 'productComponents/inputProductList/inputProduct/productID'
+        dd = self._xpath_to_list(self._annot,xp)
         return dd
 
 
     @property
     def grid_spacing(self):
-        xp_list ={ 'x':'.//correctionGridRangeSampling', 'y':'.//correctionGridAzimuthSampling'}
+        """ Return the grid spacing in meters """
+
+        xp_list = { 'x':'.//correctionGridRangeSampling', 'y':'.//correctionGridAzimuthSampling'}
         dd = {}
         for tag, xp in xp_list.items():
             dd[tag] = self._xpath_to_list(self._annot, xp, dtype=np.float)
+        dd['unit'] = 'm'
         return dd
 
 
@@ -82,25 +90,31 @@ class Sentinel1Etad:
 
         """
 
-        correction_list = ['troposphericDelayCorrection', 'ionosphericDelayCorrection', 'solidEarthTideCorrection', 'bistaticAzimuthCorrection', 'dopplerShiftRangeCorrection','FMMismatchAzimuthCorrection']
+        correction_list = ['troposphericDelayCorrection', 'ionosphericDelayCorrection', \
+                            'solidEarthTideCorrection', 'bistaticAzimuthCorrection', \
+                            'dopplerShiftRangeCorrection', 'FMMismatchAzimuthCorrection']
         dd = {}
+        xp_root = 'processingInformation/processor/setapConfigurationFile/processorSettings/'
         for correction in correction_list:
-            xp='processingInformation/processor/setapConfigurationFile/processorSettings/'+correction
+            xp = xp_root + correction
             ret = self._xpath_to_list(self._annot, xp)
-            if ret == 'true' :
+            if ret == 'true':
                 ret = True
             else: ret = False
             dd[correction] = ret
         return dd
 
     def _burst_catalogue(self):
+        """ Parses the XML annotation dataset to create a panda DataFrame conntaining
+            all the elements allowing to index properly a burst
+        """
         df = None
         for burst_ in self._annot.findall('.//etadBurst'):
             burst_dict = dict(burst_.find('burstData').attrib)
             burst_dict['productID']  =  burst_.find('burstData/productID').text
             burst_dict['swathID'] = burst_.find('burstData/swathID').text
-            burst_dict['azimuthTimeMin'] =  self._xpath_to_list(burst_,'burstCoverage/temporalCoverage/azimuthTimeMin', parse_time_func=lambda x: x)
-            burst_dict['azimuthTimeMax'] =  self._xpath_to_list(burst_,'burstCoverage/temporalCoverage/azimuthTimeMax', parse_time_func=lambda x: x)
+            burst_dict['azimuthTimeMin'] = self._xpath_to_list(burst_,'burstCoverage/temporalCoverage/azimuthTimeMin', parse_time_func=lambda x: x)
+            burst_dict['azimuthTimeMax'] = self._xpath_to_list(burst_,'burstCoverage/temporalCoverage/azimuthTimeMax', parse_time_func=lambda x: x)
 
             if df is None:
                 df = pd.DataFrame(burst_dict, index=[0])
@@ -109,15 +123,21 @@ class Sentinel1Etad:
         return df
 
 
-    def query_burst_by_time(self, first_time, last_time=None, swath=None):
+    def query_burst(self, first_time=None, product_name=None, last_time=None, swath=None):
         """Implements a query to the burst catalogue to retrieve the burst matching
         the query by time
 
         Parameters:
         ------------
             first_time : datetime
+                is set to None then set to the first time
+
             last_time : datetime
                 if set to None the last_time = first_time
+
+            product_name : str
+                Name of a real S1 product e.g. S1B_IW_SLC__1SDV_20190805T162509_20190805T162...SAFE
+
             swath : list
                 list of swathID e.g. 'IW1' or ['IW1'] or ['IW1', 'IW2']
 
@@ -127,16 +147,22 @@ class Sentinel1Etad:
         """
         #first sort the burst by time
         df = self.burst_catalogue.sort_values(by=['azimuthTimeMin'])
-        ix0 = (first_time<=df.azimuthTimeMin) &  (last_time>=df.azimuthTimeMax)
+        if first_time is None: first_time = df.iloc[0].azimuthTimeMin
+        if last_time is None: last_time = df.iloc[-1].azimuthTimeMax
+
+        if product_name is not None:
+            product_name = pathlib.Path(product_name)
+            raise NotImplementedError
+
+
+        ix0 = (first_time <= df.azimuthTimeMin) &  (last_time >= df.azimuthTimeMax)
         if swath is not None:
-            if not isinstance(swath,list):
+            if not isinstance(swath, list):
                 #hugly methhod to transfrom string into a list_
                 swath = swath.split(' ')
             ix0 = ix0 & (df.swathID.isin(swath) )
 
         return df.loc[ix0]
-
-
 
 
     @staticmethod

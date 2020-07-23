@@ -9,6 +9,7 @@ I went to https://www.ecmwf.int and I tried to login with esaf/07LZTm that were 
 
 I realised that the password was not valid anymore. I asked Pierre Femenias to reset his account.
 The new credentials are :
+
 **esaf / SW0e#`R@**
 
 However, you shouldn't need them.
@@ -19,11 +20,13 @@ Following instruction in https://github.com/ecmwf/ecmwf-api-client, I retrieve a
 key at https://api.ecmwf.int/v1/key/
 
 This gave me the Following json string that you need to write in ~/.ecmwfapirc:
+```
 {
     "url"   : "https://api.ecmwf.int/v1",
     "key"   : "4175ae6a1be3339184f1b3c988b3ff4d",
     "email" : "pierre.femenias@esa.int"
 }
+```
 
 
 Then running one of the scripts provided by DLR worked straight away:

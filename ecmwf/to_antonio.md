@@ -1,14 +1,15 @@
 # On the usage of the ECMWF API.
 
-After providing all the material related to the ECMWF token, I decided to have a look
-such that I have confidence on how obsolete is the material I provided to Your
+After providing all the material related to the ECMWF token, I decided to have a look to the material provided to you.
+
+I wanted to be sure that the material I provided to you was not obsolete.
 
 ## Password reset
-I went to https://www.ecmwf.int and I tried to login with esaf/07LZTm.
+I went to https://www.ecmwf.int and I tried to login with esaf/07LZTm that were provided along with the token.
 
-I realised that the password was not valid. I asked Pierre Femenias to reset his account.
+I realised that the password was not valid anymore. I asked Pierre Femenias to reset his account.
 The new credentials are :
-esaf / SW0e#`R@
+**esaf / SW0e#`R@**
 
 However, you shouldn't need them.
 

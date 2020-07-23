@@ -26,6 +26,7 @@ This gave me the Following json string that you need to write in ~/.ecmwfapirc:
 
 
 Then running one of the scripts provided by DLR worked straight away:
+```
 python3 nwp_request.129.setap.example_20190805T120000
 2020-07-23 15:34:21 ECMWF API python library 1.5.4
 2020-07-23 15:34:21 ECMWF API at https://api.ecmwf.int/v1
@@ -110,4 +111,4 @@ Process '['nice', 'mars', '/tmp/20200723-1330/af/tmp-_marsFO6LbO.req']' finished
 2020-07-23 15:36:49 From https://stream.ecmwf.int/data/webmars-private-svc-green-003/data/scratch/20200723-1330/42/_mars-webmars-private-svc-green-003-6fe5cac1a363ec1525f54343b6cc9fd8-kgtL_f.grib
 2020-07-23 15:36:58 Transfer rate 1.37155 Mbytes/s
 2020-07-23 15:36:58 Done.
-
+```

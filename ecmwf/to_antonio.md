@@ -10,7 +10,7 @@ I went to https://www.ecmwf.int and I tried to login with esaf/07LZTm that were 
 I realised that the password was not valid anymore. I asked Pierre Femenias to reset his account.
 The new credentials are :
 
-**esaf / SW0e#`R@**
+**   esaf / SW0e#`R@   **
 
 However, you shouldn't need them at all now because I managed to get the API key to make the defaults scripts working.
 

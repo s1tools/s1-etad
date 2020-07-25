@@ -42,7 +42,7 @@ class Sentinel1Etad:
     @property
     def __annotation_dataset(self):
         """ open the xml annotation dataset  """
-        list_ = [ i for i in self.product.glob("annotation/*.xml")]
+        list_ = [i for i in self.product.glob("annotation/*.xml")]
         xml_file = str(list_[0])
         root = etree.parse(xml_file).getroot()
         return(root)
@@ -211,12 +211,9 @@ class Sentinel1EtadSwath():
             It calls in the back the get_footprint of the Sentinel1EtadBurst class
         """
         if burst_index_list is None:
-            burst_index_list = [ int(bix_str[5:]) for bix_str in list(self._grp.groups.keys()) ]
+            burst_index_list = [int(bix_str[5:]) for bix_str in list(self._grp.groups.keys())]
 
-        footprints = []
-        for burst_index in burst_index_list:
-            burst_ = self.__getitem__(burst_index)
-            footprints.append(burst_.get_footprint())
+        footprints = [self.__getitem__(bix).get_footprint() for bix in burst_index_list]
         return MultiPolygon(footprints)
 
 

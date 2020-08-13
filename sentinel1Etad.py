@@ -400,7 +400,8 @@ class Sentinel1EtadBurst():
         lat / lon / height grid and extract the 4 corners
         """
 
-        lats, lons = self.__get_etad_param('lats', set_auto_mask=True)
+        # lats, lons = self.__get_etad_param('lats', set_auto_mask=True)
+        lats = self.__get_etad_param('lats', set_auto_mask=True)
         lons = self.__get_etad_param('lons', set_auto_mask=True)
         heights = self.__get_etad_param('height', set_auto_mask=True)
 

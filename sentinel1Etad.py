@@ -505,7 +505,7 @@ class Sentinel1EtadBurst:
 
     def get_tropospheric_correction(self, set_auto_mask=False, transpose=True,
                                     meter=False):
-        """Retrieve the requested correction in range (and azimuth if applicable).
+        """Retrieve the tropospheric correction in range.
 
         Puts the results in a dict.
 
@@ -542,7 +542,7 @@ class Sentinel1EtadBurst:
 
     def get_ionospheric_correction(self, set_auto_mask=False, transpose=True,
                                    meter=False):
-        """Retrieve the requested correction in range (and azimuth if applicable).
+        """Retrieve the ionospheric correction in range.
 
         Puts the results in a dict.
 
@@ -579,7 +579,7 @@ class Sentinel1EtadBurst:
 
     def get_geodetic_correction(self, set_auto_mask=False, transpose=True,
                                 meter=False):
-        """Retrieve the requested correction in range (and azimuth if applicable).
+        """Retrieve the geodetic correction in range and azimuth.
 
         Puts the results in a dict.
 
@@ -615,7 +615,7 @@ class Sentinel1EtadBurst:
 
     def get_bistatic_correction(self, set_auto_mask=False, transpose=True,
                                 meter=False):
-        """Retrieve the requested correction in range (and azimuth if applicable).
+        """Retrieve the bi-static correction in azimuth.
 
         Puts the results in a dict.
 
@@ -651,7 +651,7 @@ class Sentinel1EtadBurst:
 
     def get_doppler_correction(self, set_auto_mask=False, transpose=True,
                                meter=False):
-        """Retrieve the requested correction in range (and azimuth if applicable).
+        """Retrieve the Doppler correction in range.
 
         Puts the results in a dict.
 
@@ -686,7 +686,7 @@ class Sentinel1EtadBurst:
 
     def get_fmrate_correction(self, set_auto_mask=False, transpose=True,
                               meter=False):
-        """Retrieve the requested correction in range (and azimuth if applicable).
+        """Retrieve the FM-rate correction in azimuth.
 
         Puts the results in a dict.
 
@@ -722,7 +722,7 @@ class Sentinel1EtadBurst:
 
     def get_sum_correction(self, set_auto_mask=False, transpose=True,
                            meter=False):
-        """Retrieve the requested correction in range (and azimuth if applicable).
+        """Retrieve the sum of all corrections in range and azimuth.
 
         Puts the results in a dict.
 

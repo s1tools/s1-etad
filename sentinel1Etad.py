@@ -56,7 +56,7 @@ class Sentinel1Etad:
 
     @property
     def swath_list(self):
-        return self.ds.groups.keys()
+        return list(self.ds.groups.keys())
 
     def s1_product_list(self):
         """Return the list of S-1 products used to compose the ETAD one."""

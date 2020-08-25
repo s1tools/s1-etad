@@ -174,7 +174,7 @@ class Sentinel1Etad:
                (df.azimuthTimeMax <= last_time))
 
         if product_name is not None:
-            # build a reges based on the name to avoid issues with annotation
+            # build a regex based on the name to avoid issues with annotation
             # products and CRC
             product_name = Sentinel1ProductName(product_name)
             product_name.to_annotation(value='[AD]')
@@ -350,9 +350,9 @@ class Sentinel1EtadSwath:
         #     set_auto_mask=set_auto_mask)
         return dd
 
-    def merge_troposhere_correction(self, burst_index_list=None,
-                                    set_auto_mask=True, transpose=True,
-                                    meter=False):
+    def merge_troposphere_correction(self, burst_index_list=None,
+                                     set_auto_mask=True, transpose=True,
+                                     meter=False):
         prm_list = {'x': 'troposphericCorrectionRg'}
         dd = {}
         for dim, field in prm_list.items():
@@ -494,7 +494,7 @@ class Sentinel1EtadBurst:
 
     _get_etad_param = __get_etad_param
 
-    def get_lat_lon_heigth(self, transpose=True):
+    def get_lat_lon_height(self, transpose=True):
         lats = self.__get_etad_param(
             'lats', transpose=transpose, meter=False, set_auto_mask=True)
         lons = self.__get_etad_param(

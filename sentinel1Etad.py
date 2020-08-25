@@ -7,14 +7,10 @@ from netCDF4 import Dataset
 
 
 import pandas as pd
-from datetime import datetime
-from datetime import timedelta
 from dateutil import parser
 
 
 from shapely.geometry import Polygon, MultiPolygon
-from shapely.geometry import Point
-from shapely.ops import cascaded_union
 import simplekml
 
 
@@ -55,8 +51,7 @@ class Sentinel1Etad:
 
     @property
     def number_of_swath(self):
-        nn = len(self.ds.groups)
-        return nn
+        return len(self.ds.groups)
 
     @property
     def swath_list(self):
@@ -183,8 +178,8 @@ class Sentinel1Etad:
             product_name = Sentinel1ProductName(product_name)
             product_name.to_annotation(value='[AD]')
             product_name.crc = ''
-            filter = product_name.recompose(with_suffix=False)
-            ix0 = ix0 & self.burst_catalogue.productID.str.contains(filter,
+            filter_ = product_name.recompose(with_suffix=False)
+            ix0 = ix0 & self.burst_catalogue.productID.str.contains(filter_,
                                                                     regex=True)
 
         if swath is not None:
@@ -195,14 +190,14 @@ class Sentinel1Etad:
 
         return df.loc[ix0]
 
-    def xpath_to_list(self, xpath, dtype=None, namespace={},
+    def xpath_to_list(self, xpath, dtype=None, namespace=None,
                       parse_time_func=None):
         return self._xpath_to_list(self._annot, xpath, dtype=dtype,
                                    namespace=namespace,
                                    parse_time_func=parse_time_func)
 
     @staticmethod
-    def _xpath_to_list(root, xpath, dtype=None, namespace={},
+    def _xpath_to_list(root, xpath, dtype=None, namespace=None,
                        parse_time_func=None):
 
         ll = [elt.text for elt in root.findall(xpath, namespace)]
@@ -397,12 +392,12 @@ class Sentinel1EtadSwath:
         first_burst = self.__getitem__(burst_index_list[0])
         last_burst = self.__getitem__(burst_index_list[-1])
 
-        if azimuthTimeMin == None:
+        if azimuthTimeMin is None:
             t0 = first_burst._grp['azimuth'][0]
         else:
             t0 = azimuthTimeMin
 
-        if azimuthTimeMax == None:
+        if azimuthTimeMax is None:
             t1 = last_burst._grp['azimuth'][-1]
         else:
             t1 = azimuthTimeMax
@@ -468,8 +463,8 @@ class Sentinel1EtadBurst:
     def get_burst_grid(self, burst_index_list=None):
         """Return the t, tau grid of the burst."""
         azimuth = self.__get_etad_param('azimuth', set_auto_mask=True)
-        range = self.__get_etad_param('range', set_auto_mask=True)
-        return azimuth, range
+        range_ = self.__get_etad_param('range', set_auto_mask=True)
+        return azimuth, range_
 
     @property
     def sampling(self):
@@ -529,7 +524,6 @@ class Sentinel1EtadBurst:
                 unit : 'm' or 's'
                 name : name of the correction
         """
-        correction = {}
         prm_list = {'x': 'troposphericCorrectionRg'}
         correction = {}
         for dim, field in prm_list.items():
@@ -567,7 +561,6 @@ class Sentinel1EtadBurst:
                 unit : 'm' or 's'
                 name : name of the correction
         """
-        correction = {}
         prm_list = {'x': 'ionosphericCorrectionRg'}
         correction = {}
         for dim, field in prm_list.items():

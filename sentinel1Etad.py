@@ -26,20 +26,18 @@ class Sentinel1Etad:
 
     def __init__(self, product):
         self.product = pathlib.Path(product)
-        self.ds = self.__measurement_dataset
-        self._annot = self.__annotation_dataset
-        self.burst_catalogue = self._burst_catalogue()
+        self.ds = self._init_measurement_dataset()
+        self._annot = self._init_annotation_dataset()
+        self.burst_catalogue = self._init_burst_catalogue()
 
-    @property
-    def __measurement_dataset(self):
+    def _init_measurement_dataset(self):
         """Open the nc dataset."""
         list_ = [i for i in self.product.glob("measurement/*.nc")]
         rootgrp = Dataset(list_[0], "r")
         rootgrp.set_auto_mask(False)
         return rootgrp
 
-    @property
-    def __annotation_dataset(self):
+    def _init_annotation_dataset(self):
         """Open the xml annotation dataset."""
         list_ = [i for i in self.product.glob("annotation/*.xml")]
         xml_file = str(list_[0])
@@ -116,7 +114,7 @@ class Sentinel1Etad:
             dd[correction] = ret
         return dd
 
-    def _burst_catalogue(self):
+    def _init_burst_catalogue(self):
         """Build the burst catalog.
 
         Parses the XML annotation dataset to create a panda DataFrame

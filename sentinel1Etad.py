@@ -132,6 +132,10 @@ class Sentinel1Etad:
                 burst_, 'burstCoverage/temporalCoverage/azimuthTimeMax',
                 parse_time_func=lambda x: x)
 
+            burst_dict['pIndex'] = int(burst_dict['pIndex'])
+            burst_dict['sIndex'] = int(burst_dict['sIndex'])
+            burst_dict['bIndex'] = int(burst_dict['bIndex'])
+
             if df is None:
                 df = pd.DataFrame(burst_dict, index=[0])
             else:

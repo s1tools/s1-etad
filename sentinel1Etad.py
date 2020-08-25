@@ -785,7 +785,6 @@ class Sentinel1ProductName:
     @mode.setter
     def mode(self, value):
         self._parts[1] = value
-        print(self._parts[1])
 
     @property
     def ptype(self):

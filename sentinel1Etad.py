@@ -34,7 +34,8 @@ class Sentinel1Etad:
     def __measurement_dataset(self):
         """Open the nc dataset."""
         list_ = [i for i in self.product.glob("measurement/*.nc")]
-        rootgrp = Dataset(list_[0], "r", set_auto_mask=False)
+        rootgrp = Dataset(list_[0], "r")
+        rootgrp.set_auto_mask(False)
         return rootgrp
 
     @property

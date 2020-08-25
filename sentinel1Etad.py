@@ -24,8 +24,8 @@ class Sentinel1Etad:
     Sentinel1EtadSwath class
     """
 
-    def __init__(self, etadProduct):
-        self.product = pathlib.Path(etadProduct)
+    def __init__(self, product):
+        self.product = pathlib.Path(product)
         self.ds = self.__measurement_dataset
         self._annot = self.__annotation_dataset
         self.burst_catalogue = self._burst_catalogue()
@@ -211,7 +211,7 @@ class Sentinel1Etad:
         else:
             return ll
 
-    def get_footprint(self, swath_list=None, merge=False):
+    def get_footprint(self, swath_list=None):  # , merge=False
         """Return the footprints of all the bursts as MultiPolygon.
 
         It calls in the back the get_footprint of the Sentinel1EtadBurst class
@@ -460,7 +460,7 @@ class Sentinel1EtadBurst:
         etaf_burst_footprint = Polygon(etaf_burst_footprint)
         return etaf_burst_footprint
 
-    def get_burst_grid(self, burst_index_list=None):
+    def get_burst_grid(self):  # , burst_index_list=None
         """Return the t, tau grid of the burst."""
         azimuth = self.__get_etad_param('azimuth', set_auto_mask=True)
         range_ = self.__get_etad_param('range', set_auto_mask=True)

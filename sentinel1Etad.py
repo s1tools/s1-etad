@@ -315,10 +315,7 @@ class Sentinel1EtadSwath:
 
     @property
     def burst_list(self):
-        burst_list = [
-            int(burst_str[5:]) for burst_str in list(self._grp.groups.keys())
-        ]
-        return burst_list
+        return [burst.bIndex for burst in self._grp.groups.values()]
 
     @property
     def number_of_burst(self):

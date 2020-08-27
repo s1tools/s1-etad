@@ -737,6 +737,43 @@ class Sentinel1EtadBurst:
         correction['name'] = 'Sum'
         return correction
 
+    def get_correction(self, name, set_auto_mask=False, transpose=True,
+                       meter=False):
+        """Retrieve the correction for the specified correction "name".
+
+        Puts the results in a dict.
+
+        Parameters:
+            name : the name of the desired correction
+            set_auto_mask : bool
+                requested for netCDF4 to avoid retrieving a masked array
+            transpose : bool
+                requested to retrieve the correction in array following the
+                numpy convention for dimensions
+            meter : bool
+                transform the result in meters
+
+        Returns:
+            correction : dict
+                x : correction in range (if applicable)
+                y : correction in azimuth (if applicable)
+                unit : 'm' or 's'
+                name : name of the correction
+        """
+        try:
+            method = getattr(self, f'get_{name}_correction')
+        except AttributeError:
+            names = ', '.join([
+                'sum',
+                'ionospheric', 'tropospheric',  'geodetic',
+                'bistatic', 'doppler', 'fmrate',
+            ])
+            raise ValueError(
+                f'invalid correction name: {name!r}. '
+                f'Available corrections are: {names}') from None
+        else:
+            return method(set_auto_mask, transpose, meter)
+
 
 class Sentinel1ProductName:
     """Class to manipulate the filename of Sentinel 1 products."""

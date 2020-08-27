@@ -1,14 +1,14 @@
-import pathlib
-import numpy as np
+# -*- coding: utf-8 -*-
 
+import pathlib
+
+import numpy as np
 from scipy import constants
 from lxml import etree
 from netCDF4 import Dataset
 
-
 import pandas as pd
 from dateutil import parser
-
 
 from shapely.geometry import Polygon, MultiPolygon
 import simplekml

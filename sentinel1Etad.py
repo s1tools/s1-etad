@@ -51,6 +51,12 @@ class Sentinel1Etad:
         assert index in self.swath_list, f"{index} is not in {self.swath_list}"
         return Sentinel1EtadSwath(self.ds[index])
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}("{self.product}")  # 0x{id(self):x}'
+
+    def __str__(self):
+        return f'{self.__class__.__name__}("{self.product.name}")'
+
     @property
     def number_of_swath(self):
         return len(self.ds.groups)
@@ -303,6 +309,9 @@ class Sentinel1EtadSwath:
         burst_name = f"Burst{burst_index}"
         return Sentinel1EtadBurst(self._grp[burst_name])
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}("{self._grp.path}")  0x{id(self):x}'
+
     @property
     def burst_list(self):
         burst_list = [
@@ -451,6 +460,9 @@ class Sentinel1EtadSwath:
 class Sentinel1EtadBurst:
     def __init__(self, nc_group):
         self._grp = nc_group
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}("{self._grp.path}")  0x{id(self):x}'
 
     @property
     def swath_id(self):
@@ -785,6 +797,10 @@ class Sentinel1ProductName:
         if len(self._parts) == 10 and 'SLC' in self.ptype:
             del self._parts[3]
             self.ptype = 'SLC_'
+
+    def __repr__(self):
+        class_name = self.__class__.__name__
+        return f'{class_name}("{self.__product_name}")  # 0x{id(self):x}'
 
     @property
     def mission(self):

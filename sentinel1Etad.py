@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pathlib
+import warnings
 
 import numpy as np
 from scipy import constants
@@ -516,7 +517,12 @@ class Sentinel1EtadBurst:
             field = np.transpose(field)
 
         if meter:
-            field *= constants.c/2
+            if correction.endswith('Az'):
+                warnings.warn(
+                    f'conversion to meters is still not implemented for '
+                    f'{correction}.  The "meter" parameter will be ignored')
+            else:
+                field *= constants.c/2
 
         return field
 

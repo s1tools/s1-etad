@@ -314,6 +314,10 @@ class Sentinel1EtadSwath:
     def number_of_burst(self):
         return len(self._grp.groups)
 
+    @property
+    def swath_id(self):
+        return self._grp.swathID
+
     def get_footprint(self, burst_index_list=None):
         """Return the footprints of all the bursts as MultiPolygon.
 
@@ -447,6 +451,14 @@ class Sentinel1EtadSwath:
 class Sentinel1EtadBurst:
     def __init__(self, nc_group):
         self._grp = nc_group
+
+    @property
+    def swath_id(self):
+        return self._grp.swathID
+
+    @property
+    def burst_index(self):
+        return self._grp.bIndex
 
     def get_footprint(self):
         """Return the footprint of ghe bursts as shapely.Polygon.

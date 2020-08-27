@@ -2,6 +2,7 @@
 
 import pathlib
 import warnings
+import functools
 
 import numpy as np
 from scipy import constants
@@ -48,9 +49,14 @@ class Sentinel1Etad:
         root = etree.parse(xml_file).getroot()
         return root
 
+    @functools.lru_cache()
     def __getitem__(self, index):
         assert index in self.swath_list, f"{index} is not in {self.swath_list}"
         return Sentinel1EtadSwath(self.ds[index])
+
+    def __iter__(self):
+        for swath_name in self.ds.groups.keys():
+            yield self[swath_name]
 
     def __repr__(self):
         return f'{self.__class__.__name__}("{self.product}")  # 0x{id(self):x}'
@@ -305,10 +311,15 @@ class Sentinel1EtadSwath:
     def __init__(self, nc_group):
         self._grp = nc_group
 
+    @functools.lru_cache()
     def __getitem__(self, burst_index):
         burst_index = str(burst_index).rjust(4, '0')
         burst_name = f"Burst{burst_index}"
         return Sentinel1EtadBurst(self._grp[burst_name])
+
+    def __iter__(self):
+        for burst_index in self.burst_list:
+            yield self[burst_index]
 
     def __repr__(self):
         return f'{self.__class__.__name__}("{self._grp.path}")  0x{id(self):x}'

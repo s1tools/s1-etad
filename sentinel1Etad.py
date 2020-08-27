@@ -471,12 +471,11 @@ class Sentinel1EtadBurst:
 
     @property
     def sampling(self):
-        dd = {
-            'x': self._grp.gridSamplingRange,
-            'y': self._grp.gridSamplingAzimuth,
-            'units': 's',
-        }
-        return dd
+        return dict(
+            x=self._grp.gridSamplingRange,
+            y=self._grp.gridSamplingAzimuth,
+            units='s',
+        )
 
     def __get_etad_param(self, correction, set_auto_mask=False, transpose=True,
                          meter=False):

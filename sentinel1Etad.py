@@ -531,6 +531,18 @@ class Sentinel1EtadBurst:
             'height', transpose=transpose, meter=False, set_auto_mask=True)
         return lats, lons, h
 
+    def _core_get_correction(self, prm_list, set_auto_mask=False,
+                             transpose=True, meter=False):
+        correction = {}
+        for dim, field in prm_list.items():
+            correction[dim] = self.__get_etad_param(
+                field, set_auto_mask=set_auto_mask, transpose=transpose,
+                meter=meter)
+
+        correction['unit'] = 'm' if meter else 's'
+
+        return correction
+
     def get_tropospheric_correction(self, set_auto_mask=False, transpose=True,
                                     meter=False):
         """Retrieve the tropospheric correction in range.
@@ -549,23 +561,13 @@ class Sentinel1EtadBurst:
         Returns:
             correction : dict
                 x : correction in range
-                y : correction in azimuth (if applicable)
                 unit : 'm' or 's'
                 name : name of the correction
         """
         prm_list = {'x': 'troposphericCorrectionRg'}
-        correction = {}
-        for dim, field in prm_list.items():
-            correction[dim] = self.__get_etad_param(
-                field, set_auto_mask=set_auto_mask, transpose=transpose,
-                meter=meter)
-
-        unit = 's'
-        if meter:
-            unit = 'm'
-        correction['unit'] = unit
+        correction = self._core_get_correction(prm_list, set_auto_mask,
+                                               transpose, meter)
         correction['name'] = 'tropospheric'
-
         return correction
 
     def get_ionospheric_correction(self, set_auto_mask=False, transpose=True,
@@ -586,23 +588,13 @@ class Sentinel1EtadBurst:
         Returns:
             correction : dict
                 x : correction in range
-                y : correction in azimuth (if applicable)
                 unit : 'm' or 's'
                 name : name of the correction
         """
         prm_list = {'x': 'ionosphericCorrectionRg'}
-        correction = {}
-        for dim, field in prm_list.items():
-            correction[dim] = self.__get_etad_param(
-                field, set_auto_mask=set_auto_mask, transpose=transpose,
-                meter=meter)
-
-        unit = 's'
-        if meter:
-            unit = 'm'
-        correction['unit'] = unit
+        correction = self._core_get_correction(prm_list, set_auto_mask,
+                                               transpose, meter)
         correction['name'] = 'ionospheric'
-
         return correction
 
     def get_geodetic_correction(self, set_auto_mask=False, transpose=True,
@@ -623,21 +615,13 @@ class Sentinel1EtadBurst:
         Returns:
             correction : dict
                 x : correction in range
-                y : correction in azimuth (if applicable)
+                y : correction in azimuth
                 unit : 'm' or 's'
                 name : name of the correction
         """
         prm_list = {'x': 'geodeticCorrectionRg', 'y': 'geodeticCorrectionAz'}
-        correction = {}
-        for dim, field in prm_list.items():
-            correction[dim] = self.__get_etad_param(
-                field, set_auto_mask=set_auto_mask, transpose=transpose,
-                meter=meter)
-
-        unit = 's'
-        if meter:
-            unit = 'm'
-        correction['unit'] = unit
+        correction = self._core_get_correction(prm_list, set_auto_mask,
+                                               transpose, meter)
         correction['name'] = 'geodetic'
         return correction
 
@@ -658,22 +642,13 @@ class Sentinel1EtadBurst:
 
         Returns:
             correction : dict
-                x : correction in range
-                y : correction in azimuth (if applicable)
+                y : correction in azimuth
                 unit : 'm' or 's'
                 name : name of the correction
         """
         prm_list = {'y': 'bistaticCorrectionAz'}
-        correction = {}
-        for dim, field in prm_list.items():
-            correction[dim] = self.__get_etad_param(
-                field, set_auto_mask=set_auto_mask, transpose=transpose,
-                meter=meter)
-
-        unit = 's'
-        if meter:
-            unit = 'm'
-        correction['unit'] = unit
+        correction = self._core_get_correction(prm_list, set_auto_mask,
+                                               transpose, meter)
         correction['name'] = 'bistatic'
         return correction
 
@@ -695,20 +670,12 @@ class Sentinel1EtadBurst:
         Returns:
             correction : dict
                 x : correction in range
-                y : correction in azimuth (if applicable)
                 unit : 'm' or 's'
                 name : name of the correction
         """
         prm_list = {'x': 'dopplerRangeShiftRg'}
-        correction = {}
-        for dim, field in prm_list.items():
-            correction[dim] = self.__get_etad_param(
-                field, set_auto_mask=set_auto_mask, transpose=transpose,
-                meter=meter)
-        unit = 's'
-        if meter:
-            unit = 'm'
-        correction['unit'] = unit
+        correction = self._core_get_correction(prm_list, set_auto_mask,
+                                               transpose, meter)
         correction['name'] = 'Doppler'
         return correction
 
@@ -729,22 +696,13 @@ class Sentinel1EtadBurst:
 
         Returns:
             correction : dict
-                x : correction in range
-                y : correction in azimuth (if applicable)
+                y : correction in azimuth
                 unit : 'm' or 's'
                 name : name of the correction
         """
         prm_list = {'y': 'fmMismatchCorrectionAz'}
-        correction = {}
-        for dim, field in prm_list.items():
-            correction[dim] = self.__get_etad_param(
-                field, set_auto_mask=set_auto_mask, transpose=transpose,
-                meter=meter)
-
-        unit = 's'
-        if meter:
-            unit = 'm'
-        correction['unit'] = unit
+        correction = self._core_get_correction(prm_list, set_auto_mask,
+                                               transpose, meter)
         correction['name'] = 'FM rate'
         return correction
 
@@ -766,20 +724,13 @@ class Sentinel1EtadBurst:
         Returns:
             correction : dict
                 x : correction in range
-                y : correction in azimuth (if applicable)
+                y : correction in azimuth
                 unit : 'm' or 's'
                 name : name of the correction
         """
         prm_list = {'x': 'sumOfCorrectionsRg', 'y': 'sumOfCorrectionsAz'}
-        correction = {}
-        for dim, field in prm_list.items():
-            correction[dim] = self.__get_etad_param(
-                field, set_auto_mask=set_auto_mask, transpose=transpose,
-                meter=meter)
-        unit = 's'
-        if meter:
-            unit = 'm'
-        correction['unit'] = unit
+        correction = self._core_get_correction(prm_list, set_auto_mask,
+                                               transpose, meter)
         correction['name'] = 'Sum'
         return correction
 

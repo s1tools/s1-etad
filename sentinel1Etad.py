@@ -203,8 +203,7 @@ class Sentinel1Etad:
 
         if swath is not None:
             if not isinstance(swath, list):
-                # ugly method to transform string into a list_
-                swath = swath.split(' ')
+                swath = [swath]
             ix0 = ix0 & df.swathID.isin(swath)
 
         return df.loc[ix0]
@@ -347,8 +346,7 @@ class Sentinel1EtadSwath:
 
     @functools.lru_cache()
     def __getitem__(self, burst_index):
-        burst_index = str(burst_index).rjust(4, '0')
-        burst_name = f"Burst{burst_index}"
+        burst_name = f"Burst{burst_index:04d}"
         return Sentinel1EtadBurst(self._grp[burst_name])
 
     def __iter__(self):

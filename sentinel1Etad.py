@@ -55,8 +55,7 @@ class Sentinel1Etad:
         return Sentinel1EtadSwath(self.ds[index])
 
     def __iter__(self):
-        for swath_name in self.ds.groups.keys():
-            yield self[swath_name]
+        yield from self.iter_swaths()
 
     def __repr__(self):
         return f'{self.__class__.__name__}("{self.product}")  # 0x{id(self):x}'
@@ -208,6 +207,22 @@ class Sentinel1Etad:
 
         return df.loc[ix0]
 
+    def iter_swaths(self, selection=None):
+        """Iterate over swaths according to the specified selection.
+
+        Parameters:
+        ------------
+            selection : pd.Dataframe
+                it is the result of a Sentinel1Etad.query_burst query.
+                If the selection is None (default) the iteration is performed
+                on all the swaths of the product.
+        """
+        if selection is None:
+            selection = self.burst_catalogue
+
+        for swath_name in selection.swathID.unique():
+            yield self[swath_name]
+
     def xpath_to_list(self, xpath, dtype=None, namespace=None,
                       parse_time_func=None):
         return self._xpath_to_list(self._annot, xpath, dtype=dtype,
@@ -350,8 +365,7 @@ class Sentinel1EtadSwath:
         return Sentinel1EtadBurst(self._grp[burst_name])
 
     def __iter__(self):
-        for burst_index in self.burst_list:
-            yield self[burst_index]
+        yield from self.iter_bursts()
 
     def __repr__(self):
         return f'{self.__class__.__name__}("{self._grp.path}")  0x{id(self):x}'
@@ -367,6 +381,25 @@ class Sentinel1EtadSwath:
     @property
     def swath_id(self):
         return self._grp.swathID
+
+    def iter_bursts(self, selection=None):
+        """Iterate over bursts according to the specified selection.
+
+        Parameters:
+        ------------
+            selection : pd.Dataframe
+                it is the result of a Sentinel1Etad.query_burst query.
+                If the selection is None (default) the iteration is performed
+                on all the burst of the swath.
+        """
+        if selection is None:
+            index_list = self.burst_list
+        else:
+            idx = selection.swathID == self.swath_id
+            index_list = selection.bIndex[idx].values
+
+        for burst_index in index_list:
+            yield self[burst_index]
 
     def get_footprint(self, burst_index_list=None):
         """Return the footprints of all the bursts as MultiPolygon.

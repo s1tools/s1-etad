@@ -14,6 +14,9 @@ from shapely.geometry import Polygon, MultiPolygon
 import simplekml
 
 
+__all__ = ['Sentinel1Etad', 'Sentinel1EtadSwath', 'Sentinel1EtadBurst']
+
+
 class Sentinel1Etad:
     """Sentinel-1 ETAD product.
 

@@ -319,40 +319,6 @@ class Sentinel1Etad:
 
         kml.save(kml_file)
 
-    def _repr_pretty_(self, p, cycle):
-        # this is for pretty representation in jupyter
-        if cycle:
-            p.text(repr(self))
-        else:
-            p.text(repr(self))
-            p.break_()
-            plist = self.s1_product_list()
-            if isinstance(plist, str):
-                plist = [plist]
-            with p.group(2, 'Sentinel-1 products list:'):
-                for name in plist:
-                    p.break_()
-                    p.text(name)
-            p.break_()
-            p.text(f'number of swaths: {self.number_of_swath}')
-            p.break_()
-            p.text('swath list: {}'.format(', '.join(self.swath_list)))
-            p.break_()
-            with p.group(2, 'grid sampling:'):
-                for key, value in self.grid_sampling.items():
-                    p.break_()
-                    p.text(f'{key}: {value}')
-            p.break_()
-            with p.group(2, 'grid spacing:'):
-                for key, value in self.grid_spacing.items():
-                    p.break_()
-                    p.text(f'{key}: {value}')
-            p.break_()
-            with p.group(2, 'processing settings:'):
-                for key, value in self.processing_setting().items():
-                    p.break_()
-                    p.text(f'{key}: {value}')
-
 
 class Sentinel1EtadSwath:
     def __init__(self, nc_group, daz_m):
@@ -529,22 +495,6 @@ class Sentinel1EtadSwath:
         }
 
         return dd
-
-    def _repr_pretty_(self, p, cycle):
-        # this is for pretty representation in jupyter
-        if cycle:
-            p.text(repr(self))
-        else:
-            p.text(repr(self))
-            p.break_()
-            p.text(f'Swaths ID: {self.swath_id}')
-            p.break_()
-            p.text(f'number of bursts: {self.number_of_burst}')
-            p.break_()
-            with p.group(2, 'burst list:'):
-                for burst_index in self.burst_list:
-                    p.breakable()
-                    p.text(str(burst_index))
 
 
 class Sentinel1EtadBurst:
@@ -866,22 +816,6 @@ class Sentinel1EtadBurst:
         else:
             return method(set_auto_mask, transpose, meter)
 
-    def _repr_pretty_(self, p, cycle):
-        # this is for pretty representation in jupyter
-        if cycle:
-            p.text(repr(self))
-        else:
-            p.text(repr(self))
-            p.break_()
-            p.text(f'Swaths ID: {self.swath_id}')
-            p.break_()
-            p.text(f'Burst index: {self.burst_index}')
-            p.break_()
-            with p.group(2, 'sampling:'):
-                for key, value in self.sampling.items():
-                    p.break_()
-                    p.text(f'{key}: {value}')
-
 
 class Sentinel1ProductName:
     """Class to manipulate the filename of Sentinel 1 products."""
@@ -994,3 +928,89 @@ class Sentinel1ProductName:
         if with_suffix:
             pp += self.suffix
         return pp
+
+
+# --- Jupyter integration -----------------------------------------------------
+def _sentinel1_etad_repr_pretty_(obj, p, cycle):
+    if cycle:
+        p.text(repr(obj))
+    else:
+        p.text(repr(obj))
+        p.break_()
+        plist = obj.s1_product_list()
+        if isinstance(plist, str):
+            plist = [plist]
+        with p.group(2, 'Sentinel-1 products list:'):
+            for name in plist:
+                p.break_()
+                p.text(name)
+        p.break_()
+        p.text(f'Number of swaths: {obj.number_of_swath}')
+        p.break_()
+        p.text('Swath list: {}'.format(', '.join(obj.swath_list)))
+        p.break_()
+        with p.group(2, 'Grid sampling:'):
+            for key, value in obj.grid_sampling.items():
+                p.break_()
+                p.text(f'{key}: {value}')
+        p.break_()
+        with p.group(2, 'Grid spacing:'):
+            for key, value in obj.grid_spacing.items():
+                p.break_()
+                p.text(f'{key}: {value}')
+        p.break_()
+        with p.group(2, 'Processing settings:'):
+            for key, value in obj.processing_setting().items():
+                p.break_()
+                p.text(f'{key}: {value}')
+
+
+def _sentinel1_etad_swath_repr_pretty_(obj, p, cycle):
+    if cycle:
+        p.text(repr(obj))
+    else:
+        p.text(repr(obj))
+        p.break_()
+        p.text(f'Swaths ID: {obj.swath_id}')
+        p.break_()
+        p.text(f'Number of bursts: {obj.number_of_burst}')
+        p.break_()
+        with p.group(2, 'Burst list:'):
+            for burst_index in obj.burst_list:
+                p.breakable()
+                p.text(str(burst_index))
+
+
+def _sentinel1_etad_burst_repr_pretty_(obj, p, cycle):
+        if cycle:
+            p.text(repr(obj))
+        else:
+            p.text(repr(obj))
+            p.break_()
+            p.text(f'Swaths ID: {obj.swath_id}')
+            p.break_()
+            p.text(f'Burst index: {obj.burst_index}')
+            p.break_()
+            with p.group(2, 'Sampling:'):
+                for key, value in obj.sampling.items():
+                    p.break_()
+                    p.text(f'{key}: {value}')
+
+
+def _register_jupyter_formatters():
+    try:
+        ipy = get_ipython()  # noqa
+    except NameError:
+        return False
+    else:
+        formatter = ipy.display_formatter.formatters['text/plain']
+        formatter.for_type(
+            Sentinel1Etad, _sentinel1_etad_repr_pretty_)
+        formatter.for_type(
+            Sentinel1EtadSwath, _sentinel1_etad_swath_repr_pretty_)
+        formatter.for_type(
+            Sentinel1EtadBurst, _sentinel1_etad_burst_repr_pretty_)
+        return True
+
+
+_register_jupyter_formatters()

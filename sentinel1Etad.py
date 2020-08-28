@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import pathlib
-import warnings
 import functools
 
 import numpy as np
@@ -52,7 +51,7 @@ class Sentinel1Etad:
     @functools.lru_cache()
     def __getitem__(self, index):
         assert index in self.swath_list, f"{index} is not in {self.swath_list}"
-        return Sentinel1EtadSwath(self.ds[index])
+        return Sentinel1EtadSwath(self.ds[index], self.grid_spacing['y'])
 
     def __iter__(self):
         yield from self.iter_swaths()
@@ -356,13 +355,14 @@ class Sentinel1Etad:
 
 
 class Sentinel1EtadSwath:
-    def __init__(self, nc_group):
+    def __init__(self, nc_group, daz_m):
         self._grp = nc_group
+        self._daz_m = daz_m
 
     @functools.lru_cache()
     def __getitem__(self, burst_index):
         burst_name = f"Burst{burst_index:04d}"
-        return Sentinel1EtadBurst(self._grp[burst_name])
+        return Sentinel1EtadBurst(self._grp[burst_name], self._daz_m)
 
     def __iter__(self):
         yield from self.iter_bursts()
@@ -548,8 +548,9 @@ class Sentinel1EtadSwath:
 
 
 class Sentinel1EtadBurst:
-    def __init__(self, nc_group):
+    def __init__(self, nc_group, daz_m):
         self._grp = nc_group
+        self._daz_m = daz_m
 
     def __repr__(self):
         return f'{self.__class__.__name__}("{self._grp.path}")  0x{id(self):x}'
@@ -607,11 +608,10 @@ class Sentinel1EtadBurst:
 
         if meter:
             if correction.endswith('Az'):
-                warnings.warn(
-                    f'conversion to meters is still not implemented for '
-                    f'{correction}.  The "meter" parameter will be ignored')
+                k = self._daz_m / self.sampling['y']
             else:
-                field *= constants.c/2
+                k = constants.c / 2
+            field *= k
 
         return field
 

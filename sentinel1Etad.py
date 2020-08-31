@@ -310,7 +310,10 @@ class Sentinel1Etad:
             pol.polystyle.fill = 0
             pol.style.linestyle.width = 2
 
-        kml.save(kml_file)
+        if kml_file is not None:
+            kml.save(kml_file)
+
+        return kml
 
 
 class Sentinel1EtadSwath:

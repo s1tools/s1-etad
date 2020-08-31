@@ -1,5 +1,17 @@
 # -*- coding: utf-8 -*-
 
+"""Tools for easy access to Sentinel-1 Extended Timing Annotation Datasets.
+
+This module provides a set of classes to open and access all elements,
+data and meta-data, of the Sentinel-1 Extended Timing Annotation Datasets
+(S1-ETAD).
+
+Basic elements are:
+
+* :class:`Sentinel1Etad`
+* :class:`Sentinel1EtadSwath`
+* :class:`Sentinel1EtadBurst`
+"""
 
 import enum
 import pathlib
@@ -48,9 +60,23 @@ class Sentinel1Etad:
 
     The index operator [] (implemented with the __getitem__ method) returns
     a Sentinel1EtadSwath instance.
+
+    Attributes
+    ----------
+    product : pathlib.Path
+        path of the S1-ETAD product (it is a directory)
+    burst_catalogue : pandas.DataFrame
+        dataframe containing main information of all bursts present in
+        the product
     """
 
     def __init__(self, product):
+        """
+        Parameters
+        ----------
+        product : str or pathlib.Path
+            path of the S1-ETAD product (it is a directory)
+        """
         self.product = pathlib.Path(product)
         self.ds = self._init_measurement_dataset()
         self._annot = self._init_annotation_dataset()

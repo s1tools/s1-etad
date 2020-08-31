@@ -349,6 +349,19 @@ class Sentinel1EtadSwath:
     def swath_id(self):
         return self._grp.swathID
 
+    @property
+    def sampling_start(self):
+        """Relative sampling start times."""
+        first_burst_index = self.burst_list[0]
+        first_burst = self[first_burst_index]
+        return first_burst.sampling_start
+
+    @property
+    def sampling(self):
+        first_burst_index = self.burst_list[0]
+        first_burst = self[first_burst_index]
+        return first_burst.sampling
+
     def iter_bursts(self, selection=None):
         """Iterate over bursts according to the specified selection.
 
@@ -502,8 +515,8 @@ class Sentinel1EtadSwath:
             burst_ = self[burst_index]
             assert(dt == burst_.sampling['y']), \
                 'The azimuth sampling is changing long azimuth'
-            assert(first_burst._grp.gridStartRangeTime0 ==
-                   burst_._grp.gridStartRangeTime0), \
+            assert(first_burst.sampling_start['x'] ==
+                   burst_.sampling_start['x']), \
                 'The 2-way range gridStartRangeTime0 is changing long azimuth'
 
             # get the timing of the burst and convert into line index
@@ -519,7 +532,7 @@ class Sentinel1EtadSwath:
         dd = {
             burst_var: debursted_var,
             'first_azimuth_time': t0,
-            'first_slant_range_time': first_burst._grp.gridStartRangeTime0,
+            'first_slant_range_time': first_burst.sampling_start['x'],
             'sampling': first_burst.sampling,
         }
 
@@ -563,12 +576,29 @@ class Sentinel1EtadBurst:
         return azimuth, range_
 
     @property
+    def sampling_start(self):
+        """Relative sampling start times."""
+        return dict(
+            x=self._grp.gridStartRangeTime0,
+            y=self._grp.gridStartAzimuthTime0,
+            units='s',
+        )
+
+    @property
     def sampling(self):
         return dict(
             x=self._grp.gridSamplingRange,
             y=self._grp.gridSamplingAzimuth,
             units='s',
         )
+
+    @property
+    def lines(self):
+        return self._grp.dimensions['azimuthExtent'].size
+
+    @property
+    def samples(self):
+        return self._grp.dimensions['rangeExtent'].size
 
     def _get_etad_param(self, name, set_auto_mask=False, transpose=True,
                         meter=False):
@@ -1044,10 +1074,17 @@ def _sentinel1_etad_swath_repr_pretty_(obj, p, cycle):
         p.break_()
         p.text(f'Number of bursts: {obj.number_of_burst}')
         p.break_()
-        with p.group(2, 'Burst list:'):
-            for burst_index in obj.burst_list:
-                p.breakable()
-                p.text(str(burst_index))
+        p.text('Burst list: ' + str(obj.burst_list))
+        p.break_()
+        with p.group(2, 'Sampling start:'):
+            for key, value in obj.sampling_start.items():
+                p.break_()
+                p.text(f'{key}: {value}')
+        p.break_()
+        with p.group(2, 'Sampling:'):
+            for key, value in obj.sampling.items():
+                p.break_()
+                p.text(f'{key}: {value}')
 
 
 def _sentinel1_etad_burst_repr_pretty_(obj, p, cycle):
@@ -1059,6 +1096,13 @@ def _sentinel1_etad_burst_repr_pretty_(obj, p, cycle):
         p.text(f'Swaths ID: {obj.swath_id}')
         p.break_()
         p.text(f'Burst index: {obj.burst_index}')
+        p.break_()
+        p.text(f'Shape: ({obj.lines}, {obj.samples})')
+        p.break_()
+        with p.group(2, 'Sampling start:'):
+            for key, value in obj.sampling_start.items():
+                p.break_()
+                p.text(f'{key}: {value}')
         p.break_()
         with p.group(2, 'Sampling:'):
             for key, value in obj.sampling.items():

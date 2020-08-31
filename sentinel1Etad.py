@@ -280,8 +280,8 @@ class Sentinel1Etad:
         # TODO: check, Sentinel1EtadSwath.get_footprint returns a MultiPolygon
         return polys
 
-    def _swath_merger(self, burst_variable, swath_list=None,
-                      burst_index_list=None):
+    def _swath_merger(self, burst_var, swath_list=None, burst_index_list=None,
+                      set_auto_mask=False, transpose=True, meter=False):
         if swath_list is None:
             swath_list = self.swath_list
 
@@ -302,20 +302,60 @@ class Sentinel1Etad:
 
         img = np.zeros((num_lines, num_samples))
 
-        for swath_ in swath_list:
-            dd_ = self[swath_].merge_sum_correction(
-                burst_index_list=burst_index_list)
+        for swath_name in swath_list:
+            swath = self[swath_name]
+            dd_ = swath._burst_merger(burst_var,
+                                      burst_index_list=burst_index_list,
+                                      set_auto_mask=set_auto_mask,
+                                      transpose=transpose, meter=meter)
             line_ofs = np.round(
                 dd_['first_azimuth_time'] / sampling['y']).astype(np.int)
             sample_ofs = np.round(
                 (dd_['first_slant_range_time']) / sampling['x']).astype(np.int)
 
-            slice_y = slice(line_ofs, line_ofs + dd_['x'].shape[0])
-            slice_x = slice(sample_ofs, sample_ofs + dd_['x'].shape[1])
+            slice_y = slice(line_ofs, line_ofs + dd_[burst_var].shape[0])
+            slice_x = slice(sample_ofs, sample_ofs + dd_[burst_var].shape[1])
 
-            img[slice_y, slice_x] = dd_['x']
+            img[slice_y, slice_x] = dd_[burst_var]
 
         return img
+
+    def _core_merge_correction(self, prm_list, swath_list=None,
+                               burst_index_list=None, set_auto_mask=True,
+                               transpose=True, meter=False):
+        dd = {}
+        for dim, field in prm_list.items():
+            dd_ = self._swath_merger(field, swath_list=swath_list,
+                                     burst_index_list=burst_index_list,
+                                     set_auto_mask=set_auto_mask,
+                                     transpose=transpose, meter=meter)
+            dd[dim] = dd_[field]
+            dd['sampling'] = dd_['sampling']
+            dd['first_azimuth_time'] = dd_['first_azimuth_time']
+            dd['first_slant_range_time'] = dd_['first_slant_range_time']
+
+        dd['unit'] = 'm' if meter else 's'
+        dd['lats'] = self._swath_merger('lats', transpose=transpose,
+                                        meter=False,
+                                        set_auto_mask=set_auto_mask)
+        dd['lons'] = self._swath_merger('lons', transpose=transpose,
+                                        meter=False,
+                                        set_auto_mask=set_auto_mask)
+        dd['height'] = self._swath_merger('height', transpose=transpose,
+                                          meter=False,
+                                          set_auto_mask=set_auto_mask)
+        return dd
+
+    def merge_correction(self, name: CorrectionType = ECorrectionType.SUM,
+                         swath_list=None, burst_index_list=None,
+                         set_auto_mask=True, transpose=True, meter=False):
+        correction_type = ECorrectionType(name)  # check values
+        prm_list = _CORRECTION_NAMES_MAP[correction_type.value]
+        return self._core_merge_correction(prm_list, swath_list=swath_list,
+                                           burst_index_list=burst_index_list,
+                                           set_auto_mask=set_auto_mask,
+                                           transpose=transpose,
+                                           meter=meter)
 
     def to_kml(self, kml_file):
         kml = simplekml.Kml()
@@ -425,62 +465,10 @@ class Sentinel1EtadSwath:
         footprints = [self[bix].get_footprint() for bix in burst_index_list]
         return MultiPolygon(footprints)
 
-    def merge_sum_correction(self, burst_index_list=None, set_auto_mask=True,
-                             transpose=True, meter=False):
-        prm_list = {'x': 'sumOfCorrectionsRg', 'y': 'sumOfCorrectionsAz'}
-        dd = {}
-        for dim, field in prm_list.items():
-            dd_ = self._burst_merger(field, burst_index_list=burst_index_list,
-                                     set_auto_mask=set_auto_mask,
-                                     transpose=transpose, meter=meter)
-            dd[dim] = dd_[field]
-
-        unit = 's'
-        if meter:
-            unit = 'm'
-        dd['unit'] = unit
-        dd['lats'] = self._burst_merger('lats', transpose=transpose,
-                                        meter=False,
-                                        set_auto_mask=set_auto_mask)
-        dd['lons'] = self._burst_merger('lons', transpose=transpose,
-                                        meter=False,
-                                        set_auto_mask=set_auto_mask)
-        dd['sampling'] = dd['sampling']
-        dd['first_azimuth_time'] = dd['first_azimuth_time']
-        dd['first_slant_range_time'] = dd['first_slant_range_time']
-        # heights = self._burst_merger('height', transpose=transpose,
-        #                              meter=False, set_auto_mask=set_auto_mask)
-        return dd
-
-    def merge_troposphere_correction(self, burst_index_list=None,
-                                     set_auto_mask=True, transpose=True,
-                                     meter=False):
-        prm_list = {'x': 'troposphericCorrectionRg'}
-        dd = {}
-        for dim, field in prm_list.items():
-            dd_ = self._burst_merger(field, burst_index_list=burst_index_list,
-                                     set_auto_mask=set_auto_mask,
-                                     transpose=transpose, meter=meter)
-            dd[dim] = dd_[field]
-
-        unit = 's'
-        if meter:
-            unit = 'm'
-        dd['unit'] = unit
-        dd['lats'] = self._burst_merger('lats', transpose=transpose,
-                                        meter=False,
-                                        set_auto_mask=set_auto_mask)
-        dd['lons'] = self._burst_merger('lons', transpose=transpose,
-                                        meter=False,
-                                        set_auto_mask=set_auto_mask)
-        dd['sampling'] = dd['sampling']
-        dd['first_azimuth_time'] = dd['first_azimuth_time']
-        dd['first_slant_range_time'] = dd['first_slant_range_time']
-
     def _burst_merger(self, burst_var, burst_index_list=None,
                       azimuthTimeMin=None, azimuthTimeMax=None,
                       set_auto_mask=False, transpose=True, meter=False):
-        """Template method to de-burst a variables.
+        """Low level method to de-burst a NetCDF variable.
 
         The de-burst strategy is simple as the latest line is on top of the
         oldest.
@@ -523,21 +511,23 @@ class Sentinel1EtadSwath:
         first_burst = self[burst_index_list[0]]
         last_burst = self[burst_index_list[-1]]
 
+        first_azimuth, range_ = first_burst.get_burst_grid()
         if azimuthTimeMin is None:
-            t0 = first_burst._grp['azimuth'][0]
+            t0 = first_azimuth[0]
         else:
             t0 = azimuthTimeMin
 
+        last_azimuth, _ = last_burst.get_burst_grid()
         if azimuthTimeMax is None:
-            t1 = last_burst._grp['azimuth'][-1]
+            t1 = last_azimuth[-1]
         else:
             t1 = azimuthTimeMax
 
         # azimuth grid sampling
         dt = first_burst.sampling['y']
 
-        num_lines = np.round((t1-t0) / dt).astype(np.int)+1
-        num_samples = first_burst._grp.dimensions['rangeExtent'].size
+        num_lines = np.round((t1 - t0) / dt).astype(np.int) + 1
+        num_samples = range_.size
 
         debursted_var = np.zeros((num_lines, num_samples))
 
@@ -567,6 +557,41 @@ class Sentinel1EtadSwath:
         }
 
         return dd
+
+    def _core_merge_correction(self, prm_list, burst_index_list=None,
+                               set_auto_mask=True, transpose=True, meter=False):
+        dd = {}
+        for dim, field in prm_list.items():
+            dd_ = self._burst_merger(field, burst_index_list=burst_index_list,
+                                     set_auto_mask=set_auto_mask,
+                                     transpose=transpose, meter=meter)
+            dd[dim] = dd_[field]
+            dd['sampling'] = dd_['sampling']
+            dd['first_azimuth_time'] = dd_['first_azimuth_time']
+            dd['first_slant_range_time'] = dd_['first_slant_range_time']
+
+        dd['unit'] = 'm' if meter else 's'
+        dd['lats'] = self._burst_merger('lats', transpose=transpose,
+                                        meter=False,
+                                        set_auto_mask=set_auto_mask)
+        dd['lons'] = self._burst_merger('lons', transpose=transpose,
+                                        meter=False,
+                                        set_auto_mask=set_auto_mask)
+        dd['height'] = self._burst_merger('height', transpose=transpose,
+                                          meter=False,
+                                          set_auto_mask=set_auto_mask)
+        return dd
+
+    def merge_correction(self, name: CorrectionType = ECorrectionType.SUM,
+                         burst_index_list=None, set_auto_mask=True,
+                         transpose=True, meter=False):
+        correction_type = ECorrectionType(name)  # check values
+        prm_list = _CORRECTION_NAMES_MAP[correction_type.value]
+        return self._core_merge_correction(prm_list,
+                                           burst_index_list=burst_index_list,
+                                           set_auto_mask=set_auto_mask,
+                                           transpose=transpose,
+                                           meter=meter)
 
 
 class Sentinel1EtadBurst:

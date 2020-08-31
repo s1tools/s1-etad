@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pathlib
+import warnings
 import functools
 
 import numpy as np
@@ -562,22 +563,27 @@ class Sentinel1EtadBurst:
             units='s',
         )
 
-    def _get_etad_param(self, correction, set_auto_mask=False, transpose=True,
+    def _get_etad_param(self, name, set_auto_mask=False, transpose=True,
                         meter=False):
-        correction_list = list(self._grp.variables.keys())
-        assert(correction in correction_list), 'Parameter is not allowed list'
+        assert name in self._grp.variables, f'Parameter {name!r} is not allowed'
 
         self._grp.set_auto_mask(set_auto_mask)
 
-        field = np.asarray(self._grp[correction])
+        field = np.asarray(self._grp[name])
         if transpose:
             field = np.transpose(field)
 
         if meter:
-            if correction.endswith('Az'):
+            if name.endswith('Az'):
                 k = self._daz_m / self.sampling['y']
-            else:
+            elif name.endswith('Rg'):
                 k = constants.c / 2
+            else:
+                # it is not a correction
+                k = 1
+                warnings.warn(
+                    f'the {name} is not a correction: '
+                    'the "meter" parameter will be ignored')
             field *= k
 
         return field

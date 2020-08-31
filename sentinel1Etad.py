@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import enum
 import pathlib
 import warnings
 import functools
+from typing import Union
 
 import numpy as np
 from scipy import constants
@@ -16,7 +18,23 @@ from shapely.geometry import Polygon, MultiPolygon
 import simplekml
 
 
-__all__ = ['Sentinel1Etad', 'Sentinel1EtadSwath', 'Sentinel1EtadBurst']
+__all__ = [
+    'Sentinel1Etad', 'Sentinel1EtadSwath', 'Sentinel1EtadBurst',
+    'ECorrectionType',
+]
+
+
+class ECorrectionType(enum.Enum):
+    TROPOSPHERIC = 'tropospheric'
+    IONOSPHERIC = 'ionospheric'
+    GEODETIC = 'geodetic'
+    BISTATIC = 'bistatic'
+    DOPPLER = 'doppler'
+    FMRATE = 'fmrate'
+    SUM = 'sum'
+
+
+CorrectionType = Union[ECorrectionType, str]
 
 
 class Sentinel1Etad:
@@ -296,6 +314,7 @@ class Sentinel1Etad:
             slice_x = slice(sample_ofs, sample_ofs + dd_['x'].shape[1])
 
             img[slice_y, slice_x] = dd_['x']
+
         return img
 
     def to_kml(self, kml_file):
@@ -319,6 +338,17 @@ class Sentinel1Etad:
             kml.save(kml_file)
 
         return kml
+
+
+_CORRECTION_NAMES_MAP = {
+    'tropospheric': {'x': 'troposphericCorrectionRg'},
+    'ionospheric': {'x': 'ionosphericCorrectionRg'},
+    'geodetic': {'x': 'geodeticCorrectionRg', 'y': 'geodeticCorrectionAz'},
+    'bistatic': {'y': 'bistaticCorrectionAz'},
+    'doppler': {'x': 'dopplerRangeShiftRg'},
+    'fmrate': {'y': 'fmMismatchCorrectionAz'},
+    'sum': {'x': 'sumOfCorrectionsRg', 'y': 'sumOfCorrectionsAz'},
+}
 
 
 class Sentinel1EtadSwath:
@@ -646,6 +676,47 @@ class Sentinel1EtadBurst:
 
         return correction
 
+    def get_correction(self, name: CorrectionType = ECorrectionType.SUM,
+                       set_auto_mask=False, transpose=True, meter=False):
+        """Retrieve the correction for the specified correction "name".
+
+        Puts the results in a dict.
+
+        Parameters
+        ----------
+        name : ECorrectionType or str
+            the desired correction
+        set_auto_mask : bool
+            requested for netCDF4 to avoid retrieving a masked array
+        transpose : bool
+            requested to retrieve the correction in array following the
+            numpy convention for dimensions
+        meter : bool
+            transform the result in meters
+
+        Returns
+        -------
+        dict
+            a dictionary containing the following items for the
+            requested correction:
+
+            :x: correction in range (if applicable)
+            :y: correction in azimuth (if applicable)
+            :unit: 'm' or 's'
+            :name: name of the correction
+        """
+        correction_type = ECorrectionType(name)  # check values
+        name = correction_type.value
+        prm_list = _CORRECTION_NAMES_MAP[name]
+        correction = self._core_get_correction(prm_list,
+                                               set_auto_mask=set_auto_mask,
+                                               transpose=transpose, meter=meter)
+        correction['name'] = name
+        return correction
+
+    # TODO: remove methods below (superseded by
+    #       Sentinel1EtadBurst.get_correction(ECorrectionType, ...))
+
     def get_tropospheric_correction(self, set_auto_mask=False, transpose=True,
                                     meter=False):
         """Retrieve the tropospheric correction in range.
@@ -672,11 +743,9 @@ class Sentinel1EtadBurst:
             :unit: 'm' or 's'
             :name: name of the correction
         """
-        prm_list = {'x': 'troposphericCorrectionRg'}
-        correction = self._core_get_correction(prm_list, set_auto_mask,
-                                               transpose, meter)
-        correction['name'] = 'tropospheric'
-        return correction
+        return self.get_correction(ECorrectionType.TROPOSPHERIC,
+                                   set_auto_mask=set_auto_mask,
+                                   transpose=transpose, meter=meter)
 
     def get_ionospheric_correction(self, set_auto_mask=False, transpose=True,
                                    meter=False):
@@ -704,11 +773,9 @@ class Sentinel1EtadBurst:
             :unit: 'm' or 's'
             :name: name of the correction
         """
-        prm_list = {'x': 'ionosphericCorrectionRg'}
-        correction = self._core_get_correction(prm_list, set_auto_mask,
-                                               transpose, meter)
-        correction['name'] = 'ionospheric'
-        return correction
+        return self.get_correction(ECorrectionType.IONOSPHERIC,
+                                   set_auto_mask=set_auto_mask,
+                                   transpose=transpose, meter=meter)
 
     def get_geodetic_correction(self, set_auto_mask=False, transpose=True,
                                 meter=False):
@@ -737,11 +804,9 @@ class Sentinel1EtadBurst:
             :unit: 'm' or 's'
             :name: name of the correction
         """
-        prm_list = {'x': 'geodeticCorrectionRg', 'y': 'geodeticCorrectionAz'}
-        correction = self._core_get_correction(prm_list, set_auto_mask,
-                                               transpose, meter)
-        correction['name'] = 'geodetic'
-        return correction
+        return self.get_correction(ECorrectionType.GEODETIC,
+                                   set_auto_mask=set_auto_mask,
+                                   transpose=transpose, meter=meter)
 
     def get_bistatic_correction(self, set_auto_mask=False, transpose=True,
                                 meter=False):
@@ -769,11 +834,9 @@ class Sentinel1EtadBurst:
             :unit: 'm' or 's'
             :name: name of the correction
         """
-        prm_list = {'y': 'bistaticCorrectionAz'}
-        correction = self._core_get_correction(prm_list, set_auto_mask,
-                                               transpose, meter)
-        correction['name'] = 'bistatic'
-        return correction
+        return self.get_correction(ECorrectionType.BISTATIC,
+                                   set_auto_mask=set_auto_mask,
+                                   transpose=transpose, meter=meter)
 
     def get_doppler_correction(self, set_auto_mask=False, transpose=True,
                                meter=False):
@@ -801,11 +864,9 @@ class Sentinel1EtadBurst:
             :unit: 'm' or 's'
             :name: name of the correction
         """
-        prm_list = {'x': 'dopplerRangeShiftRg'}
-        correction = self._core_get_correction(prm_list, set_auto_mask,
-                                               transpose, meter)
-        correction['name'] = 'Doppler'
-        return correction
+        return self.get_correction(ECorrectionType.DOPPLER,
+                                   set_auto_mask=set_auto_mask,
+                                   transpose=transpose, meter=meter)
 
     def get_fmrate_correction(self, set_auto_mask=False, transpose=True,
                               meter=False):
@@ -833,10 +894,10 @@ class Sentinel1EtadBurst:
             :unit: 'm' or 's'
             :name: name of the correction
         """
-        prm_list = {'y': 'fmMismatchCorrectionAz'}
-        correction = self._core_get_correction(prm_list, set_auto_mask,
-                                               transpose, meter)
-        correction['name'] = 'FM rate'
+        correction = self.get_correction(ECorrectionType.FMRATE,
+                                         set_auto_mask=set_auto_mask,
+                                         transpose=transpose, meter=meter)
+        correction['name'] = 'FM rate'  # TODO: check
         return correction
 
     def get_sum_correction(self, set_auto_mask=False, transpose=True,
@@ -866,54 +927,11 @@ class Sentinel1EtadBurst:
             :unit: 'm' or 's'
             :name: name of the correction
         """
-        prm_list = {'x': 'sumOfCorrectionsRg', 'y': 'sumOfCorrectionsAz'}
-        correction = self._core_get_correction(prm_list, set_auto_mask,
-                                               transpose, meter)
-        correction['name'] = 'Sum'
+        correction = self.get_correction(ECorrectionType.SUM,
+                                         set_auto_mask=set_auto_mask,
+                                         transpose=transpose, meter=meter)
+        correction['name'] = 'Sum'  # TODO: check
         return correction
-
-    def get_correction(self, name, set_auto_mask=False, transpose=True,
-                       meter=False):
-        """Retrieve the correction for the specified correction "name".
-
-        Puts the results in a dict.
-
-        Parameters
-        ----------
-        name: str
-            the desired correction
-        set_auto_mask : bool
-            requested for netCDF4 to avoid retrieving a masked array
-        transpose : bool
-            requested to retrieve the correction in array following the
-            numpy convention for dimensions
-        meter : bool
-            transform the result in meters
-
-        Returns
-        -------
-        dict
-            a dictionary containing the following items for the
-            requested correction:
-
-            :x: correction in range (if applicable)
-            :y: correction in azimuth (if applicable)
-            :unit: 'm' or 's'
-            :name: name of the correction
-        """
-        try:
-            method = getattr(self, f'get_{name}_correction')
-        except AttributeError:
-            names = ', '.join([
-                'sum',
-                'ionospheric', 'tropospheric',  'geodetic',
-                'bistatic', 'doppler', 'fmrate',
-            ])
-            raise ValueError(
-                f'invalid correction name: {name!r}. '
-                f'Available corrections are: {names}') from None
-        else:
-            return method(set_auto_mask, transpose, meter)
 
 
 class Sentinel1ProductName:

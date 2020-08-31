@@ -982,19 +982,19 @@ def _sentinel1_etad_swath_repr_pretty_(obj, p, cycle):
 
 
 def _sentinel1_etad_burst_repr_pretty_(obj, p, cycle):
-        if cycle:
-            p.text(repr(obj))
-        else:
-            p.text(repr(obj))
-            p.break_()
-            p.text(f'Swaths ID: {obj.swath_id}')
-            p.break_()
-            p.text(f'Burst index: {obj.burst_index}')
-            p.break_()
-            with p.group(2, 'Sampling:'):
-                for key, value in obj.sampling.items():
-                    p.break_()
-                    p.text(f'{key}: {value}')
+    if cycle:
+        p.text(repr(obj))
+    else:
+        p.text(repr(obj))
+        p.break_()
+        p.text(f'Swaths ID: {obj.swath_id}')
+        p.break_()
+        p.text(f'Burst index: {obj.burst_index}')
+        p.break_()
+        with p.group(2, 'Sampling:'):
+            for key, value in obj.sampling.items():
+                p.break_()
+                p.text(f'{key}: {value}')
 
 
 def _register_jupyter_formatters():

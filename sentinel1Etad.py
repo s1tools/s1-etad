@@ -256,8 +256,8 @@ class Sentinel1Etad:
 
         return polys
 
-    def __swath_merger(self, burst_variable, swath_list=None,
-                       burst_index_list=None):
+    def _swath_merger(self, burst_variable, swath_list=None,
+                      burst_index_list=None):
         if swath_list is None:
             swath_list = self.swath_list
 
@@ -291,12 +291,6 @@ class Sentinel1Etad:
 
             img[slice_y, slice_x] = dd_['x']
         return img
-
-        # np.round(
-        #     (last_slant_range_time-first_slant_range_time) / sampling['x']
-        # ).astype(np.int) + 1
-
-    _swath_merger = __swath_merger
 
     def to_kml(self, kml_file):
         kml = simplekml.Kml()
@@ -383,27 +377,26 @@ class Sentinel1EtadSwath:
         prm_list = {'x': 'sumOfCorrectionsRg', 'y': 'sumOfCorrectionsAz'}
         dd = {}
         for dim, field in prm_list.items():
-            dd_ = self.__burst_merger(field, burst_index_list=burst_index_list,
-                                      set_auto_mask=set_auto_mask,
-                                      transpose=transpose, meter=meter)
+            dd_ = self._burst_merger(field, burst_index_list=burst_index_list,
+                                     set_auto_mask=set_auto_mask,
+                                     transpose=transpose, meter=meter)
             dd[dim] = dd_[field]
 
         unit = 's'
         if meter:
             unit = 'm'
         dd['unit'] = unit
-        dd['lats'] = self.__burst_merger('lats', transpose=transpose,
-                                         meter=False,
-                                         set_auto_mask=set_auto_mask)
-        dd['lons'] = self.__burst_merger('lons', transpose=transpose,
-                                         meter=False,
-                                         set_auto_mask=set_auto_mask)
+        dd['lats'] = self._burst_merger('lats', transpose=transpose,
+                                        meter=False,
+                                        set_auto_mask=set_auto_mask)
+        dd['lons'] = self._burst_merger('lons', transpose=transpose,
+                                        meter=False,
+                                        set_auto_mask=set_auto_mask)
         dd['sampling'] = dd['sampling']
         dd['first_azimuth_time'] = dd['first_azimuth_time']
         dd['first_slant_range_time'] = dd['first_slant_range_time']
-        # heights = self.__burst_merger__burst_merger(
-        #     'height', transpose=transpose, meter=False,
-        #     set_auto_mask=set_auto_mask)
+        # heights = self._burst_merger('height', transpose=transpose,
+        #                              meter=False, set_auto_mask=set_auto_mask)
         return dd
 
     def merge_troposphere_correction(self, burst_index_list=None,
@@ -412,28 +405,28 @@ class Sentinel1EtadSwath:
         prm_list = {'x': 'troposphericCorrectionRg'}
         dd = {}
         for dim, field in prm_list.items():
-            dd_ = self.__burst_merger(field, burst_index_list=burst_index_list,
-                                      set_auto_mask=set_auto_mask,
-                                      transpose=transpose, meter=meter)
+            dd_ = self._burst_merger(field, burst_index_list=burst_index_list,
+                                     set_auto_mask=set_auto_mask,
+                                     transpose=transpose, meter=meter)
             dd[dim] = dd_[field]
 
         unit = 's'
         if meter:
             unit = 'm'
         dd['unit'] = unit
-        dd['lats'] = self.__burst_merger('lats', transpose=transpose,
-                                         meter=False,
-                                         set_auto_mask=set_auto_mask)
-        dd['lons'] = self.__burst_merger('lons', transpose=transpose,
-                                         meter=False,
-                                         set_auto_mask=set_auto_mask)
+        dd['lats'] = self._burst_merger('lats', transpose=transpose,
+                                        meter=False,
+                                        set_auto_mask=set_auto_mask)
+        dd['lons'] = self._burst_merger('lons', transpose=transpose,
+                                        meter=False,
+                                        set_auto_mask=set_auto_mask)
         dd['sampling'] = dd['sampling']
         dd['first_azimuth_time'] = dd['first_azimuth_time']
         dd['first_slant_range_time'] = dd['first_slant_range_time']
 
-    def __burst_merger(self, burst_var, burst_index_list=None,
-                       azimuthTimeMin=None, azimuthTimeMax=None,
-                       set_auto_mask=False, transpose=True, meter=False):
+    def _burst_merger(self, burst_var, burst_index_list=None,
+                      azimuthTimeMin=None, azimuthTimeMax=None,
+                      set_auto_mask=False, transpose=True, meter=False):
         """Template method to de-burst a variables.
 
         The de-burst strategy is simple as the latest line is on top of the
@@ -544,11 +537,7 @@ class Sentinel1EtadBurst:
 
         It gets the lat / lon / height grid and extract the 4 corners.
         """
-        # lats, lons = self.__get_etad_param('lats', set_auto_mask=True)
-        lats = self.__get_etad_param('lats', set_auto_mask=True)
-        lons = self.__get_etad_param('lons', set_auto_mask=True)
-        heights = self.__get_etad_param('height', set_auto_mask=True)
-
+        lats, lons, heights = self.get_lat_lon_height()
         corner_list = [(0, 0), (0, -1), (-1, -1), (-1, 0)]
         etaf_burst_footprint = []
         for corner in corner_list:
@@ -559,8 +548,8 @@ class Sentinel1EtadBurst:
 
     def get_burst_grid(self):  # , burst_index_list=None
         """Return the t, tau grid of the burst."""
-        azimuth = self.__get_etad_param('azimuth', set_auto_mask=True)
-        range_ = self.__get_etad_param('range', set_auto_mask=True)
+        azimuth = self._get_etad_param('azimuth', set_auto_mask=True)
+        range_ = self._get_etad_param('range', set_auto_mask=True)
         return azimuth, range_
 
     @property
@@ -571,8 +560,8 @@ class Sentinel1EtadBurst:
             units='s',
         )
 
-    def __get_etad_param(self, correction, set_auto_mask=False, transpose=True,
-                         meter=False):
+    def _get_etad_param(self, correction, set_auto_mask=False, transpose=True,
+                        meter=False):
         correction_list = list(self._grp.variables.keys())
         assert(correction in correction_list), 'Parameter is not allowed list'
 
@@ -591,14 +580,12 @@ class Sentinel1EtadBurst:
 
         return field
 
-    _get_etad_param = __get_etad_param
-
     def get_lat_lon_height(self, transpose=True):
-        lats = self.__get_etad_param(
+        lats = self._get_etad_param(
             'lats', transpose=transpose, meter=False, set_auto_mask=True)
-        lons = self.__get_etad_param(
+        lons = self._get_etad_param(
             'lons', transpose=transpose, meter=False, set_auto_mask=True)
-        h = self.__get_etad_param(
+        h = self._get_etad_param(
             'height', transpose=transpose, meter=False, set_auto_mask=True)
         return lats, lons, h
 
@@ -606,7 +593,7 @@ class Sentinel1EtadBurst:
                              transpose=True, meter=False):
         correction = {}
         for dim, field in prm_list.items():
-            correction[dim] = self.__get_etad_param(
+            correction[dim] = self._get_etad_param(
                 field, set_auto_mask=set_auto_mask, transpose=transpose,
                 meter=meter)
 

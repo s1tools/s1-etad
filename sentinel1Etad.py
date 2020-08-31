@@ -250,10 +250,11 @@ class Sentinel1Etad:
             swath_list = self.swath_list
 
         polys = []
-        for swath_ in swath_list:
-            for poly_ in self.__getitem__(swath_).get_footprint():
+        for swath_name in swath_list:
+            for poly_ in self[swath_name].get_footprint():
                 polys.append(poly_)
 
+        # TODO: check, Sentinel1EtadSwath.get_footprint returns a MultiPolygon
         return polys
 
     def _swath_merger(self, burst_variable, swath_list=None,
@@ -367,9 +368,7 @@ class Sentinel1EtadSwath:
         if burst_index_list is None:
             burst_index_list = self.burst_list
 
-        footprints = [
-            self.__getitem__(bix).get_footprint() for bix in burst_index_list
-        ]
+        footprints = [self[bix].get_footprint() for bix in burst_index_list]
         return MultiPolygon(footprints)
 
     def merge_sum_correction(self, burst_index_list=None, set_auto_mask=True,
@@ -467,8 +466,8 @@ class Sentinel1EtadSwath:
             burst_index_list = self.burst_list
 
         # Find what is the extent of the acquisition in azimuth
-        first_burst = self.__getitem__(burst_index_list[0])
-        last_burst = self.__getitem__(burst_index_list[-1])
+        first_burst = self[burst_index_list[0]]
+        last_burst = self[burst_index_list[-1]]
 
         if azimuthTimeMin is None:
             t0 = first_burst._grp['azimuth'][0]
@@ -489,7 +488,7 @@ class Sentinel1EtadSwath:
         debursted_var = np.zeros((num_lines, num_samples))
 
         for b, burst_index in enumerate(burst_index_list):
-            burst_ = self.__getitem__(burst_index)
+            burst_ = self[burst_index]
             assert(dt == burst_.sampling['y']), \
                 'The azimuth sampling is changing long azimuth'
             assert(first_burst._grp.gridStartRangeTime0 ==

@@ -210,15 +210,19 @@ class Sentinel1Etad:
 
         Parameters
         ----------
-        selection : pandas.Dataframe
-            it is the result of a Sentinel1Etad.query_burst query.
+        selection : list(str) or pd.Dataframe, optional
+            the list of selected swath IDs or the result of a
+            Sentinel1Etad.query_burst query.
             If the selection is None (default) the iteration is performed
             on all the swaths of the product.
         """
         if selection is None:
             selection = self.burst_catalogue
 
-        for swath_name in selection.swathID.unique():
+        if isinstance(selection, pd.DataFrame):
+            selection = selection.swathID.unique()
+
+        for swath_name in selection:
             yield self[swath_name]
 
     def xpath_to_list(self, xpath, dtype=None, namespace=None,
@@ -350,16 +354,19 @@ class Sentinel1EtadSwath:
 
         Parameters
         ----------
-        selection : pd.Dataframe
-            it is the result of a Sentinel1Etad.query_burst query.
+        selection : list(int) or pd.Dataframe, optional
+            the list of selected bursts or result of a
+            Sentinel1Etad.query_burst query.
             If the selection is None (default) the iteration is performed
             on all the burst of the swath.
         """
         if selection is None:
             index_list = self.burst_list
-        else:
+        elif isinstance(selection, pd.DataFrame):
             idx = selection.swathID == self.swath_id
             index_list = selection.bIndex[idx].values
+        else:
+            index_list = selection
 
         for burst_index in index_list:
             yield self[burst_index]

@@ -223,6 +223,17 @@ class Sentinel1Etad:
 
         return df.loc[ix0]
 
+    def _selection_to_swath_list(self, selection=None):
+        if selection is None:
+            selection = self.burst_catalogue
+
+        if isinstance(selection, pd.DataFrame):
+            selection = selection.swathID.unique()
+        elif isinstance(selection, str):
+            selection = [selection]
+
+        return selection
+
     def iter_swaths(self, selection=None):
         """Iterate over swaths according to the specified selection.
 
@@ -234,12 +245,7 @@ class Sentinel1Etad:
             If the selection is None (default) the iteration is performed
             on all the swaths of the product.
         """
-        if selection is None:
-            selection = self.burst_catalogue
-
-        if isinstance(selection, pd.DataFrame):
-            selection = selection.swathID.unique()
-
+        selection = self._selection_to_swath_list(selection)
         for swath_name in selection:
             yield self[swath_name]
 
@@ -280,11 +286,8 @@ class Sentinel1Etad:
         # TODO: check, Sentinel1EtadSwath.get_footprint returns a MultiPolygon
         return polys
 
-    def _swath_merger(self, burst_var, swath_list=None, burst_index_list=None,
-                      set_auto_mask=False, transpose=True, meter=False):
-        if swath_list is None:
-            swath_list = self.swath_list
-
+    def _swath_merger(self, burst_var, selection=None, set_auto_mask=False,
+                      transpose=True, meter=False):
         sampling = self.grid_sampling
 
         first_slant_range_time = self.ds.rangeTimeMin
@@ -302,10 +305,10 @@ class Sentinel1Etad:
 
         img = np.zeros((num_lines, num_samples))
 
-        for swath_name in swath_list:
-            swath = self[swath_name]
-            dd_ = swath._burst_merger(burst_var,
-                                      burst_index_list=burst_index_list,
+        for swath in self.iter_swaths(selection):
+            # NOTE: use the private "Sentinel1EtadSwath._burst_merger" method
+            # to be able to work only on the specified NetCDF variable
+            dd_ = swath._burst_merger(burst_var, selection=selection,  # noqa
                                       set_auto_mask=set_auto_mask,
                                       transpose=transpose, meter=meter)
             line_ofs = np.round(
@@ -320,13 +323,11 @@ class Sentinel1Etad:
 
         return img
 
-    def _core_merge_correction(self, prm_list, swath_list=None,
-                               burst_index_list=None, set_auto_mask=True,
-                               transpose=True, meter=False):
+    def _core_merge_correction(self, prm_list, selection=None,
+                               set_auto_mask=True, transpose=True, meter=False):
         dd = {}
         for dim, field in prm_list.items():
-            dd_ = self._swath_merger(field, swath_list=swath_list,
-                                     burst_index_list=burst_index_list,
+            dd_ = self._swath_merger(field, selection=selection,
                                      set_auto_mask=set_auto_mask,
                                      transpose=transpose, meter=meter)
             dd[dim] = dd_[field]
@@ -347,15 +348,13 @@ class Sentinel1Etad:
         return dd
 
     def merge_correction(self, name: CorrectionType = ECorrectionType.SUM,
-                         swath_list=None, burst_index_list=None,
-                         set_auto_mask=True, transpose=True, meter=False):
+                         selection=None, set_auto_mask=True, transpose=True,
+                         meter=False):
         correction_type = ECorrectionType(name)  # check values
         prm_list = _CORRECTION_NAMES_MAP[correction_type.value]
-        return self._core_merge_correction(prm_list, swath_list=swath_list,
-                                           burst_index_list=burst_index_list,
+        return self._core_merge_correction(prm_list, selection=selection,
                                            set_auto_mask=set_auto_mask,
-                                           transpose=transpose,
-                                           meter=meter)
+                                           transpose=transpose, meter=meter)
 
     def to_kml(self, kml_file):
         kml = simplekml.Kml()
@@ -432,6 +431,16 @@ class Sentinel1EtadSwath:
         first_burst = self[first_burst_index]
         return first_burst.sampling
 
+    def _selection_to_burst_index_list(self, selection=None):
+        if selection is None:
+            index_list = self.burst_list
+        elif isinstance(selection, pd.DataFrame):
+            idx = selection.swathID == self.swath_id
+            index_list = selection.bIndex[idx].values
+        else:
+            index_list = selection
+        return index_list
+
     def iter_bursts(self, selection=None):
         """Iterate over bursts according to the specified selection.
 
@@ -443,14 +452,7 @@ class Sentinel1EtadSwath:
             If the selection is None (default) the iteration is performed
             on all the burst of the swath.
         """
-        if selection is None:
-            index_list = self.burst_list
-        elif isinstance(selection, pd.DataFrame):
-            idx = selection.swathID == self.swath_id
-            index_list = selection.bIndex[idx].values
-        else:
-            index_list = selection
-
+        index_list = self._selection_to_burst_index_list(selection)
         for burst_index in index_list:
             yield self[burst_index]
 
@@ -465,8 +467,8 @@ class Sentinel1EtadSwath:
         footprints = [self[bix].get_footprint() for bix in burst_index_list]
         return MultiPolygon(footprints)
 
-    def _burst_merger(self, burst_var, burst_index_list=None,
-                      azimuthTimeMin=None, azimuthTimeMax=None,
+    def _burst_merger(self, burst_var, selection=None,
+                      az_time_min=None, az_time_max=None,
                       set_auto_mask=False, transpose=True, meter=False):
         """Low level method to de-burst a NetCDF variable.
 
@@ -477,12 +479,12 @@ class Sentinel1EtadSwath:
         ----------
         burst_var : str
             one of the burst netcdf variables
-        burst_index_list : list
+        selection : list or pandas.DataFRame
             list of selected bursts (by default all bursts are selected)
-        azimuthTimeMin : float
+        az_time_min : float
             minimum azimuth time of the merged swath
              (relative to the reference annotated in the NetCDF root)
-        azimuthTimeMax : float
+        az_time_max : float
             maximum azimuth tim eof the merged swath
             (relative to the reference annotated in the NetCDF root)
         set_auto_mask : bool
@@ -504,24 +506,23 @@ class Sentinel1EtadSwath:
             :sampling: a dictionary containing the sampling along the
             'x' and 'y' directions and the 'unit'
         """
-        if burst_index_list is None:
-            burst_index_list = self.burst_list
+        burst_index_list = self._selection_to_burst_index_list(selection)
 
         # Find what is the extent of the acquisition in azimuth
         first_burst = self[burst_index_list[0]]
         last_burst = self[burst_index_list[-1]]
 
         first_azimuth, range_ = first_burst.get_burst_grid()
-        if azimuthTimeMin is None:
+        if az_time_min is None:
             t0 = first_azimuth[0]
         else:
-            t0 = azimuthTimeMin
+            t0 = az_time_min
 
         last_azimuth, _ = last_burst.get_burst_grid()
-        if azimuthTimeMax is None:
+        if az_time_max is None:
             t1 = last_azimuth[-1]
         else:
-            t1 = azimuthTimeMax
+            t1 = az_time_max
 
         # azimuth grid sampling
         dt = first_burst.sampling['y']
@@ -531,8 +532,7 @@ class Sentinel1EtadSwath:
 
         debursted_var = np.zeros((num_lines, num_samples))
 
-        for b, burst_index in enumerate(burst_index_list):
-            burst_ = self[burst_index]
+        for burst_ in self.iter_bursts(burst_index_list):
             assert(dt == burst_.sampling['y']), \
                 'The azimuth sampling is changing long azimuth'
             assert(first_burst.sampling_start['x'] ==
@@ -543,9 +543,11 @@ class Sentinel1EtadSwath:
             az_time_, rg_time_ = burst_.get_burst_grid()
             line_index_ = np.round((az_time_ - t0) / dt).astype(np.int)
 
-            var_ = burst_._get_etad_param(
-                burst_var, set_auto_mask=set_auto_mask, transpose=transpose,
-                meter=meter)
+            # NOTE: use the private "Sentinel1EtadBurst._get_etad_param" method
+            # to be able to work only on the specified NetCDF variable
+            var_ = burst_._get_etad_param(burst_var,  # noqa
+                                          set_auto_mask=set_auto_mask,
+                                          transpose=transpose, meter=meter)
 
             debursted_var[line_index_, :] = var_
 
@@ -558,11 +560,11 @@ class Sentinel1EtadSwath:
 
         return dd
 
-    def _core_merge_correction(self, prm_list, burst_index_list=None,
+    def _core_merge_correction(self, prm_list, selection=None,
                                set_auto_mask=True, transpose=True, meter=False):
         dd = {}
         for dim, field in prm_list.items():
-            dd_ = self._burst_merger(field, burst_index_list=burst_index_list,
+            dd_ = self._burst_merger(field, selection=selection,
                                      set_auto_mask=set_auto_mask,
                                      transpose=transpose, meter=meter)
             dd[dim] = dd_[field]
@@ -583,12 +585,12 @@ class Sentinel1EtadSwath:
         return dd
 
     def merge_correction(self, name: CorrectionType = ECorrectionType.SUM,
-                         burst_index_list=None, set_auto_mask=True,
+                         selection=None, set_auto_mask=True,
                          transpose=True, meter=False):
         correction_type = ECorrectionType(name)  # check values
         prm_list = _CORRECTION_NAMES_MAP[correction_type.value]
         return self._core_merge_correction(prm_list,
-                                           burst_index_list=burst_index_list,
+                                           selection=selection,
                                            set_auto_mask=set_auto_mask,
                                            transpose=transpose,
                                            meter=meter)

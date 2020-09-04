@@ -288,19 +288,37 @@ class Sentinel1Etad:
 
     def _swath_merger(self, burst_var, selection=None, set_auto_mask=False,
                       transpose=True, meter=False):
-        sampling = self.grid_sampling
+        if selection is None:
+            df = self.burst_catalogue
+        elif not isinstance(selection, pd.DataFrame):
+            df = self.query_burst(swath=selection)
+        else:
+            assert isinstance(selection, pd.DataFrame)
+            df = selection
 
-        first_slant_range_time = self.ds.rangeTimeMin
-        last_slant_range_time = self.ds.rangeTimeMax
-        first_azimuth_time = parser.parse(self.ds.azimuthTimeMin)
-        last_azimuth_time = parser.parse(self.ds.azimuthTimeMax)
+        # NOTE: assume a specific order of swath IDs
+        first_swath = self[df.swathID.min()]
+        near_burst = first_swath[first_swath.burst_list[0]]
+        last_swath = self[df.swathID.max()]
+        far_burst = last_swath[last_swath.burst_list[0]]
+
+        rg_first_time = near_burst.sampling_start['x']
+        rg_last_time = (far_burst.sampling_start['x'] +
+                        far_burst.sampling['x'] * far_burst.samples)
+        az_first_time = df.azimuthTimeMin.min()
+        az_last_time = df.azimuthTimeMax.max()
+        az_ref_time = parser.parse(self.ds.azimuthTimeMin)
+        az_first_time_rel = (az_first_time - az_ref_time).total_seconds()
+
+        sampling = self.grid_sampling
+        dx = sampling['x']
+        dy = sampling['y']
 
         num_samples = np.round(
-            (last_slant_range_time-first_slant_range_time) / sampling['x']
+            (rg_last_time - rg_first_time) / dx
         ).astype(np.int) + 1
         num_lines = np.round(
-            (last_azimuth_time - first_azimuth_time).total_seconds() /
-            sampling['y']
+            (az_last_time - az_first_time).total_seconds() / dy
         ).astype(np.int) + 1
 
         img = np.zeros((num_lines, num_samples))
@@ -311,17 +329,22 @@ class Sentinel1Etad:
             dd_ = swath._burst_merger(burst_var, selection=selection,  # noqa
                                       set_auto_mask=set_auto_mask,
                                       transpose=transpose, meter=meter)
-            line_ofs = np.round(
-                dd_['first_azimuth_time'] / sampling['y']).astype(np.int)
-            sample_ofs = np.round(
-                (dd_['first_slant_range_time']) / sampling['x']).astype(np.int)
+            yoffset = dd_['first_azimuth_time'] - az_first_time_rel
+            xoffset = dd_['first_slant_range_time'] - rg_first_time
+            line_ofs = np.round(yoffset / dy).astype(np.int)
+            sample_ofs = np.round(xoffset / dx).astype(np.int)
 
             slice_y = slice(line_ofs, line_ofs + dd_[burst_var].shape[0])
             slice_x = slice(sample_ofs, sample_ofs + dd_[burst_var].shape[1])
 
             img[slice_y, slice_x] = dd_[burst_var]
 
-        return img
+        return {
+            burst_var: img,
+            'first_azimuth_time': az_first_time,
+            'first_slant_range_time': rg_first_time,
+            'sampling': sampling,
+        }
 
     def _core_merge_correction(self, prm_list, selection=None,
                                set_auto_mask=True, transpose=True, meter=False):
@@ -336,15 +359,34 @@ class Sentinel1Etad:
             dd['first_slant_range_time'] = dd_['first_slant_range_time']
 
         dd['unit'] = 'm' if meter else 's'
-        dd['lats'] = self._swath_merger('lats', transpose=transpose,
-                                        meter=False,
-                                        set_auto_mask=set_auto_mask)
-        dd['lons'] = self._swath_merger('lons', transpose=transpose,
-                                        meter=False,
-                                        set_auto_mask=set_auto_mask)
-        dd['height'] = self._swath_merger('height', transpose=transpose,
-                                          meter=False,
-                                          set_auto_mask=set_auto_mask)
+
+        # To compute lat/lon/h make a new selection with all gaps filled
+        swath_list = self._selection_to_swath_list(selection)
+        near_swath = min(swath_list)
+        far_swath = max(swath_list)
+        idx = self.burst_catalogue.swathID >= near_swath
+        idx &= self.burst_catalogue.swathID <= far_swath
+        swaths = self.burst_catalogue.swathID[idx].unique()
+
+        data = dd['x' if 'x' in prm_list else 'y']
+        lines = data.shape[0]
+        duration = lines * self.grid_sampling['y']
+        duration = np.float64(duration * 1e9).astype('timedelta64[ns]')
+        first_time = dd['first_azimuth_time']
+        last_time = first_time + duration
+
+        filled_selection = self.query_burst(first_time=first_time,
+                                            last_time=last_time, swath=swaths)
+
+        dd['lats'] = self._swath_merger('lats', selection=filled_selection,
+                                        set_auto_mask=set_auto_mask,
+                                        transpose=transpose, meter=False)
+        dd['lons'] = self._swath_merger('lons', selection=filled_selection,
+                                        set_auto_mask=set_auto_mask,
+                                        transpose=transpose, meter=False)
+        dd['height'] = self._swath_merger('height', selection=filled_selection,
+                                          set_auto_mask=set_auto_mask,
+                                          transpose=transpose, meter=False)
         return dd
 
     def merge_correction(self, name: CorrectionType = ECorrectionType.SUM,
@@ -352,9 +394,12 @@ class Sentinel1Etad:
                          meter=False):
         correction_type = ECorrectionType(name)  # check values
         prm_list = _CORRECTION_NAMES_MAP[correction_type.value]
-        return self._core_merge_correction(prm_list, selection=selection,
-                                           set_auto_mask=set_auto_mask,
-                                           transpose=transpose, meter=meter)
+        correction = self._core_merge_correction(prm_list, selection=selection,
+                                                 set_auto_mask=set_auto_mask,
+                                                 transpose=transpose,
+                                                 meter=meter)
+        correction['name'] = correction_type.value
+        return correction
 
     def to_kml(self, kml_file):
         kml = simplekml.Kml()
@@ -512,9 +557,8 @@ class Sentinel1EtadSwath:
         first_burst = self[burst_index_list[0]]
         last_burst = self[burst_index_list[-1]]
 
-        first_azimuth, range_ = first_burst.get_burst_grid()
         if az_time_min is None:
-            t0 = first_azimuth[0]
+            t0 = first_burst.sampling_start['y']
         else:
             t0 = az_time_min
 
@@ -528,7 +572,7 @@ class Sentinel1EtadSwath:
         dt = first_burst.sampling['y']
 
         num_lines = np.round((t1 - t0) / dt).astype(np.int) + 1
-        num_samples = range_.size
+        num_samples = first_burst.samples
 
         debursted_var = np.zeros((num_lines, num_samples))
 
@@ -551,14 +595,12 @@ class Sentinel1EtadSwath:
 
             debursted_var[line_index_, :] = var_
 
-        dd = {
+        return {
             burst_var: debursted_var,
             'first_azimuth_time': t0,
             'first_slant_range_time': first_burst.sampling_start['x'],
             'sampling': first_burst.sampling,
         }
-
-        return dd
 
     def _core_merge_correction(self, prm_list, selection=None,
                                set_auto_mask=True, transpose=True, meter=False):
@@ -589,11 +631,13 @@ class Sentinel1EtadSwath:
                          transpose=True, meter=False):
         correction_type = ECorrectionType(name)  # check values
         prm_list = _CORRECTION_NAMES_MAP[correction_type.value]
-        return self._core_merge_correction(prm_list,
-                                           selection=selection,
-                                           set_auto_mask=set_auto_mask,
-                                           transpose=transpose,
-                                           meter=meter)
+        correction = self._core_merge_correction(prm_list,
+                                                 selection=selection,
+                                                 set_auto_mask=set_auto_mask,
+                                                 transpose=transpose,
+                                                 meter=meter)
+        correction['name'] = correction_type.value
+        return correction
 
 
 class Sentinel1EtadBurst:

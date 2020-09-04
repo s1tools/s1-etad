@@ -170,7 +170,7 @@ class Sentinel1Etad:
         product_name : str
             Name of a real S1 product e.g.
             S1B_IW_SLC__1SDV_20190805T162509_20190805T162...SAFE
-        swath : list
+        swath : str or list
             list of swathID e.g. 'IW1' or ['IW1'] or ['IW1', 'IW2']
 
         Returns
@@ -199,7 +199,7 @@ class Sentinel1Etad:
                                                                     regex=True)
 
         if swath is not None:
-            if not isinstance(swath, list):
+            if isinstance(swath, str):
                 swath = [swath]
             ix0 = ix0 & df.swathID.isin(swath)
 

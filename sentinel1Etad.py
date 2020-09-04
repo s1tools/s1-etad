@@ -24,8 +24,8 @@ class Sentinel1Etad:
     Class to decode and access the elements of the Sentinel ETAD product
     which specification is governed by ETAD-DLR-PS-0014
 
-    The index operator [] implemented with the __getitem__ method returns a
-    Sentinel1EtadSwath class
+    The index operator [] (implemented with the __getitem__ method) returns
+    a Sentinel1EtadSwath instance.
     """
 
     def __init__(self, product):
@@ -132,7 +132,7 @@ class Sentinel1Etad:
         """Build the burst catalog.
 
         Parses the XML annotation dataset to create a panda DataFrame
-        containing all the elements allowing to index properly a burst
+        containing all the elements allowing to index properly a burst.
         """
         df = None
         for burst_ in self._annot.findall('.//etadBurst'):
@@ -160,23 +160,21 @@ class Sentinel1Etad:
                     swath=None):
         """Query the burst catalogue to retrieve the burst matching by time.
 
-        Parameters:
-        ------------
-            first_time : datetime
-                is set to None then set to the first time
+        Parameters
+        ----------
+        first_time : datetime
+            is set to None then set to the first time
+        last_time : datetime
+            if set to None the last_time = first_time
+        product_name : str
+            Name of a real S1 product e.g.
+            S1B_IW_SLC__1SDV_20190805T162509_20190805T162...SAFE
+        swath : list
+            list of swathID e.g. 'IW1' or ['IW1'] or ['IW1', 'IW2']
 
-            last_time : datetime
-                if set to None the last_time = first_time
-
-            product_name : str
-                Name of a real S1 product e.g.
-                S1B_IW_SLC__1SDV_20190805T162509_20190805T162...SAFE
-
-            swath : list
-                list of swathID e.g. 'IW1' or ['IW1'] or ['IW1', 'IW2']
-
-        Returns:
-        --------
+        Returns
+        -------
+        pandas.DataFrame
             Filtered panda dataframe
         """
         # first sort the burst by time
@@ -209,12 +207,12 @@ class Sentinel1Etad:
     def iter_swaths(self, selection=None):
         """Iterate over swaths according to the specified selection.
 
-        Parameters:
-        ------------
-            selection : pd.Dataframe
-                it is the result of a Sentinel1Etad.query_burst query.
-                If the selection is None (default) the iteration is performed
-                on all the swaths of the product.
+        Parameters
+        ----------
+        selection : pandas.Dataframe
+            it is the result of a Sentinel1Etad.query_burst query.
+            If the selection is None (default) the iteration is performed
+            on all the swaths of the product.
         """
         if selection is None:
             selection = self.burst_catalogue
@@ -246,7 +244,7 @@ class Sentinel1Etad:
     def get_footprint(self, swath_list=None):  # , merge=False
         """Return the footprints of all the bursts as MultiPolygon.
 
-        It calls in the back the get_footprint of the Sentinel1EtadBurst class
+        It calls in the back the get_footprint of the Sentinel1EtadBurst class.
         """
         if swath_list is None:
             swath_list = self.swath_list
@@ -351,12 +349,12 @@ class Sentinel1EtadSwath:
     def iter_bursts(self, selection=None):
         """Iterate over bursts according to the specified selection.
 
-        Parameters:
-        ------------
-            selection : pd.Dataframe
-                it is the result of a Sentinel1Etad.query_burst query.
-                If the selection is None (default) the iteration is performed
-                on all the burst of the swath.
+        Parameters
+        ----------
+        selection : pd.Dataframe
+            it is the result of a Sentinel1Etad.query_burst query.
+            If the selection is None (default) the iteration is performed
+            on all the burst of the swath.
         """
         if selection is None:
             index_list = self.burst_list
@@ -370,7 +368,7 @@ class Sentinel1EtadSwath:
     def get_footprint(self, burst_index_list=None):
         """Return the footprints of all the bursts as MultiPolygon.
 
-        It calls in the back the get_footprint of the Sentinel1EtadBurst class
+        It calls in the back the get_footprint of the Sentinel1EtadBurst class.
         """
         if burst_index_list is None:
             burst_index_list = self.burst_list
@@ -439,10 +437,38 @@ class Sentinel1EtadSwath:
         """Template method to de-burst a variables.
 
         The de-burst strategy is simple as the latest line is on top of the
-        oldest
+        oldest.
 
-        Parameter:
-            burst_var : one of the burst netcdf variables
+        Parameters
+        ----------
+        burst_var : str
+            one of the burst netcdf variables
+        burst_index_list : list
+            list of selected bursts (by default all bursts are selected)
+        azimuthTimeMin : float
+            minimum azimuth time of the merged swath
+             (relative to the reference annotated in the NetCDF root)
+        azimuthTimeMax : float
+            maximum azimuth tim eof the merged swath
+            (relative to the reference annotated in the NetCDF root)
+        set_auto_mask : bool
+            requested for netCDF4 to avoid retrieving a masked array
+        transpose : bool
+            requested to retrieve the correction in array following the
+            numpy convention for dimensions
+        meter : bool
+            transform the result in meters
+
+        Returns
+        -------
+        dict
+            a dictionary containing merged data and sampling information:
+
+            :<burst_var_name>: merged data for the selected burst_var
+            :first_azimuth_time: the relative azimuth first time
+            :first_slant_range_time: the relative (slant) range first time
+            :sampling: a dictionary containing the sampling along the
+            'x' and 'y' directions and the 'unit'
         """
         if burst_index_list is None:
             burst_index_list = self.burst_list
@@ -516,7 +542,7 @@ class Sentinel1EtadBurst:
     def get_footprint(self):
         """Return the footprint of ghe bursts as shapely.Polygon.
 
-        It gets the lat / lon / height grid and extract the 4 corners
+        It gets the lat / lon / height grid and extract the 4 corners.
         """
         # lats, lons = self.__get_etad_param('lats', set_auto_mask=True)
         lats = self.__get_etad_param('lats', set_auto_mask=True)
@@ -594,20 +620,25 @@ class Sentinel1EtadBurst:
 
         Puts the results in a dict.
 
-        Parameters:
-            set_auto_mask : bool
-                requested for netCDF4 to avoid retrieving a masked array
-            transpose : bool
-                requested to retrieve the correction in array following the
-                numpy convention for dimensions
-            meter : bool
-                transform the result in meters
+        Parameters
+        ----------
+        set_auto_mask : bool
+            requested for netCDF4 to avoid retrieving a masked array
+        transpose : bool
+            requested to retrieve the correction in array following the
+            numpy convention for dimensions
+        meter : bool
+            transform the result in meters
 
-        Returns:
-            correction : dict
-                x : correction in range
-                unit : 'm' or 's'
-                name : name of the correction
+        Returns
+        -------
+        dict
+            a dictionary containing the following items for the
+            requested correction:
+
+            :x: correction in range
+            :unit: 'm' or 's'
+            :name: name of the correction
         """
         prm_list = {'x': 'troposphericCorrectionRg'}
         correction = self._core_get_correction(prm_list, set_auto_mask,
@@ -621,20 +652,25 @@ class Sentinel1EtadBurst:
 
         Puts the results in a dict.
 
-        Parameters:
-            set_auto_mask : bool
-                requested for netCDF4 to avoid retrieving a masked array
-            transpose : bool
-                requested to retrieve the correction in array following the
-                numpy convention for dimensions
-            meter : bool
-                transform the result in meters
+        Parameters
+        ----------
+        set_auto_mask : bool
+            requested for netCDF4 to avoid retrieving a masked array
+        transpose : bool
+            requested to retrieve the correction in array following the
+            numpy convention for dimensions
+        meter : bool
+            transform the result in meters
 
-        Returns:
-            correction : dict
-                x : correction in range
-                unit : 'm' or 's'
-                name : name of the correction
+        Returns
+        -------
+        dict
+            a dictionary containing the following items for the
+            requested correction:
+
+            :x: correction in range
+            :unit: 'm' or 's'
+            :name: name of the correction
         """
         prm_list = {'x': 'ionosphericCorrectionRg'}
         correction = self._core_get_correction(prm_list, set_auto_mask,
@@ -648,21 +684,26 @@ class Sentinel1EtadBurst:
 
         Puts the results in a dict.
 
-        Parameters:
-            set_auto_mask : bool
-                requested for netCDF4 to avoid retrieving a masked array
-            transpose : bool
-                requested to retrieve the correction in array following the
-                numpy convention for dimensions
-            meter : bool
-                transform the result in meters
+        Parameters
+        ----------
+        set_auto_mask : bool
+            requested for netCDF4 to avoid retrieving a masked array
+        transpose : bool
+            requested to retrieve the correction in array following the
+            numpy convention for dimensions
+        meter : bool
+            transform the result in meters
 
-        Returns:
-            correction : dict
-                x : correction in range
-                y : correction in azimuth
-                unit : 'm' or 's'
-                name : name of the correction
+        Returns
+        -------
+        dict
+            a dictionary containing the following items for the
+            requested correction:
+
+            :x: correction in range
+            :y: correction in azimuth
+            :unit: 'm' or 's'
+            :name: name of the correction
         """
         prm_list = {'x': 'geodeticCorrectionRg', 'y': 'geodeticCorrectionAz'}
         correction = self._core_get_correction(prm_list, set_auto_mask,
@@ -676,20 +717,25 @@ class Sentinel1EtadBurst:
 
         Puts the results in a dict.
 
-        Parameters:
-            set_auto_mask : bool
-                requested for netCDF4 to avoid retrieving a masked array
-            transpose : bool
-                requested to retrieve the correction in array following the
-                numpy convention for dimensions
-            meter : bool
-                transform the result in meters
+        Parameters
+        ----------
+        set_auto_mask : bool
+            requested for netCDF4 to avoid retrieving a masked array
+        transpose : bool
+            requested to retrieve the correction in array following the
+            numpy convention for dimensions
+        meter : bool
+            transform the result in meters
 
-        Returns:
-            correction : dict
-                y : correction in azimuth
-                unit : 'm' or 's'
-                name : name of the correction
+        Returns
+        -------
+        dict
+            a dictionary containing the following items for the
+            requested correction:
+
+            :y: correction in azimuth
+            :unit: 'm' or 's'
+            :name: name of the correction
         """
         prm_list = {'y': 'bistaticCorrectionAz'}
         correction = self._core_get_correction(prm_list, set_auto_mask,
@@ -703,20 +749,25 @@ class Sentinel1EtadBurst:
 
         Puts the results in a dict.
 
-        Parameters:
-            set_auto_mask : bool
-                requested for netCDF4 to avoid retrieving a masked array
-            transpose : bool
-                requested to retrieve the correction in array following the
-                numpy convention for dimensions
-            meter : bool
-                transform the result in meters
+        Parameters
+        ----------
+        set_auto_mask : bool
+            requested for netCDF4 to avoid retrieving a masked array
+        transpose : bool
+            requested to retrieve the correction in array following the
+            numpy convention for dimensions
+        meter : bool
+            transform the result in meters
 
-        Returns:
-            correction : dict
-                x : correction in range
-                unit : 'm' or 's'
-                name : name of the correction
+        Returns
+        -------
+        dict
+            a dictionary containing the following items for the
+            requested correction:
+
+            :x: correction in range
+            :unit: 'm' or 's'
+            :name: name of the correction
         """
         prm_list = {'x': 'dopplerRangeShiftRg'}
         correction = self._core_get_correction(prm_list, set_auto_mask,
@@ -730,20 +781,25 @@ class Sentinel1EtadBurst:
 
         Puts the results in a dict.
 
-        Parameters:
-            set_auto_mask : bool
-                requested for netCDF4 to avoid retrieving a masked array
-            transpose : bool
-                requested to retrieve the correction in array following the
-                numpy convention for dimensions
-            meter : bool
-                transform the result in meters
+        Parameters
+        ----------
+        set_auto_mask : bool
+            requested for netCDF4 to avoid retrieving a masked array
+        transpose : bool
+            requested to retrieve the correction in array following the
+            numpy convention for dimensions
+        meter : bool
+            transform the result in meters
 
-        Returns:
-            correction : dict
-                y : correction in azimuth
-                unit : 'm' or 's'
-                name : name of the correction
+        Returns
+        -------
+        dict
+            a dictionary containing the following items for the
+            requested correction:
+
+            :y: correction in azimuth
+            :unit: 'm' or 's'
+            :name: name of the correction
         """
         prm_list = {'y': 'fmMismatchCorrectionAz'}
         correction = self._core_get_correction(prm_list, set_auto_mask,
@@ -757,21 +813,26 @@ class Sentinel1EtadBurst:
 
         Puts the results in a dict.
 
-        Parameters:
-            set_auto_mask : bool
-                requested for netCDF4 to avoid retrieving a masked array
-            transpose : bool
-                requested to retrieve the correction in array following the
-                 numpy convention for dimensions
-            meter : bool
-                transform the result in meters
+        Parameters
+        ----------
+        set_auto_mask : bool
+            requested for netCDF4 to avoid retrieving a masked array
+        transpose : bool
+            requested to retrieve the correction in array following the
+            numpy convention for dimensions
+        meter : bool
+            transform the result in meters
 
-        Returns:
-            correction : dict
-                x : correction in range
-                y : correction in azimuth
-                unit : 'm' or 's'
-                name : name of the correction
+        Returns
+        -------
+        dict
+            a dictionary containing the following items for the
+            requested correction:
+
+            :x: correction in range
+            :y: correction in azimuth
+            :unit: 'm' or 's'
+            :name: name of the correction
         """
         prm_list = {'x': 'sumOfCorrectionsRg', 'y': 'sumOfCorrectionsAz'}
         correction = self._core_get_correction(prm_list, set_auto_mask,
@@ -785,22 +846,28 @@ class Sentinel1EtadBurst:
 
         Puts the results in a dict.
 
-        Parameters:
-            name : the name of the desired correction
-            set_auto_mask : bool
-                requested for netCDF4 to avoid retrieving a masked array
-            transpose : bool
-                requested to retrieve the correction in array following the
-                numpy convention for dimensions
-            meter : bool
-                transform the result in meters
+        Parameters
+        ----------
+        name: str
+            the desired correction
+        set_auto_mask : bool
+            requested for netCDF4 to avoid retrieving a masked array
+        transpose : bool
+            requested to retrieve the correction in array following the
+            numpy convention for dimensions
+        meter : bool
+            transform the result in meters
 
-        Returns:
-            correction : dict
-                x : correction in range (if applicable)
-                y : correction in azimuth (if applicable)
-                unit : 'm' or 's'
-                name : name of the correction
+        Returns
+        -------
+        dict
+            a dictionary containing the following items for the
+            requested correction:
+
+            :x: correction in range (if applicable)
+            :y: correction in azimuth (if applicable)
+            :unit: 'm' or 's'
+            :name: name of the correction
         """
         try:
             method = getattr(self, f'get_{name}_correction')

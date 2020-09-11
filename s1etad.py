@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+
 import enum
 import pathlib
 import warnings
@@ -17,6 +18,8 @@ from dateutil import parser
 from shapely.geometry import Polygon, MultiPolygon
 import simplekml
 
+
+__version__ = '0.1.0'
 
 __all__ = [
     'Sentinel1Etad', 'Sentinel1EtadSwath', 'Sentinel1EtadBurst',

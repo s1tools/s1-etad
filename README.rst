@@ -1,6 +1,11 @@
 s1etad Python package
 ======================
 
+.. image:: https://img.shields.io/readthedocs/s1etad/latest.svg
+    :target: http://s1etad.readthedocs.org/
+    :alt: Documentation Status
+
+
 :copyright: 2020 Nuno Mirada, Antonio Valentino
 
 

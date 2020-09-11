@@ -1,1 +1,4 @@
 exclude SETAP_AUX_README.rst
+
+recursive-include docs *.py *.rst *.ipynb Makefile make.bat
+prune docs/_build

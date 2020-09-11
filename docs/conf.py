@@ -95,3 +95,16 @@ autodoc_mock_imports = [
     'shapely',
     'simplekml',
 ]
+
+# -- Options for ReadTheDocs integration -------------------------------------
+if os.environ.get('READTHEDOCS'):
+    html_theme = "default"
+
+master_doc = 'index'
+html_context = {
+    "display_gitlab": True,
+    "gitlab_user": "nuno.miranda",
+    "gitlab_repo": "s1-etad",
+    "gitlab_version": "master",
+    "conf_py_path": "docs",
+}

@@ -15,6 +15,7 @@ s1etad documentation
    :maxdepth: 2
 
    quickstart
+   notebooks/s1etad-tutorial
    api
    TODO
    news

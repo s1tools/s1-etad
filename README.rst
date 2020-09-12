@@ -9,6 +9,8 @@ s1etad Python package
 :copyright: 2020 Nuno Mirada, Antonio Valentino
 
 
+.. contents
+
 About
 -----
 
@@ -22,13 +24,13 @@ Main features provided are:
 
 * open and navigate all the S1-ETAD elements:
 
-  - product (:class:`s1etad.Sentinel1Etad`)
-  - swaths (:class:`s1etad.Sentinel1EtadSwath`)
-  - bursts (:class:`s1etad.Sentinel1EtadBurst`)
+  - product (|Sentinel1Etad| class)
+  - swaths (|Sentinel1EtadSwath| class)
+  - bursts (|Sentinel1EtadBurst| class)
 
 * inspect metadata
 * perform queries on bursts (by time, swath name, product name or any
-  combination) using the :attr:`Sentinel1Etad.burst_catalog`
+  combination) using the |Sentinel1Etad.burst_catalogue|
 * easy iteration
 * read corrections
 * perform correction mosaic: de-bursting and swath stitching (a basic
@@ -78,3 +80,10 @@ License
 The s1etad package is distributed unthe the terms of the MIT License.
 
 See ``LICENSE.txt`` for mare details.
+
+
+.. substitutions
+.. |Sentinel1Etad| replace:: ``Sentinel1Etad``
+.. |Sentinel1EtadSwath| replace:: ``Sentinel1EtadSwath``
+.. |Sentinel1EtadBurst| replace:: ``Sentinel1EtadBurst``
+.. |Sentinel1Etad.burst_catalogue| replace:: ``Sentinel1Etad.burst_catalogue``

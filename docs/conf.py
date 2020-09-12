@@ -25,13 +25,15 @@ author = 'Nuno Miranda <nuno.miranda@esa.int>'
 with open('../s1etad.py') as fd:
     s = fd.read()
 
+pattern = (
+    r'^__version__( )?=( )?'
+    r'(?P<q>[\'"])(?P<r>(?P<v>\d+\.\d+(\.\d+)?).*)(?P=q)'
+)
 
 # The short X.Y version
-pattern = r'^__version__( )?=( )?(?P<q>[\'"])(?P<v>\d+\.\d+(\.\d+))(?P=q)'
 version = re.search(pattern, s, re.M).group('v')
 
 # The full version, including alpha/beta/rc tags
-pattern = r'^__version__( )?=( )?(?P<q>[\'"])(?P<r>\d+\.\d+(\.\d+).*)(?P=q)'
 release = re.search(pattern, s, re.M).group('r')
 
 
@@ -65,7 +67,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+# html_theme = 'alabaster'
+# html_theme = 'default'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -98,9 +101,6 @@ autodoc_mock_imports = [
 ]
 
 # -- Options for ReadTheDocs integration -------------------------------------
-if os.environ.get('READTHEDOCS'):
-    html_theme = "default"
-
 master_doc = 'index'
 html_context = {
     "display_gitlab": True,

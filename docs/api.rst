@@ -4,6 +4,8 @@ s1etad module API
 .. automodule:: s1etad
 
 
+.. _Sentinel1Etad-class-label:
+
 Sentinel1Etad class
 -------------------
 
@@ -13,6 +15,8 @@ Sentinel1Etad class
    :show-inheritance:
 
 
+.. _Sentinel1EtadSwath-class-label:
+
 Sentinel1EtadSwath class
 ------------------------
 
@@ -21,6 +25,8 @@ Sentinel1EtadSwath class
    :undoc-members:
    :show-inheritance:
 
+
+.. _Sentinel1EtadBurst-class-label:
 
 Sentinel1EtadBurst class
 ------------------------

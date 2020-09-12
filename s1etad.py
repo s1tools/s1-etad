@@ -31,7 +31,7 @@ from shapely.geometry import Polygon, MultiPolygon
 import simplekml
 
 
-__version__ = '0.2.0'
+__version__ = '0.3.0.dev0'
 __all__ = [
     'Sentinel1Etad', 'Sentinel1EtadSwath', 'Sentinel1EtadBurst',
     'ECorrectionType',

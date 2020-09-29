@@ -50,6 +50,7 @@ Project links
 :documentation: https://s1etad.readthedocs.io
 :sources: https://gitlab.com/nuno.miranda/s1-etad
 :issues: https://gitlab.com/nuno.miranda/s1-etad/-/issues
+:conda package: https://anaconda.org/avalentino/s1etad
 
 
 Requirements
@@ -72,6 +73,10 @@ Installation
 To install the ``s1etad`` package simpy run the following command::
 
   $ python3 -m pip install s1etad
+
+In conda environments:
+
+  $ conda install -c avalentino -c conda-forge s1etad
 
 
 License

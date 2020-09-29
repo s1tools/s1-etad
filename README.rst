@@ -74,7 +74,7 @@ To install the ``s1etad`` package simpy run the following command::
 
   $ python3 -m pip install s1etad
 
-In conda environments:
+In conda environments::
 
   $ conda install -c avalentino -c conda-forge s1etad
 

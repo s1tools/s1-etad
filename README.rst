@@ -47,8 +47,8 @@ Project links
 -------------
 
 :download: https://pypi.org/project/s1etad
-:documentation: https://s1etad.readthedocs.io/en/latest
-                https://s1etad.readthedocs.io/en/stable
+:documentation: `latest <https://s1etad.readthedocs.io/en/latest>`_,
+                `stable <https://s1etad.readthedocs.io/en/stable>`_
 :sources: https://gitlab.com/nuno.miranda/s1-etad
 :issues: https://gitlab.com/nuno.miranda/s1-etad/-/issues
 :conda package: https://anaconda.org/avalentino/s1etad

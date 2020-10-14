@@ -1,5 +1,5 @@
-s1etad module API
-=================
+s1etad package API
+==================
 
 .. automodule:: s1etad
 
@@ -9,7 +9,7 @@ s1etad module API
 Sentinel1Etad class
 -------------------
 
-.. autoclass:: s1etad.Sentinel1Etad
+.. autoclass:: s1etad.product.Sentinel1Etad
    :members:
    :undoc-members:
    :show-inheritance:
@@ -20,7 +20,7 @@ Sentinel1Etad class
 Sentinel1EtadSwath class
 ------------------------
 
-.. autoclass:: s1etad.Sentinel1EtadSwath
+.. autoclass:: s1etad.product.Sentinel1EtadSwath
    :members:
    :undoc-members:
    :show-inheritance:
@@ -31,7 +31,7 @@ Sentinel1EtadSwath class
 Sentinel1EtadBurst class
 ------------------------
 
-.. autoclass:: s1etad.Sentinel1EtadBurst
+.. autoclass:: s1etad.product.Sentinel1EtadBurst
    :members:
    :undoc-members:
    :show-inheritance:
@@ -40,7 +40,7 @@ Sentinel1EtadBurst class
 ECorrectionType enum
 --------------------
 
-.. autoclass:: s1etad.ECorrectionType
+.. autoclass:: s1etad.product.ECorrectionType
    :members:
    :undoc-members:
    :show-inheritance:

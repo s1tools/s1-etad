@@ -1,17 +1,4 @@
-# -*- coding: utf-8 -*-
-
-"""Tools for easy access to Sentinel-1 Extended Timing Annotation Datasets.
-
-This module provides a set of classes to open and access all elements,
-data and meta-data, of the Sentinel-1 Extended Timing Annotation Datasets
-(S1-ETAD).
-
-Basic elements are:
-
-* :class:`Sentinel1Etad`
-* :class:`Sentinel1EtadSwath`
-* :class:`Sentinel1EtadBurst`
-"""
+"""S1-ETAD data model core classes."""
 
 import enum
 import pathlib
@@ -31,7 +18,6 @@ from shapely.geometry import Polygon, MultiPolygon
 import simplekml
 
 
-__version__ = '0.3.0.dev0'
 __all__ = [
     'Sentinel1Etad', 'Sentinel1EtadSwath', 'Sentinel1EtadBurst',
     'ECorrectionType',

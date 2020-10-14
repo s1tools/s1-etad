@@ -61,7 +61,7 @@ Requirements
 * `numpy <https://numpy.org>`_
 * `scipy <https://scipy.org>`_
 * `lxml <https://lxml.de>`_
-* `netCDF4 <http://github.com/Unidata/netcdf4-python>`_
+* `netCDF4 <https://github.com/Unidata/netcdf4-python>`_
 * `pandas <https://pandas.pydata.org>`_
 * `python-dateutil <https://dateutil.readthedocs.io>`_
 * `shapely <https://github.com/Toblerity/Shapely>`_

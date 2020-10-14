@@ -22,7 +22,7 @@ project = 's1etad'
 copyright = '2020, s1etad Developers'
 author = 'Nuno Miranda <nuno.miranda@esa.int>'
 
-with open('../s1etad.py') as fd:
+with open('../s1etad/__init__.py') as fd:
     s = fd.read()
 
 pattern = (

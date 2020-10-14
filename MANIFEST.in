@@ -1,4 +1,7 @@
-exclude SETAP_AUX_README.rst
+exclude setapaux.py SETAP_AUX_README.rst
+exclude s1etad-tutorial.ipynb
 
 recursive-include docs *.py *.rst *.ipynb Makefile make.bat
 prune docs/_build
+prune sample-products
+prune templates

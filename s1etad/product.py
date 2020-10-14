@@ -4,6 +4,7 @@ import enum
 import pathlib
 import warnings
 import functools
+import collections
 from typing import Union
 
 import numpy as np
@@ -37,6 +38,20 @@ class ECorrectionType(enum.Enum):
 
 
 CorrectionType = Union[ECorrectionType, str]
+
+
+_STATS_TAG_MAP = {
+    ECorrectionType.TROPOSPHERIC: 'troposphericCorrection',
+    ECorrectionType.IONOSPHERIC: 'ionosphericCorrection',
+    ECorrectionType.GEODETIC: 'geodeticCorrection',
+    ECorrectionType.BISTATIC: 'bistaticCorrection',
+    ECorrectionType.DOPPLER: 'dopplerRangeShift',
+    ECorrectionType.FMRATE: 'fmMismatchCorrection',
+    ECorrectionType.SUM: 'sumOfCorrections',
+}
+
+
+Statistics = collections.namedtuple('Statistics', ['min', 'mean', 'max'])
 
 
 class Sentinel1Etad:
@@ -285,6 +300,63 @@ class Sentinel1Etad:
             return ll.item(0)
         else:
             return ll
+
+    def get_statistics(self, correction, meter=False):
+        """Return the global statistic value of the specified correction.
+
+        The returned value is the pre-computed one that is stored in the
+        XML annotation file of the product.
+
+        Parameters
+        ----------
+        correction : str or ECorrectionType
+            the corrections for which the statistic value is requested
+        meter : bool
+            if set to True then the returned value is expressed in meters,
+            otherwise it is expressed in seconds (default: False)
+
+        Returns
+        -------
+        dict
+            a dictionary containing :class:`Statistics` (min, mean and max)
+            for all available components of the specified correction:
+
+            :x:
+                a :class:`Statistics` instance relative to the range
+                component of the specified correction
+            :y:
+                a :class:`Statistics` instance relative to the azimuth
+                component of the specified correction
+            :unit:
+                the units of the returned statistics ("m" or "s")
+        """
+        units = 'm' if meter else 's'
+
+        stat_xp = './qualityAndStatistics'
+        target = ECorrectionType(correction)
+        target_tag = _STATS_TAG_MAP[target]
+
+        statistics = {'unit': units}
+
+        # NOTE: looping on element and heuristic test on tags is necessary
+        #       due to inconsistent naming of range and azimuth element
+        # TODO: report the inconsistency to DLR? (TBD)
+        correction_elem = self._annot.find(f'{stat_xp}/{target_tag}')
+        for elem in correction_elem:
+            if 'range' in elem.tag:
+                direction = 'x'
+            elif 'azimuth' in elem.tag:
+                direction = 'y'
+            else:
+                continue
+
+            statistics[direction] = Statistics(
+                float(elem.findtext(f'min[@unit="{units}"]')),
+                float(elem.findtext(f'mean[@unit="{units}"]')),
+                float(elem.findtext(f'max[@unit="{units}"]')),
+            )
+
+        return statistics
 
     def get_footprint(self, selection=None, merge=False):
         """Return the footprints of all the bursts as MultiPolygon.

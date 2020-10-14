@@ -13,6 +13,7 @@ s1etad v0.3.0 (UNRELEASED)
     single "merged" footprint; by default the method returns the set of
     footprints of all bursts
 
+* New :meth:`s1etad.product.Sentinel1Etad.get_statistics` method.
 * Documentation:
 
   - added instructions to install via conda packages

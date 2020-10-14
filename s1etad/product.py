@@ -280,12 +280,6 @@ class Sentinel1Etad:
         for swath_name in selection:
             yield self[swath_name]
 
-    def xpath_to_list(self, xpath, dtype=None, namespace=None,
-                      parse_time_func=None):
-        return self._xpath_to_list(self._annot, xpath, dtype=dtype,
-                                   namespace=namespace,
-                                   parse_time_func=parse_time_func)
-
     @staticmethod
     def _xpath_to_list(root, xpath, dtype=None, namespace=None,
                        parse_time_func=None):

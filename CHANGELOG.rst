@@ -16,6 +16,8 @@ s1etad v0.3.0 (UNRELEASED)
 * New :meth:`s1etad.product.Sentinel1Etad.get_statistics` method.
 * Added missing attributes to :class:`s1etad.product.Sentinel1EtadSwath` and
   :class:`s1etad.product.Sentinel1EtadBurst` classes.
+* Removed :meth:`s1etad.product.Sentinel1Etad.xpath_to_list` method from
+  the public API (the private one is still available)
 * Documentation:
 
   - added instructions to install via conda packages

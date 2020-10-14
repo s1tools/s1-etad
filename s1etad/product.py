@@ -15,6 +15,8 @@ import pandas as pd
 from dateutil import parser
 
 from shapely.geometry import Polygon, MultiPolygon
+import shapely.ops
+
 import simplekml
 
 
@@ -284,20 +286,31 @@ class Sentinel1Etad:
         else:
             return ll
 
-    def get_footprint(self, swath_list=None):  # , merge=False  # TODO
+    def get_footprint(self, selection=None, merge=False):
         """Return the footprints of all the bursts as MultiPolygon.
 
         It calls in the back the get_footprint of the Sentinel1EtadBurst class.
+
+        Parameters
+        ----------
+        selection : list(str) or pd.Dataframe, optional
+            the list of selected swath IDs or the result of a
+            Sentinel1Etad.query_burst query.
+            If the selection is None (default) the iteration is performed
+            on all the swaths of the product.
+        merge : bool
+            if set to True return a single polygon that is the union of the
+            footprints of all bursts
         """
-        if swath_list is None:
-            swath_list = self.swath_list
-
         polys = []
-        for swath_name in swath_list:
-            for poly_ in self[swath_name].get_footprint():
-                polys.append(poly_)
+        for swath in self.iter_swaths(selection):
+            polys.extend(swath.get_footprint(selection))
 
-        # TODO: check, Sentinel1EtadSwath.get_footprint returns a MultiPolygon
+        if merge:
+            polys = shapely.ops.cascaded_union(polys)
+        else:
+            polys = MultiPolygon(polys)
+
         return polys
 
     def _swath_merger(self, burst_var, selection=None, set_auto_mask=False,
@@ -515,16 +528,29 @@ class Sentinel1EtadSwath:
         for burst_index in index_list:
             yield self[burst_index]
 
-    def get_footprint(self, burst_index_list=None):
+    def get_footprint(self, selection=None, merge=False):
         """Return the footprints of all the bursts as MultiPolygon.
 
         It calls in the back the get_footprint of the Sentinel1EtadBurst class.
-        """
-        if burst_index_list is None:
-            burst_index_list = self.burst_list
 
-        footprints = [self[bix].get_footprint() for bix in burst_index_list]
-        return MultiPolygon(footprints)
+        Parameters
+        ----------
+        selection : list(int) or pd.Dataframe, optional
+            the list of selected bursts or result of a
+            Sentinel1Etad.query_burst query.
+            If the selection is None (default) the iteration is performed
+            on all the burst of the swath.
+        merge : bool
+            if set to True return a single polygon that is the union of the
+            footprints of all bursts
+        """
+        polys = [burst.get_footprint() for burst in self.iter_bursts(selection)]
+        if merge:
+            polys = shapely.ops.cascaded_union(polys)
+        else:
+            polys = MultiPolygon(polys)
+
+        return polys
 
     def _burst_merger(self, burst_var, selection=None,
                       az_time_min=None, az_time_max=None,

@@ -5,6 +5,14 @@ s1etad v0.3.0 (UNRELEASED)
 --------------------------
 
 * Now ``s1etad`` is a package.
+* Improved ``get_gootprint`` methods:
+
+  - support for extended selection semantics (also accept the result of
+    a query as parameter)
+  - support for the ``merge`` option: now it is possible to request a
+    single "merged" footprint; by default the method returns the set of
+    footprints of all bursts
+
 * Documentation:
 
   - added instructions to install via conda packages

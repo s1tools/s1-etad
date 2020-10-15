@@ -29,6 +29,11 @@ class Sentinel1EtadKmlWriter:
         self.etad = etad
         self.etad_file = self.etad.product
 
+        # TODO: should depend on the output filename
+        self._kmzdir = pathlib.Path(self.etad_file.stem)
+        if self._kmzdir.exists():
+            raise FileExistsError(
+                f'output path already exists "{self._kmzdir}"')
         self.kml = Kml()
         self.kml_root = self.kml.newfolder(name=self.etad_file.stem)
         self._set_timespan()
@@ -57,17 +62,17 @@ class Sentinel1EtadKmlWriter:
 
     def save(self, outpath='preview.kmz'):
         outpath = pathlib.Path(outpath)
-        assert outpath.suffix.lower() in {'.kml', '.kmz'}
-        # dir_ = outpath.with_suffix('')
-        dir_ = pathlib.Path('doc')
-        dir_.mkdir(exist_ok=True)
-        self.kml.save(dir_ / 'doc.kml')
+        assert outpath.suffix.lower() in {'.kml', '.kmz', ''}
+        self._kmzdir.mkdir(exist_ok=True)
+        self.kml.save(self._kmzdir / 'doc.kml')
 
         if outpath.name.lower().endswith('.kmz'):
             shutil.make_archive(str(outpath.with_suffix('')),
-                                format='zip', root_dir=str(dir_))
+                                format='zip', root_dir=str(self._kmzdir))
             shutil.move(outpath.with_suffix('.zip'), outpath)
-            shutil.rmtree(dir_)
+            shutil.rmtree(self._kmzdir)
+        else:
+            shutil.move(self._kmzdir, outpath)
 
     def write_overall_footprint(self):
         # overall footprints
@@ -160,7 +165,8 @@ class Sentinel1EtadKmlWriter:
                     color_table = Colorizer(cor_min, cor_max)
                     gdal_palette = color_table.gdal_palette()
 
-                color_table.build_colorbar(f"doc/{correction}_{dim}_cb.png")
+                color_table.build_colorbar(
+                    self._kmzdir / f'{correction}_{dim}_cb.png')
 
                 screen = kml_cor_dir.newscreenoverlay(name='ScreenOverlay')
                 screen.icon.href = f"{correction}_{dim}_cb.png"
@@ -234,7 +240,7 @@ class Sentinel1EtadKmlWriter:
                         burst_img = f'burst_{swath_}_{bix}_{correction}_{dim}'
                         ground.icon.href = burst_img + '.tiff'
 
-                        self.array2raster('doc/' + burst_img, cor,
+                        self.array2raster(self._kmzdir / burst_img, cor,
                                           color_table=gdal_palette,
                                           pixel_depth=pixel_depth,
                                           driver='GTiff',
@@ -253,14 +259,14 @@ class Sentinel1EtadKmlWriter:
         rows = array.shape[0]
 
         if driver == 'GTiff':
-            outfile += '.tiff'
+            outfile = outfile.with_suffix('.tiff')
         elif driver == 'PNG':
-            outfile += '.png'
+            outfile = outfile.with_suffix('.png')
         else:
             raise RuntimeError(f'unexpected driver: {driver}')
 
         driver = gdal.GetDriverByName(driver)
-        outraster = driver.Create(outfile, cols, rows, 1, pixel_depth)
+        outraster = driver.Create(str(outfile), cols, rows, 1, pixel_depth)
 
         # outRaster.SetGeoTransform(
         #     (originX, pixelWidth, 0, originY, 0, pixelHeight))
@@ -320,7 +326,7 @@ class Colorizer:
         cb1.set_label('[meters]', rotation=90, color='k')
         # This is called from plotpages, in <plotdir>.
         pathlib.Path(cb_filename).parent.mkdir(exist_ok=True)
-        pyplot.savefig(cb_filename, transparent=False)
+        pyplot.savefig(str(cb_filename), transparent=False)
 
 
 def etad_to_kmz(etad, outpath=None, *args, **kargs):

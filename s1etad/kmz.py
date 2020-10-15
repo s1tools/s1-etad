@@ -25,9 +25,9 @@ __all__ = ['etad_to_kmz', 'Sentinel1EtadKmlWriter']
 
 
 class Sentinel1EtadKmlWriter:
-    def __init__(self, etad_file):
-        self.etad_file = pathlib.Path(etad_file)
-        self.etad = Sentinel1Etad(etad_file)
+    def __init__(self, etad):
+        self.etad = etad
+        self.etad_file = self.etad.product
 
         self.kml = Kml()
         self.kml_root = self.kml.newfolder(name=self.etad_file.stem)
@@ -322,11 +322,11 @@ class Colorizer:
 
 
 def etad_to_kmz(etad, outpath=None):
-    if isinstance(etad, Sentinel1Etad):
-        etad = etad.product
+    if not isinstance(etad, Sentinel1Etad):
+        etad = Sentinel1Etad(etad)
 
     if outpath is None:
-        outpath = pathlib.Path(etad).stem + '.kmz'
+        outpath = etad.product.stem + '.kmz'
 
     writer = Sentinel1EtadKmlWriter(etad)
     writer.save(outpath)

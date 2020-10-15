@@ -34,6 +34,7 @@ class Sentinel1EtadKmlWriter:
         if self._kmzdir.exists():
             raise FileExistsError(
                 f'output path already exists "{self._kmzdir}"')
+
         self.kml = Kml()
         self.kml_root = self.kml.newfolder(name=self.etad_file.stem)
         self._set_timespan()
@@ -75,54 +76,58 @@ class Sentinel1EtadKmlWriter:
             shutil.move(self._kmzdir, outpath)
 
     def write_overall_footprint(self):
-        # overall footprints
         data_footprint = self.etad.get_footprint(merge=True)
-        x, y = data_footprint.exterior.xy
-
-        corner = [(x[i], y[i]) for i in range(len(x))]
+        corners = Sentinel1EtadKmlWriter._get_footprint_corners(data_footprint)
 
         pol = self.kml_root.newpolygon(name='footprint')
-        pol.outerboundaryis = corner
+        pol.outerboundaryis = corners
         pol.altitudeMode = 'absolute'
         pol.tessellate = 1
         pol.polystyle.fill = 0
         pol.style.linestyle.width = 2
 
+    @staticmethod
+    def _get_footprint_corners(footprint):
+        x, y = footprint.exterior.xy
+        corners = list(zip(x, y))
+        return corners
+
+    @staticmethod
+    def _get_burst_time_span(burst, t_ref):
+        azimuth_time, _ = burst.get_burst_grid()
+        t0 = t_ref + timedelta(seconds=azimuth_time[0])
+        t1 = t_ref + timedelta(seconds=azimuth_time[-1])
+        if t1 < t0:
+            t0, t1 = t1, t0
+        return t0, t1
+
+    @staticmethod
+    def _write_burst_footprint(burst, kml_dir, t_ref):
+        corners = Sentinel1EtadKmlWriter._get_footprint_corners(
+            burst.get_footprint())
+        t0, t1 = Sentinel1EtadKmlWriter._get_burst_time_span(burst, t_ref)
+
+        pol = kml_dir.newpolygon(name=str(burst.burst_index))
+        pol.outerboundaryis = corners
+        pol.altitudeMode = 'absolute'
+        pol.tessellate = 1
+        pol.polystyle.fill = 0
+        pol.style.linestyle.width = 2
+        pol.timespan.begin = t0.isoformat()
+        pol.timespan.end = t1.isoformat()
+
     def write_burst_footprint(self):
         first_azimuth_time = parser.parse(self.etad.ds.azimuthTimeMin)
 
-        kml_burst_ftp = self.kml_root.newfolder(name='burst_footprint')
-        for swath_ in self.etad.swath_list:
+        kml_fp_dir = self.kml_root.newfolder(name='burst_footprint')
+        selection = None
+        for swath in self.etad.iter_swaths(selection):
+            kml_swath_dir = kml_fp_dir.newfolder(name=swath.swath_id)
+            for burst in swath.iter_bursts(selection):
+                self._write_burst_footprint(burst, kml_swath_dir,
+                                            first_azimuth_time)
 
-            kml_swath_dir = kml_burst_ftp.newfolder(name=swath_)
-            etad_swath = self.etad[swath_]
-            for bix in etad_swath.burst_list:
-                burst_ = etad_swath[bix]
-
-                # get teh footprint and compute the kml gcp list
-                ftp_ = burst_.get_footprint()
-                x, y = ftp_.exterior.xy
-                corner = [(x[i], y[i]) for i in range(len(x))]
-
-                # define the time span
-                azimuth_time, _ = burst_.get_burst_grid()
-                t0 = first_azimuth_time + timedelta(seconds=azimuth_time[0])
-                t1 = first_azimuth_time + timedelta(seconds=azimuth_time[-1])
-
-                # lats, lons, h = burst_.get_lat_lon_heigth()
-                pol = kml_swath_dir.newpolygon(name=str(bix))
-                pol.outerboundaryis = corner
-                pol.altitudeMode = 'absolute'
-                pol.tessellate = 1
-                pol.polystyle.fill = 0
-                pol.style.linestyle.width = 2
-
-                if t1 < t0:
-                    t0, t1 = t1, t0
-                pol.timespan.begin = t0.isoformat()
-                pol.timespan.end = t1.isoformat()
-
-    def write_corrections(self, correction_list, swath_list=None,
+    def write_corrections(self, correction_list, selection=None,
                           decimation_factor=1, colorizing=False):
         first_azimuth_time = parser.parse(self.etad.ds.azimuthTimeMin)
 
@@ -180,32 +185,40 @@ class Sentinel1EtadKmlWriter:
                                                xunits=Units.fraction,
                                                yunits=Units.fraction)
 
-                for swath_ in self.etad.swath_list:
-                    kml_swath_dir = kml_cor_dir.newfolder(name=swath_)
+                for swath in self.etad.iter_swaths(selection):
+                    kml_swath_dir = kml_cor_dir.newfolder(name=swath.swath_id)
 
-                    etad_swath = self.etad[swath_]
-                    for bix in etad_swath.burst_list:
-                        burst_ = etad_swath[bix]
+                    for burst in swath.iter_bursts(selection):
+                        corners = self._get_footprint_corners(burst.get_footprint())
+                        t0, t1 = self._get_burst_time_span(burst, first_azimuth_time)
 
-                        # get teh footprint and compute the kml gcp list
-                        ftp_ = burst_.get_footprint()
+                        ground = kml_swath_dir.newgroundoverlay(
+                            name='GroundOverlay')
+                        ground.visibility = visibility
+                        ground.name = (
+                            f'{burst.product_index}_{burst.swath_index}_{burst.burst_index}'
+                        )
 
-                        x, y = ftp_.exterior.xy
-                        corner = [(x[i], y[i]) for i in range(len(x))]
+                        ground.timespan.begin = t0.isoformat()
+                        ground.timespan.end = t1.isoformat()
 
-                        # define the time span
-                        azimuth_time, _ = burst_.get_burst_grid()
-                        t0 = (first_azimuth_time +
-                              timedelta(seconds=azimuth_time[0]))
-                        t1 = (first_azimuth_time +
-                              timedelta(seconds=azimuth_time[-1]))
+                        ground.gxlatlonquad.coords = corners
 
+                        # ground.altitudeMode = 'absolute'
+                        # ground.polystyle.fill = 0
+                        # ground.tessellate=1
+                        # ground.style.linestyle.width = 2
+
+                        burst_img = f'burst_{swath.swath_id}_{burst.burst_index}_{correction}_{dim}'
+                        ground.icon.href = burst_img + '.tiff'
+
+                        # data
                         if correction == 'sumOfCorrections':
                             func_ = functools.partial(
-                                burst_.get_correction, name='sum')
+                                burst.get_correction, name='sum')
                         elif correction == 'troposphericCorrection':
                             func_ = functools.partial(
-                                burst_.get_correction, name='tropospheric')
+                                burst.get_correction, name='tropospheric')
                         else:
                             raise RuntimeError(
                                 f'unexpected correction: {correction!r}')
@@ -219,26 +232,6 @@ class Sentinel1EtadKmlWriter:
                             pixel_depth = gdal.GDT_Float32
 
                         cor = np.flipud(cor)
-
-                        ground = kml_swath_dir.newgroundoverlay(
-                            name='GroundOverlay')
-                        ground.visibility = visibility
-                        grp = burst_._grp
-                        name = f"{grp.pIndex}_{grp.sIndex}_{grp.bIndex}"
-                        ground.name = name
-
-                        ground.timespan.begin = t0.isoformat()
-                        ground.timespan.end = t1.isoformat()
-
-                        ground.gxlatlonquad.coords = corner
-
-                        # ground.altitudeMode = 'absolute'
-                        # ground.polystyle.fill = 0
-                        # ground.tessellate=1
-                        # ground.style.linestyle.width = 2
-
-                        burst_img = f'burst_{swath_}_{bix}_{correction}_{dim}'
-                        ground.icon.href = burst_img + '.tiff'
 
                         self.array2raster(self._kmzdir / burst_img, cor,
                                           color_table=gdal_palette,

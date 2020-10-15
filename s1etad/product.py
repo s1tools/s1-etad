@@ -40,6 +40,17 @@ class ECorrectionType(enum.Enum):
 CorrectionType = Union[ECorrectionType, str]
 
 
+_CORRECTION_NAMES_MAP = {
+    'tropospheric': {'x': 'troposphericCorrectionRg'},
+    'ionospheric': {'x': 'ionosphericCorrectionRg'},
+    'geodetic': {'x': 'geodeticCorrectionRg', 'y': 'geodeticCorrectionAz'},
+    'bistatic': {'y': 'bistaticCorrectionAz'},
+    'doppler': {'x': 'dopplerRangeShiftRg'},
+    'fmrate': {'y': 'fmMismatchCorrectionAz'},
+    'sum': {'x': 'sumOfCorrectionsRg', 'y': 'sumOfCorrectionsAz'},
+}
+
+
 _STATS_TAG_MAP = {
     ECorrectionType.TROPOSPHERIC: 'troposphericCorrection',
     ECorrectionType.IONOSPHERIC: 'ionosphericCorrection',
@@ -484,9 +495,11 @@ class Sentinel1Etad:
 
     def merge_correction(self, name: CorrectionType = ECorrectionType.SUM,
                          selection=None, set_auto_mask=True, transpose=True,
-                         meter=False):
+                         meter=False, direction=None):
         correction_type = ECorrectionType(name)  # check values
         prm_list = _CORRECTION_NAMES_MAP[correction_type.value]
+        if direction is not None:
+            prm_list = {direction: prm_list[direction]}
         correction = self._core_merge_correction(prm_list, selection=selection,
                                                  set_auto_mask=set_auto_mask,
                                                  transpose=transpose,
@@ -515,17 +528,6 @@ class Sentinel1Etad:
             kml.save(kml_file)
 
         return kml
-
-
-_CORRECTION_NAMES_MAP = {
-    'tropospheric': {'x': 'troposphericCorrectionRg'},
-    'ionospheric': {'x': 'ionosphericCorrectionRg'},
-    'geodetic': {'x': 'geodeticCorrectionRg', 'y': 'geodeticCorrectionAz'},
-    'bistatic': {'y': 'bistaticCorrectionAz'},
-    'doppler': {'x': 'dopplerRangeShiftRg'},
-    'fmrate': {'y': 'fmMismatchCorrectionAz'},
-    'sum': {'x': 'sumOfCorrectionsRg', 'y': 'sumOfCorrectionsAz'},
-}
 
 
 class Sentinel1EtadSwath:
@@ -634,7 +636,7 @@ class Sentinel1EtadSwath:
         ----------
         burst_var : str
             one of the burst netcdf variables
-        selection : list or pandas.DataFRame
+        selection : list or pandas.DataFrame
             list of selected bursts (by default all bursts are selected)
         az_time_min : float
             minimum azimuth time of the merged swath
@@ -738,9 +740,11 @@ class Sentinel1EtadSwath:
 
     def merge_correction(self, name: CorrectionType = ECorrectionType.SUM,
                          selection=None, set_auto_mask=True,
-                         transpose=True, meter=False):
+                         transpose=True, meter=False, direction=None):
         correction_type = ECorrectionType(name)  # check values
         prm_list = _CORRECTION_NAMES_MAP[correction_type.value]
+        if direction is not None:
+            prm_list = {direction: prm_list[direction]}
         correction = self._core_merge_correction(prm_list,
                                                  selection=selection,
                                                  set_auto_mask=set_auto_mask,
@@ -874,7 +878,8 @@ class Sentinel1EtadBurst:
         return correction
 
     def get_correction(self, name: CorrectionType = ECorrectionType.SUM,
-                       set_auto_mask=False, transpose=True, meter=False):
+                       set_auto_mask=False, transpose=True, meter=False,
+                       direction=None):
         """Retrieve the correction for the specified correction "name".
 
         Puts the results in a dict.
@@ -905,6 +910,8 @@ class Sentinel1EtadBurst:
         correction_type = ECorrectionType(name)  # check values
         name = correction_type.value
         prm_list = _CORRECTION_NAMES_MAP[name]
+        if direction is not None:
+            prm_list = {direction: prm_list[direction]}
         correction = self._core_get_correction(prm_list,
                                                set_auto_mask=set_auto_mask,
                                                transpose=transpose, meter=meter)

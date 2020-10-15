@@ -25,7 +25,7 @@ __all__ = ['etad_to_kmz', 'Sentinel1EtadKmlWriter']
 
 
 class Sentinel1EtadKmlWriter:
-    def __init__(self, etad):
+    def __init__(self, etad, corrections=None, decimation_factor=1):
         self.etad = etad
         self.etad_file = self.etad.product
 
@@ -34,8 +34,10 @@ class Sentinel1EtadKmlWriter:
         self._set_timespan()
 
         self.write_overall_footprint()
-        self.write_corrections(['sumOfCorrections', 'troposphericCorrection'],
-                               decimation_factor=1, colorizing=True)
+        if corrections is None:
+            corrections = ['sumOfCorrections', 'troposphericCorrection']
+        self.write_corrections(corrections, decimation_factor=decimation_factor,
+                               colorizing=True)
         self.write_burst_footprint()
 
     def _set_timespan(self, duration=30, range_=1500000):
@@ -321,12 +323,12 @@ class Colorizer:
         pyplot.savefig(cb_filename, transparent=False)
 
 
-def etad_to_kmz(etad, outpath=None):
+def etad_to_kmz(etad, outpath=None, *args, **kargs):
     if not isinstance(etad, Sentinel1Etad):
         etad = Sentinel1Etad(etad)
 
     if outpath is None:
         outpath = etad.product.stem + '.kmz'
 
-    writer = Sentinel1EtadKmlWriter(etad)
+    writer = Sentinel1EtadKmlWriter(etad, *args, **kargs)
     writer.save(outpath)

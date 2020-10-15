@@ -18,6 +18,7 @@ s1etad v0.3.0 (UNRELEASED)
   :class:`s1etad.product.Sentinel1EtadBurst` classes.
 * Removed :meth:`s1etad.product.Sentinel1Etad.xpath_to_list` method from
   the public API (the private one is still available)
+* Strongly improved KMZ export function.
 * Documentation:
 
   - added instructions to install via conda packages

@@ -127,6 +127,36 @@ class Sentinel1EtadKmlWriter:
                 self._write_burst_footprint(burst, kml_swath_dir,
                                             first_azimuth_time)
 
+    def _get_correction_min_max(self, xp):
+        cor_max = np.max(
+            self.etad._xpath_to_list(
+                self.etad._annot, f'{xp}/max[@unit="m"]', dtype=np.float)
+        )
+        cor_min = np.min(
+            self.etad._xpath_to_list(
+                self.etad._annot, f'{xp}/min[@unit="m"]', dtype=np.float)
+        )
+        return cor_min, cor_max
+
+    def _colorbar_overlay(self, correction, dim, kml_cor_dir, color_table):
+        assert color_table is not None
+
+        color_table.build_colorbar(
+            self._kmzdir / f'{correction}_{dim}_cb.png')
+
+        screen = kml_cor_dir.newscreenoverlay(name='ScreenOverlay')
+        screen.icon.href = f'{correction}_{dim}_cb.png'
+        screen.overlayxy = OverlayXY(x=0, y=0,
+                                     xunits=Units.fraction,
+                                     yunits=Units.fraction)
+        screen.screenxy = ScreenXY(x=0.015, y=0.075,
+                                   xunits=Units.fraction,
+                                   yunits=Units.fraction)
+        screen.rotationXY = RotationXY(x=0.5, y=0.5,
+                                       xunits=Units.fraction,
+                                       yunits=Units.fraction)
+        return screen
+
     def write_corrections(self, correction_list, selection=None,
                           decimation_factor=1, colorizing=False):
         first_azimuth_time = parser.parse(self.etad.ds.azimuthTimeMin)
@@ -151,39 +181,16 @@ class Sentinel1EtadKmlWriter:
                     visibility = False
 
                 kml_cor_dir = self.kml_root.newfolder(
-                    name=f"{correction}_{prm_list[dim]}")
+                    name=f"{correction}_{correction_name}")
 
-                cor_max = np.max(
-                    self.etad._xpath_to_list(
-                        self.etad._annot,
-                        f"{xp_}/{prm_list[dim]}/max[@unit='m']", dtype=np.float)
-                )
-                cor_min = np.min(
-                    self.etad._xpath_to_list(
-                        self.etad._annot,
-                        f"{xp_}/{prm_list[dim]}/min[@unit='m']", dtype=np.float)
-                )
+                cor_min, cor_max = self._get_correction_min_max(
+                    f'{xp_}/{correction_name}')
 
-                color_table = None
                 gdal_palette = None
                 if colorizing:
                     color_table = Colorizer(cor_min, cor_max)
+                    self._colorbar_overlay(correction, dim, kml_cor_dir, color_table)
                     gdal_palette = color_table.gdal_palette()
-
-                color_table.build_colorbar(
-                    self._kmzdir / f'{correction}_{dim}_cb.png')
-
-                screen = kml_cor_dir.newscreenoverlay(name='ScreenOverlay')
-                screen.icon.href = f"{correction}_{dim}_cb.png"
-                screen.overlayxy = OverlayXY(x=0, y=0,
-                                             xunits=Units.fraction,
-                                             yunits=Units.fraction)
-                screen.screenxy = ScreenXY(x=0.015, y=0.075,
-                                           xunits=Units.fraction,
-                                           yunits=Units.fraction)
-                screen.rotationXY = RotationXY(x=0.5, y=0.5,
-                                               xunits=Units.fraction,
-                                               yunits=Units.fraction)
 
                 for swath in self.etad.iter_swaths(selection):
                     kml_swath_dir = kml_cor_dir.newfolder(name=swath.swath_id)

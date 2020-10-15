@@ -103,6 +103,7 @@ class Sentinel1EtadKmlWriter:
 
     @staticmethod
     def _write_burst_footprint(burst, kml_dir, t_ref):
+        # TODO: description pop-up
         corners = Sentinel1EtadKmlWriter._get_footprint_corners(
             burst.get_footprint())
         t0, t1 = Sentinel1EtadKmlWriter._get_burst_time_span(burst, t_ref)
@@ -127,6 +128,16 @@ class Sentinel1EtadKmlWriter:
                 self._write_burst_footprint(burst, kml_swath_dir,
                                             first_azimuth_time)
 
+    def _correction_iter(self, corrections):
+        for correction in corrections:
+            xp = f".//qualityAndStatistics/{correction}"
+            for child in self.etad._annot.find(xp).getchildren():
+                tag = child.tag
+                if 'range' in tag:
+                    yield correction, 'x', tag
+                elif 'azimuth' in tag:
+                    yield correction, 'y', tag
+
     def _get_correction_min_max(self, xp):
         cor_max = np.max(
             self.etad._xpath_to_list(
@@ -138,7 +149,8 @@ class Sentinel1EtadKmlWriter:
         )
         return cor_min, cor_max
 
-    def _colorbar_overlay(self, correction, dim, kml_cor_dir, color_table):
+    def _colorbar_overlay(self, correction, dim, kml_cor_dir, color_table,
+                          visibility):
         assert color_table is not None
 
         color_table.build_colorbar(
@@ -155,136 +167,151 @@ class Sentinel1EtadKmlWriter:
         screen.rotationXY = RotationXY(x=0.5, y=0.5,
                                        xunits=Units.fraction,
                                        yunits=Units.fraction)
+
+        screen.visibility = visibility
+
         return screen
 
-    def write_corrections(self, correction_list, selection=None,
+    def _ground_overlay_node(self, kml_dir, burst, t_ref, visibility=True):
+        corners = self._get_footprint_corners(burst.get_footprint())
+        t0, t1 = self._get_burst_time_span(burst, t_ref)
+
+        ground = kml_dir.newgroundoverlay(name='GroundOverlay')
+        ground.visibility = visibility
+        ground.name = (
+            f'{burst.product_index}_{burst.swath_index}_{burst.burst_index}'
+        )
+
+        ground.timespan.begin = t0.isoformat()
+        ground.timespan.end = t1.isoformat()
+
+        ground.gxlatlonquad.coords = corners
+
+        # ground.altitudeMode = 'absolute'
+        # ground.polystyle.fill = 0
+        # ground.tessellate=1
+        # ground.style.linestyle.width = 2
+
+        return ground
+
+    @staticmethod
+    def _ground_overlay_data(correction, burst, dim, cor_min, cor_max,
+                             colorizing):
+        if correction == 'sumOfCorrections':
+            func_ = functools.partial(
+                burst.get_correction, name='sum', direction=dim)
+        elif correction == 'troposphericCorrection':
+            func_ = functools.partial(
+                burst.get_correction, name='tropospheric',
+                direction=dim)
+        else:
+            raise RuntimeError(
+                f'unexpected correction: {correction!r}')
+
+        etad_correction = func_(meter=True)
+        cor = etad_correction[dim]
+        if colorizing is not None:
+            cor = (cor - cor_min) / np.abs(cor_max - cor_min) * 255
+
+        cor = np.flipud(cor)
+
+        return cor
+
+    def write_corrections(self, corrections, selection=None,
                           decimation_factor=1, colorizing=False):
         first_azimuth_time = parser.parse(self.etad.ds.azimuthTimeMin)
 
-        for correction in correction_list:
-            # get the parameter list
-            prm_list = {}
-            xp_ = f".//qualityAndStatistics/{correction}"
-            for child in self.etad._annot.find(xp_).getchildren():
-                tag = child.tag
-                if 'range' in tag:
-                    prm_list['x'] = tag
-                elif 'azimuth' in tag:
-                    prm_list['y'] = tag
+        for correction, dim, tag in self._correction_iter(corrections):
+            xp_ = f'.//qualityAndStatistics/{correction}'
 
-            for dim, correction_name in prm_list.items():
-                # only enable sum of corrections in range
-                # TODO: make configurable
-                if correction == 'sumOfCorrections' and dim == 'x':
-                    visibility = True
-                else:
-                    visibility = False
+            # only enable sum of corrections in range
+            # TODO: make configurable
+            if correction == 'sumOfCorrections' and dim == 'x':
+                visibility = True
+            else:
+                visibility = False
 
-                kml_cor_dir = self.kml_root.newfolder(
-                    name=f"{correction}_{correction_name}")
+            kml_cor_dir = self.kml_root.newfolder(name=f"{correction}_{tag}")
+            cor_min, cor_max = self._get_correction_min_max(xp=f'{xp_}/{tag}')
 
-                cor_min, cor_max = self._get_correction_min_max(
-                    f'{xp_}/{correction_name}')
+            gdal_palette = None
+            if colorizing:
+                color_table = Colorizer(cor_min, cor_max)
+                self._colorbar_overlay(correction, dim, kml_cor_dir,
+                                       color_table, visibility)
+                gdal_palette = color_table.gdal_palette()
 
-                gdal_palette = None
-                if colorizing:
-                    color_table = Colorizer(cor_min, cor_max)
-                    self._colorbar_overlay(correction, dim, kml_cor_dir, color_table)
-                    gdal_palette = color_table.gdal_palette()
+            for swath in self.etad.iter_swaths(selection):
+                kml_swath_dir = kml_cor_dir.newfolder(name=swath.swath_id)
 
-                for swath in self.etad.iter_swaths(selection):
-                    kml_swath_dir = kml_cor_dir.newfolder(name=swath.swath_id)
+                for burst in swath.iter_bursts(selection):
+                    ground = self._ground_overlay_node(kml_swath_dir, burst,
+                                                       first_azimuth_time,
+                                                       visibility)
 
-                    for burst in swath.iter_bursts(selection):
-                        corners = self._get_footprint_corners(burst.get_footprint())
-                        t0, t1 = self._get_burst_time_span(burst, first_azimuth_time)
+                    cor = self._ground_overlay_data(correction, burst, dim,
+                                                    cor_min, cor_max,
+                                                    colorizing)
 
-                        ground = kml_swath_dir.newgroundoverlay(
-                            name='GroundOverlay')
-                        ground.visibility = visibility
-                        ground.name = (
-                            f'{burst.product_index}_{burst.swath_index}_{burst.burst_index}'
-                        )
+                    if colorizing is not None:
+                        pixel_depth = gdal.GDT_Byte
+                    else:
+                        pixel_depth = gdal.GDT_Float32
 
-                        ground.timespan.begin = t0.isoformat()
-                        ground.timespan.end = t1.isoformat()
+                    b = burst
+                    burst_img = (
+                        f'burst_{b.swath_id}_{b.burst_index}_{correction}_{dim}'
+                    )
 
-                        ground.gxlatlonquad.coords = corners
+                    ds = array2raster(self._kmzdir / burst_img, cor,
+                                      color_table=gdal_palette,
+                                      pixel_depth=pixel_depth,
+                                      driver='GTiff',
+                                      decimation_factor=decimation_factor,
+                                      gcp_list=None)
 
-                        # ground.altitudeMode = 'absolute'
-                        # ground.polystyle.fill = 0
-                        # ground.tessellate=1
-                        # ground.style.linestyle.width = 2
+                    ground.icon.href = pathlib.Path(ds.GetDescription()).name
 
-                        burst_img = f'burst_{swath.swath_id}_{burst.burst_index}_{correction}_{dim}'
-                        ground.icon.href = burst_img + '.tiff'
 
-                        # data
-                        if correction == 'sumOfCorrections':
-                            func_ = functools.partial(
-                                burst.get_correction, name='sum')
-                        elif correction == 'troposphericCorrection':
-                            func_ = functools.partial(
-                                burst.get_correction, name='tropospheric')
-                        else:
-                            raise RuntimeError(
-                                f'unexpected correction: {correction!r}')
+def array2raster(outfile, array, gcp_list=None, color_table=None,
+                 pixel_depth=gdal.GDT_Float32, driver='GTiff',
+                 decimation_factor=None):
+    # http://osgeo-org.1560.x6.nabble.com/Transparent-PNG-with-color-table-palette-td3748906.html
+    if decimation_factor is not None:
+        array = array[::decimation_factor, ::decimation_factor]
 
-                        etad_correction = func_(meter=True)
-                        cor = etad_correction[dim]
-                        if colorizing is not None:
-                            cor = (cor-cor_min) / np.abs(cor_max-cor_min) * 255
-                            pixel_depth = gdal.GDT_Byte
-                        else:
-                            pixel_depth = gdal.GDT_Float32
+    cols = array.shape[1]
+    rows = array.shape[0]
 
-                        cor = np.flipud(cor)
+    if driver == 'GTiff':
+        outfile = outfile.with_suffix('.tiff')
+    elif driver == 'PNG':
+        outfile = outfile.with_suffix('.png')
+    else:
+        raise RuntimeError(f'unexpected driver: {driver}')
 
-                        self.array2raster(self._kmzdir / burst_img, cor,
-                                          color_table=gdal_palette,
-                                          pixel_depth=pixel_depth,
-                                          driver='GTiff',
-                                          decimation_factor=decimation_factor,
-                                          gcp_list=None)
+    driver = gdal.GetDriverByName(driver)
+    outraster = driver.Create(str(outfile), cols, rows, 1, pixel_depth)
 
-    @staticmethod
-    def array2raster(outfile, array, gcp_list=None, color_table=None,
-                     pixel_depth=gdal.GDT_Float32, driver='GTiff',
-                     decimation_factor=None):
-        # http://osgeo-org.1560.x6.nabble.com/Transparent-PNG-with-color-table-palette-td3748906.html
-        if decimation_factor is not None:
-            array = array[::decimation_factor, ::decimation_factor]
+    # outRaster.SetGeoTransform(
+    #     (originX, pixelWidth, 0, originY, 0, pixelHeight))
+    outband = outraster.GetRasterBand(1)
+    if color_table is not None:
+        assert(isinstance(color_table, gdal.ColorTable))
+        outband.SetRasterColorTable(color_table)
+    outband.WriteArray(array)
 
-        cols = array.shape[1]
-        rows = array.shape[0]
+    out_srs = osr.SpatialReference()
+    out_srs.ImportFromEPSG(4326)
+    outraster.SetProjection(out_srs.ExportToWkt())
 
-        if driver == 'GTiff':
-            outfile = outfile.with_suffix('.tiff')
-        elif driver == 'PNG':
-            outfile = outfile.with_suffix('.png')
-        else:
-            raise RuntimeError(f'unexpected driver: {driver}')
+    if gcp_list is not None:
+        wkt = outraster.GetProjection()
+        outraster.SetGCPs(gcp_list, wkt)
 
-        driver = gdal.GetDriverByName(driver)
-        outraster = driver.Create(str(outfile), cols, rows, 1, pixel_depth)
+    outband.FlushCache()
 
-        # outRaster.SetGeoTransform(
-        #     (originX, pixelWidth, 0, originY, 0, pixelHeight))
-        outband = outraster.GetRasterBand(1)
-        if color_table is not None:
-            assert(isinstance(color_table, gdal.ColorTable))
-            outband.SetRasterColorTable(color_table)
-        outband.WriteArray(array)
-
-        out_srs = osr.SpatialReference()
-        out_srs.ImportFromEPSG(4326)
-        outraster.SetProjection(out_srs.ExportToWkt())
-
-        if gcp_list is not None:
-            wkt = outraster.GetProjection()
-            outraster.SetGCPs(gcp_list, wkt)
-
-        outband.FlushCache()
+    return outraster
 
 
 # http://osgeo-org.1560.x6.nabble.com/Transparent-PNG-with-color-table-palette-td3748906.html

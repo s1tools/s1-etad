@@ -19,6 +19,8 @@ s1etad v0.3.0 (UNRELEASED)
 * Removed :meth:`s1etad.product.Sentinel1Etad.xpath_to_list` method from
   the public API (the private one is still available)
 * Strongly improved KMZ export function.
+* New Command Line Interface (CLI) ofr basic functions
+  (only "export-kmz" at the moment).
 * Documentation:
 
   - added instructions to install via conda packages

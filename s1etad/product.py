@@ -563,6 +563,10 @@ class Sentinel1EtadSwath:
         return self._grp.swathID
 
     @property
+    def swath_index(self):
+        return self._grp.swathID
+
+    @property
     def sampling_start(self):
         """Relative sampling start times."""
         first_burst_index = self.burst_list[0]
@@ -761,8 +765,24 @@ class Sentinel1EtadBurst:
         return f'{self.__class__.__name__}("{self._grp.path}")  0x{id(self):x}'
 
     @property
+    def product_id(self):
+        return self._grp.productID
+
+    @property
     def swath_id(self):
         return self._grp.swathID
+
+    @property
+    def burst_id(self):
+        return self._grp.name
+
+    @property
+    def product_index(self):
+        return self._grp.pIndex
+
+    @property
+    def swath_index(self):
+        return self._grp.sIndex
 
     @property
     def burst_index(self):

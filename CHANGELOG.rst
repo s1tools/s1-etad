@@ -14,6 +14,8 @@ s1etad v0.3.0 (UNRELEASED)
     footprints of all bursts
 
 * New :meth:`s1etad.product.Sentinel1Etad.get_statistics` method.
+* Added missing attributes to :class:`s1etad.product.Sentinel1EtadSwath` and
+  :class:`s1etad.product.Sentinel1EtadBurst` classes.
 * Documentation:
 
   - added instructions to install via conda packages

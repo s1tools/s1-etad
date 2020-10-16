@@ -9,3 +9,6 @@ Possible improvements
 * improve documentation theme and styling
 * (x, y, z)/(lat, lon, h) --> (burst, row, col)
 * corrections (and coordinates) interpolation (bi-linear)
+* replace returned dictionaries (with 'x', 'y', 'units', etc. keys)
+  with named tuples (TBD)
+* burst selection based on geographic point (and polygon)

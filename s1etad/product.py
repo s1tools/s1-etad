@@ -74,6 +74,11 @@ class Sentinel1Etad:
     The index operator [] (implemented with the __getitem__ method) returns
     a Sentinel1EtadSwath instance.
 
+    Parameters
+    ----------
+    product : str or pathlib.Path
+        path of the S1-ETAD product (it is a directory)
+
     Attributes
     ----------
     product : pathlib.Path
@@ -81,16 +86,14 @@ class Sentinel1Etad:
     burst_catalogue : pandas.DataFrame
         dataframe containing main information of all bursts present in
         the product
+    ds : netCDF.Dataset
+        (provisional) the NetCDF.Dataset in which data are stored
     """
 
     def __init__(self, product):
-        """
-        Parameters
-        ----------
-        product : str or pathlib.Path
-            path of the S1-ETAD product (it is a directory)
-        """
+        # TODO: make this read-only (property)
         self.product = pathlib.Path(product)
+        # TODO: ds should not be exposed
         self.ds = self._init_measurement_dataset()
         self._annot = self._init_annotation_dataset()
         self.burst_catalogue = self._init_burst_catalogue()
@@ -125,10 +128,12 @@ class Sentinel1Etad:
 
     @property
     def number_of_swath(self):
+        """The number of swaths in the product."""
         return len(self.ds.groups)
 
     @property
     def swath_list(self):
+        """The list of swath identifiers (str) in the product."""
         return list(self.ds.groups.keys())
 
     def s1_product_list(self):
@@ -162,6 +167,16 @@ class Sentinel1Etad:
             dd[tag] = self._xpath_to_list(self._annot, xp, dtype=np.float)
         dd['unit'] = 's'
         return dd
+
+    @property
+    def min_azimuth_time(self):
+        """The minimum azimuth time of all bursts in the product."""
+        return parser.parse(self.ds.azimuthTimeMin)
+
+    @property
+    def max_azimuth_time(self):
+        """The maximum azimuth time of all bursts in the product."""
+        return parser.parse(self.ds.azimuthTimeMax)
 
     def processing_setting(self):
         """Return the corrections performed.
@@ -496,6 +511,68 @@ class Sentinel1Etad:
     def merge_correction(self, name: CorrectionType = ECorrectionType.SUM,
                          selection=None, set_auto_mask=True, transpose=True,
                          meter=False, direction=None):
+        """Merge multiple swaths of the specified correction variable.
+
+        Data of the selected swaths (typically overlapped) are merged
+        together to form a single data matrix with a consistent (range and
+        azimuth) time axis.
+
+        Note
+        ----
+
+        The current implementation uses a very simple algorithm that
+        iterates over selected swaths and bursts and stitches correction
+        data together.
+
+        In overlapping regions, new data simpy overwrite the old ones.
+        This is an easy algorithm and perfectly correct for atmospheric
+        and geodetic correction.
+
+        It is, instead, sub-optimal for system corrections (bi-static,
+        Doppler, FM Rate) which have different values in overlapping
+        regions. In this case results are *not* correct.
+
+        Parameters
+        ----------
+        name : str or CorrectionType
+            the name of the desired correction
+        selection : list or pandas.DataFrame
+            list of selected bursts (by default all bursts are selected)
+        set_auto_mask : bool
+            requested for netCDF4 to avoid retrieving a masked array
+        transpose : bool
+            requested to retrieve the correction in array following the
+            numpy convention for dimensions
+        meter : bool
+            transform the result in meters
+        direction : str or None
+            if set to "x" (for range) or "y" (for "azimuth") only extracts
+            the specified correction component.
+            By default (None) all available components are returned.
+
+        Returns
+        -------
+        dict
+            a dictionary containing merged data and sampling information:
+
+            :<burst_var_name>:
+                merged data for the selected burst_var
+            :first_azimuth_time:
+                the relative azimuth first time
+            :first_slant_range_time:
+                the relative (slant) range first time
+            :sampling:
+                a dictionary containing the sampling along the
+                'x' and 'y' directions and the 'unit'
+            :units:
+                of the correction (seconds or meters)
+            :lats:
+                the matrix of latitude values (in degrees) for each point
+            :lons:
+                the matrix of longitude values (in degrees) for each point
+            :height:
+                the matrix of height values (in meters) for each point
+        """
         correction_type = ECorrectionType(name)  # check values
         prm_list = _CORRECTION_NAMES_MAP[correction_type.value]
         if direction is not None:
@@ -531,6 +608,12 @@ class Sentinel1Etad:
 
 
 class Sentinel1EtadSwath:
+    """Object representing a swath in the S1-ETAD product.
+
+    This objects are returned by methods of the :class:`Sentine1Etad` class.
+    It is not expected that the user instantiates this objects directly.
+    """
+
     def __init__(self, nc_group, daz_m):
         self._grp = nc_group
         self._daz_m = daz_m
@@ -548,18 +631,22 @@ class Sentinel1EtadSwath:
 
     @property
     def burst_list(self):
+        """The list of burst identifiers (str) of all bursts in the swath."""
         return [burst.bIndex for burst in self._grp.groups.values()]
 
     @property
     def number_of_burst(self):
+        """The number of bursts in the swath."""
         return len(self._grp.groups)
 
     @property
     def swath_id(self):
+        """The swath identifier (str)."""
         return self._grp.swathID
 
     @property
     def swath_index(self):
+        """The swath index (int)."""
         return self._grp.swathID
 
     @property
@@ -571,6 +658,14 @@ class Sentinel1EtadSwath:
 
     @property
     def sampling(self):
+        """Sampling in seconds used for all bursts of the swath.
+
+        A dictionary containing the following keys:
+
+        * "x": range spacing,
+        * "y": azimuth spacing,
+        * "units": the measurement units used for "x' and "y"
+        """
         first_burst_index = self.burst_list[0]
         first_burst = self[first_burst_index]
         return first_burst.sampling
@@ -741,6 +836,68 @@ class Sentinel1EtadSwath:
     def merge_correction(self, name: CorrectionType = ECorrectionType.SUM,
                          selection=None, set_auto_mask=True,
                          transpose=True, meter=False, direction=None):
+        """Merge multiple bursts of the specified correction variable.
+
+        Data of the selected bursts (typically overlapped) are merged
+        together to form a single data matrix with a consistent (azimuth)
+        time axis.
+
+        Note
+        ----
+
+        The current implementation uses a very simple algorithm that
+        iterates over selected bursts and stitches correction data
+        together.
+
+        In overlapping regions, new data simpy overwrite the old ones.
+        This is an easy algorithm and perfectly correct for atmospheric
+        and geodetic correction.
+
+        It is, instead, sub-optimal for system corrections (bi-static,
+        Doppler, FM Rate) which have different values in overlapping
+        regions. In this case results are *not* correct.
+
+        Parameters
+        ----------
+        name : str or CorrectionType
+            the name of the desired correction
+        selection : list or pandas.DataFrame
+            list of selected bursts (by default all bursts are selected)
+        set_auto_mask : bool
+            requested for netCDF4 to avoid retrieving a masked array
+        transpose : bool
+            requested to retrieve the correction in array following the
+            numpy convention for dimensions
+        meter : bool
+            transform the result in meters
+        direction : str or None
+            if set to "x" (for range) or "y" (for "azimuth") only extracts
+            the specified correction component.
+            By default (None) all available components are returned.
+
+        Returns
+        -------
+        dict
+            a dictionary containing merged data and sampling information:
+
+            :<burst_var_name>:
+                merged data for the selected burst_var
+            :first_azimuth_time:
+                the relative azimuth first time
+            :first_slant_range_time:
+                the relative (slant) range first time
+            :sampling:
+                a dictionary containing the sampling along the
+                'x' and 'y' directions and the 'unit'
+            :units:
+                of the correction (seconds or meters)
+            :lats:
+                the matrix of latitude values (in degrees) for each point
+            :lons:
+                the matrix of longitude values (in degrees) for each point
+            :height:
+                the matrix of height values (in meters) for each point
+        """
         correction_type = ECorrectionType(name)  # check values
         prm_list = _CORRECTION_NAMES_MAP[correction_type.value]
         if direction is not None:
@@ -755,6 +912,13 @@ class Sentinel1EtadSwath:
 
 
 class Sentinel1EtadBurst:
+    """Object representing a burst in the S1-ETAD product.
+
+    This objects are returned by methods of the :class:`Sentinel1EtadSwath`
+    class.
+    It is not expected that the user instantiates this objects directly.
+    """
+
     def __init__(self, nc_group, daz_m):
         self._grp = nc_group
         self._daz_m = daz_m
@@ -764,32 +928,38 @@ class Sentinel1EtadBurst:
 
     @property
     def product_id(self):
+        """The S1 product (str) to which the burst object is associated."""
         return self._grp.productID
 
     @property
     def swath_id(self):
+        """The swath identifier (str) to which the burst belongs."""
         return self._grp.swathID
 
     @property
     def burst_id(self):
+        """The burst identifier (str)."""
         return self._grp.name
 
     @property
     def product_index(self):
+        """Index (int) of the S1 product to which the burst is associated."""
         return self._grp.pIndex
 
     @property
     def swath_index(self):
+        """The index (int) of the swath to which the burst belongs."""
         return self._grp.sIndex
 
     @property
     def burst_index(self):
+        """The index (int) of the burst."""
         return self._grp.bIndex
 
     def get_footprint(self):
         """Return the footprint of ghe bursts as shapely.Polygon.
 
-        It gets the lat / lon / height grid and extract the 4 corners.
+        It gets the lat/lon/height grid and extract the 4 corners.
         """
         lats, lons, heights = self.get_lat_lon_height()
         corner_list = [(0, 0), (0, -1), (-1, -1), (-1, 0)]
@@ -808,7 +978,12 @@ class Sentinel1EtadBurst:
 
     @property
     def sampling_start(self):
-        """Relative sampling start times."""
+        """Relative sampling start times.
+
+        Value in seconds relative to the beginning of the product.
+        """
+        # TODO: put a reference in the docstring to the proper
+        #       Sentinel1Etad property.
         return dict(
             x=self._grp.gridStartRangeTime0,
             y=self._grp.gridStartAzimuthTime0,
@@ -817,6 +992,14 @@ class Sentinel1EtadBurst:
 
     @property
     def sampling(self):
+        """Sampling in seconds used for all bursts of the swath.
+
+        A dictionary containing the following keys:
+
+        * "x": range spacing,
+        * "y": azimuth spacing,
+        * "units": the measurement units used for "x' and "y"
+        """
         return dict(
             x=self._grp.gridSamplingRange,
             y=self._grp.gridSamplingAzimuth,
@@ -825,10 +1008,12 @@ class Sentinel1EtadBurst:
 
     @property
     def lines(self):
+        """The number of lines in  the burst."""
         return self._grp.dimensions['azimuthExtent'].size
 
     @property
     def samples(self):
+        """The number of samples in the burst."""
         return self._grp.dimensions['rangeExtent'].size
 
     def _get_etad_param(self, name, set_auto_mask=False, transpose=True,
@@ -837,6 +1022,8 @@ class Sentinel1EtadBurst:
 
         self._grp.set_auto_mask(set_auto_mask)
 
+        # TODO: avoid double copies
+        # TODO: decimation factor
         field = np.asarray(self._grp[name])
         if transpose:
             field = np.transpose(field)
@@ -857,6 +1044,12 @@ class Sentinel1EtadBurst:
         return field
 
     def get_lat_lon_height(self, transpose=True):
+        """Return the latitude, longitude and height for each point.
+
+        Data are returned as (3) matrices (lines x samples).
+        Latitude and longitude are expressed in degrees, height is
+        expressed in meters.
+        """
         lats = self._get_etad_param(
             'lats', transpose=transpose, meter=False, set_auto_mask=True)
         lons = self._get_etad_param(
@@ -895,6 +1088,10 @@ class Sentinel1EtadBurst:
             numpy convention for dimensions
         meter : bool
             transform the result in meters
+        direction : str or None
+            if set to "x" (for range) or "y" (for "azimuth") only extracts
+            the specified correction component.
+            By default (None) all available components are returned.
 
         Returns
         -------

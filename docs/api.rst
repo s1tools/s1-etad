@@ -20,7 +20,7 @@ Sentinel1Etad class
 Sentinel1EtadSwath class
 ------------------------
 
-.. autoclass:: s1etad.product.Sentinel1EtadSwath
+.. autoclass:: s1etad.product.Sentinel1EtadSwath()
    :members:
    :undoc-members:
    :show-inheritance:
@@ -31,7 +31,7 @@ Sentinel1EtadSwath class
 Sentinel1EtadBurst class
 ------------------------
 
-.. autoclass:: s1etad.product.Sentinel1EtadBurst
+.. autoclass:: s1etad.product.Sentinel1EtadBurst()
    :members:
    :undoc-members:
    :show-inheritance:

@@ -89,6 +89,7 @@ intersphinx_mapping = {'https://docs.python.org/3/': None}
 todo_include_todos = True
 
 # -- Options for autodoc extension -------------------------------------------
+autodoc_member_order = 'groupwise'
 autodoc_mock_imports = [
     'numpy',
     'scipy',

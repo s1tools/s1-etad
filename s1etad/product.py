@@ -285,11 +285,20 @@ class Sentinel1Etad:
             selection = self.burst_catalogue
 
         if isinstance(selection, pd.DataFrame):
-            selection = selection.swathID.unique()
+            burst_selection = selection
+            swath_list = selection.swathID.unique()
         elif isinstance(selection, str):
-            selection = [selection]
+            burst_selection = None
+            swath_list = [selection]
+        else:
+            # assume it is a list of swaths already
+            import collections.abc
+            assert isinstance(selection, collections.abc.Iterable)
+            assert all(isinstance(item, str) for item in selection)
+            burst_selection = None
+            swath_list = selection
 
-        return selection
+        return swath_list, burst_selection
 
     def iter_swaths(self, selection=None):
         """Iterate over swaths according to the specified selection.
@@ -302,8 +311,8 @@ class Sentinel1Etad:
             If the selection is None (default) the iteration is performed
             on all the swaths of the product.
         """
-        selection = self._selection_to_swath_list(selection)
-        for swath_name in selection:
+        swath_list, _ = self._selection_to_swath_list(selection)
+        for swath_name in swath_list:
             yield self[swath_name]
 
     @staticmethod
@@ -395,8 +404,9 @@ class Sentinel1Etad:
             footprints of all bursts
         """
         polys = []
-        for swath in self.iter_swaths(selection):
-            polys.extend(swath.get_footprint(selection))
+        swath_list, burst_selection = self._selection_to_swath_list(selection)
+        for swath in self.iter_swaths(swath_list):
+            polys.extend(swath.get_footprint(burst_selection))
 
         if merge:
             polys = shapely.ops.cascaded_union(polys)
@@ -442,10 +452,10 @@ class Sentinel1Etad:
 
         img = np.zeros((num_lines, num_samples))
 
-        for swath in self.iter_swaths(selection):
+        for swath in self.iter_swaths(df):
             # NOTE: use the private "Sentinel1EtadSwath._burst_merger" method
             # to be able to work only on the specified NetCDF variable
-            dd_ = swath._burst_merger(burst_var, selection=selection,  # noqa
+            dd_ = swath._burst_merger(burst_var, selection=df,  # noqa
                                       set_auto_mask=set_auto_mask,
                                       transpose=transpose, meter=meter)
             yoffset = dd_['first_azimuth_time'] - az_first_time_rel
@@ -480,7 +490,7 @@ class Sentinel1Etad:
         dd['unit'] = 'm' if meter else 's'
 
         # To compute lat/lon/h make a new selection with all gaps filled
-        swath_list = self._selection_to_swath_list(selection)
+        swath_list, _ = self._selection_to_swath_list(selection)
         near_swath = min(swath_list)
         far_swath = max(swath_list)
         idx = self.burst_catalogue.swathID >= near_swath

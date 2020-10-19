@@ -103,12 +103,21 @@ class Sentinel1EtadKmlWriter:
 
     @staticmethod
     def _write_burst_footprint(burst, kml_dir, t_ref):
-        # TODO: description pop-up
         corners = Sentinel1EtadKmlWriter._get_footprint_corners(
             burst.get_footprint())
         t0, t1 = Sentinel1EtadKmlWriter._get_burst_time_span(burst, t_ref)
 
-        pol = kml_dir.newpolygon(name=str(burst.burst_index))
+        pol = kml_dir.newpolygon(name=str(burst.burst_id))
+        pol.description = (f'''\
+<![CDATA[
+<p>{burst.product_id}</p>
+<p>swath = {burst.swath_id},</p>
+<p>first_time = '{t0.isoformat()}',</p>
+<p>last_time = '{t1.isoformat()}',</p>
+<p>Index (product, swath, burst) =
+ ({burst.product_index}, {burst.swath_index}, {burst.burst_index})
+</p>
+]]>''')
         pol.outerboundaryis = corners
         pol.altitudeMode = 'absolute'
         pol.tessellate = 1

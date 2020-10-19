@@ -2,6 +2,7 @@
 
 import enum
 import pathlib
+import datetime
 import warnings
 import functools
 import collections
@@ -13,7 +14,6 @@ from lxml import etree
 from netCDF4 import Dataset
 
 import pandas as pd
-from dateutil import parser
 
 from shapely.geometry import Polygon, MultiPolygon
 import shapely.ops
@@ -171,12 +171,12 @@ class Sentinel1Etad:
     @property
     def min_azimuth_time(self):
         """The minimum azimuth time of all bursts in the product."""
-        return parser.parse(self.ds.azimuthTimeMin)
+        return datetime.datetime.fromisoformat(self.ds.azimuthTimeMin)
 
     @property
     def max_azimuth_time(self):
         """The maximum azimuth time of all bursts in the product."""
-        return parser.parse(self.ds.azimuthTimeMax)
+        return datetime.datetime.fromisoformat(self.ds.azimuthTimeMax)
 
     def processing_setting(self):
         """Return the corrections performed.
@@ -312,8 +312,8 @@ class Sentinel1Etad:
 
         ll = [elt.text for elt in root.findall(xpath, namespace)]
         if parse_time_func is not None:
-            ll = [parser.parse(t) for t in ll]
-            ll = parse_time_func(ll)
+            ll = [datetime.datetime.fromisoformat(t) for t in ll]
+            ll = parse_time_func(ll)  # TODO: check
         ll = np.asarray(ll, dtype=dtype)
 
         if ll.size == 1:
@@ -426,7 +426,7 @@ class Sentinel1Etad:
                         far_burst.sampling['x'] * far_burst.samples)
         az_first_time = df.azimuthTimeMin.min()
         az_last_time = df.azimuthTimeMax.max()
-        az_ref_time = parser.parse(self.ds.azimuthTimeMin)
+        az_ref_time = self.min_azimuth_time
         az_first_time_rel = (az_first_time - az_ref_time).total_seconds()
 
         sampling = self.grid_sampling

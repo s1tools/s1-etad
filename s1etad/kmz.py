@@ -18,7 +18,7 @@ import matplotlib as mpl
 from matplotlib import cm
 from matplotlib import pyplot
 
-from .product import Sentinel1Etad
+from .product import Sentinel1Etad, ECorrectionType
 
 
 __all__ = ['etad_to_kmz', 'Sentinel1EtadKmlWriter']
@@ -41,7 +41,7 @@ class Sentinel1EtadKmlWriter:
 
         self.write_overall_footprint()
         if corrections is None:
-            corrections = ['sumOfCorrections', 'troposphericCorrection']
+            corrections = [ECorrectionType.SUM, ECorrectionType.TROPOSPHERIC]
         self.write_corrections(corrections, decimation_factor=decimation_factor,
                                colorizing=True)
         self.write_burst_footprint()
@@ -128,9 +128,12 @@ class Sentinel1EtadKmlWriter:
                 self._write_burst_footprint(burst, kml_swath_dir,
                                             first_azimuth_time)
 
+    # TODO: rewrite (do not access private members of etad)
     def _correction_iter(self, corrections):
+        from s1etad.product import _STATS_TAG_MAP
         for correction in corrections:
-            xp = f".//qualityAndStatistics/{correction}"
+            correction = ECorrectionType(correction)
+            xp = f".//qualityAndStatistics/{_STATS_TAG_MAP[correction]}"
             for child in self.etad._annot.find(xp).getchildren():
                 tag = child.tag
                 if 'range' in tag:
@@ -140,13 +143,12 @@ class Sentinel1EtadKmlWriter:
 
     def _colorbar_overlay(self, correction, dim, kml_cor_dir, color_table,
                           visibility):
-        assert color_table is not None
-
+        assert isinstance(correction, ECorrectionType)
         color_table.build_colorbar(
-            self._kmzdir / f'{correction}_{dim}_cb.png')
+            self._kmzdir / f'{correction.value}_{dim}_cb.png')
 
         screen = kml_cor_dir.newscreenoverlay(name='ScreenOverlay')
-        screen.icon.href = f'{correction}_{dim}_cb.png'
+        screen.icon.href = f'{correction.value}_{dim}_cb.png'
         screen.overlayxy = OverlayXY(x=0, y=0,
                                      xunits=Units.fraction,
                                      yunits=Units.fraction)
@@ -186,18 +188,10 @@ class Sentinel1EtadKmlWriter:
     @staticmethod
     def _ground_overlay_data(correction, burst, dim, cor_min, cor_max,
                              colorizing):
-        if correction == 'sumOfCorrections':
-            func_ = functools.partial(
-                burst.get_correction, name='sum', direction=dim)
-        elif correction == 'troposphericCorrection':
-            func_ = functools.partial(
-                burst.get_correction, name='tropospheric',
-                direction=dim)
-        else:
-            raise RuntimeError(
-                f'unexpected correction: {correction!r}')
+        func = functools.partial(
+            burst.get_correction, name=correction, direction=dim)
 
-        etad_correction = func_(meter=True)
+        etad_correction = func(meter=True)
         cor = etad_correction[dim]
         if colorizing is not None:
             cor = (cor - cor_min) / np.abs(cor_max - cor_min) * 255
@@ -213,22 +207,14 @@ class Sentinel1EtadKmlWriter:
         for correction, dim, tag in self._correction_iter(corrections):
             # only enable sum of corrections in range
             # TODO: make configurable
-            if correction == 'sumOfCorrections' and dim == 'x':
+            # TODO: support cases in which SUM is not in the corrections list
+            if correction == ECorrectionType.SUM and dim == 'x':
                 visibility = True
             else:
                 visibility = False
 
             kml_cor_dir = self.kml_root.newfolder(name=f"{correction}_{tag}")
-            # xp_ = f'.//qualityAndStatistics/{correction}'
-            # cor_min, cor_max = self._get_correction_min_max(xp=f'{xp_}/{tag}')
-            # TODO: remove this workaround as soon as the interface is updated
-            #       to standard corrections naming
-            from .product import _STATS_TAG_MAP
-            reversed_correction_names_map = {
-                v: k for k, v in _STATS_TAG_MAP.items()
-            }
-            std_correction_name = reversed_correction_names_map[correction]
-            statistics = self.etad.get_statistics(std_correction_name, meter=True)
+            statistics = self.etad.get_statistics(correction, meter=True)
             cor_min = statistics[dim].min
             cor_max = statistics[dim].max
 

@@ -141,8 +141,7 @@ class Sentinel1EtadKmlWriter:
                 elif 'azimuth' in tag:
                     yield correction, 'y', tag
 
-    def _colorbar_overlay(self, correction, dim, kml_cor_dir, color_table,
-                          visibility):
+    def _colorbar_overlay(self, correction, dim, kml_cor_dir, color_table):
         assert isinstance(correction, ECorrectionType)
         color_table.build_colorbar(
             self._kmzdir / f'{correction.value}_{dim}_cb.png')
@@ -158,17 +157,13 @@ class Sentinel1EtadKmlWriter:
         screen.rotationXY = RotationXY(x=0.5, y=0.5,
                                        xunits=Units.fraction,
                                        yunits=Units.fraction)
-
-        screen.visibility = visibility
-
         return screen
 
-    def _ground_overlay_node(self, kml_dir, burst, t_ref, visibility=True):
+    def _ground_overlay_node(self, kml_dir, burst, t_ref):
         corners = self._get_footprint_corners(burst.get_footprint())
         t0, t1 = self._get_burst_time_span(burst, t_ref)
 
         ground = kml_dir.newgroundoverlay(name='GroundOverlay')
-        ground.visibility = visibility
         ground.name = (
             f'{burst.product_index}_{burst.swath_index}_{burst.burst_index}'
         )
@@ -221,17 +216,18 @@ class Sentinel1EtadKmlWriter:
             gdal_palette = None
             if colorizing:
                 color_table = Colorizer(cor_min, cor_max)
-                self._colorbar_overlay(correction, dim, kml_cor_dir,
-                                       color_table, visibility)
                 gdal_palette = color_table.gdal_palette()
+                cb_overlay = self._colorbar_overlay(correction, dim,
+                                                    kml_cor_dir, color_table)
+                cb_overlay.visibility = visibility
 
             for swath in self.etad.iter_swaths(selection):
                 kml_swath_dir = kml_cor_dir.newfolder(name=swath.swath_id)
 
                 for burst in swath.iter_bursts(selection):
                     ground = self._ground_overlay_node(kml_swath_dir, burst,
-                                                       first_azimuth_time,
-                                                       visibility)
+                                                       first_azimuth_time)
+                    ground.visibility = visibility
 
                     cor = self._ground_overlay_data(correction, burst, dim,
                                                     cor_min, cor_max,

@@ -138,17 +138,6 @@ class Sentinel1EtadKmlWriter:
                 elif 'azimuth' in tag:
                     yield correction, 'y', tag
 
-    def _get_correction_min_max(self, xp):
-        cor_max = np.max(
-            self.etad._xpath_to_list(
-                self.etad._annot, f'{xp}/max[@unit="m"]', dtype=np.float)
-        )
-        cor_min = np.min(
-            self.etad._xpath_to_list(
-                self.etad._annot, f'{xp}/min[@unit="m"]', dtype=np.float)
-        )
-        return cor_min, cor_max
-
     def _colorbar_overlay(self, correction, dim, kml_cor_dir, color_table,
                           visibility):
         assert color_table is not None
@@ -222,8 +211,6 @@ class Sentinel1EtadKmlWriter:
         first_azimuth_time = parser.parse(self.etad.ds.azimuthTimeMin)
 
         for correction, dim, tag in self._correction_iter(corrections):
-            xp_ = f'.//qualityAndStatistics/{correction}'
-
             # only enable sum of corrections in range
             # TODO: make configurable
             if correction == 'sumOfCorrections' and dim == 'x':
@@ -232,7 +219,18 @@ class Sentinel1EtadKmlWriter:
                 visibility = False
 
             kml_cor_dir = self.kml_root.newfolder(name=f"{correction}_{tag}")
-            cor_min, cor_max = self._get_correction_min_max(xp=f'{xp_}/{tag}')
+            # xp_ = f'.//qualityAndStatistics/{correction}'
+            # cor_min, cor_max = self._get_correction_min_max(xp=f'{xp_}/{tag}')
+            # TODO: remove this workaround as soon as the interface is updated
+            #       to standard corrections naming
+            from .product import _STATS_TAG_MAP
+            reversed_correction_names_map = {
+                v: k for k, v in _STATS_TAG_MAP.items()
+            }
+            std_correction_name = reversed_correction_names_map[correction]
+            statistics = self.etad.get_statistics(std_correction_name, meter=True)
+            cor_min = statistics[dim].min
+            cor_max = statistics[dim].max
 
             gdal_palette = None
             if colorizing:

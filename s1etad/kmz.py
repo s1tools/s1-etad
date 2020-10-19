@@ -2,12 +2,10 @@
 
 import shutil
 import pathlib
+import datetime
 import functools
 
 import numpy as np
-
-from datetime import timedelta
-from dateutil import parser
 
 from simplekml import Kml, OverlayXY, ScreenXY, Units, RotationXY
 
@@ -64,8 +62,8 @@ class Sentinel1EtadKmlWriter:
         lon0, lat0, lon1, lat1 = burst.get_footprint().bounds
         lat = np.mean([lat0, lat1])
         lon = np.mean([lon0, lon1])
-        t0 = parser.parse(self.etad.ds.azimuthTimeMin)
-        t1 = t0 + timedelta(seconds=duration)  # configure duration
+        t0 = self.etad.min_azimuth_time
+        t1 = t0 + datetime.timedelta(seconds=duration)  # configure duration
 
         self.kml_root.lookat.latitude = lat
         self.kml_root.lookat.longitude = lon
@@ -97,8 +95,8 @@ class Sentinel1EtadKmlWriter:
     @staticmethod
     def _get_burst_time_span(burst, t_ref):
         azimuth_time, _ = burst.get_burst_grid()
-        t0 = t_ref + timedelta(seconds=azimuth_time[0])
-        t1 = t_ref + timedelta(seconds=azimuth_time[-1])
+        t0 = t_ref + datetime.timedelta(seconds=azimuth_time[0])
+        t1 = t_ref + datetime.timedelta(seconds=azimuth_time[-1])
         if t1 < t0:
             t0, t1 = t1, t0
         return t0, t1

@@ -30,36 +30,51 @@ class Sentinel1EtadKmlWriter:
     DEFAULT_OPEN_FOLDER = False
 
     def __init__(self, etad, corrections=None, timespan=DEFAULT_TIMESPAN,
-                 decimation_factor=1, open_folders=DEFAULT_OPEN_FOLDER):
+                 selection=None, decimation_factor=1, colorizing=True,
+                 open_folders=DEFAULT_OPEN_FOLDER):
+        assert isinstance(etad, Sentinel1Etad)
         self.etad = etad
-        self.etad_file = self.etad.product
 
         if corrections is None:
             corrections = list(self.DEFAULT_CORRECTIONS)  # make a copy
 
+        if selection is None:
+            selection = self.etad.burst_catalogue
+
+        if len(selection) < 1:
+            raise ValueError(f'no burst found in selection: {selection}')
+
+        self._corrections = corrections
+        self._selection = selection
+        self._decimation_factor = decimation_factor
+        self._colorizing = colorizing
+        self._open_folders = open_folders
+
         # TODO: should depend on the output filename
-        self._kmzdir = pathlib.Path(self.etad_file.stem)
+        self._kmzdir = pathlib.Path(self.etad.product.stem)
         if self._kmzdir.exists():
             raise FileExistsError(
                 f'output path already exists "{self._kmzdir}"')
-        self._open_folders = open_folders
+        self._kmzdir.mkdir()
+
         self.kml = Kml(open=self._open_folders)
-        self.kml_root = self.kml.newfolder(name=self.etad_file.stem,
+        self.kml_root = self.kml.newfolder(name=self.etad.product.stem,
                                            open=self._open_folders)
 
         if timespan is not None:
             timespan = self.DEFAULT_TIMESPAN if timespan is True else timespan
-            self.set_timespan(duration=timespan)    # TODO: handle selections
-        self.add_overall_footprint()                # TODO: handle selections
-        self.add_burst_footprints()                 # TODO: handle selections
+            self.set_timespan(duration=timespan)
+
+        self.add_overall_footprint()
+        self.add_burst_footprints()
         # TODO: move this to the save method
-        self.add_ground_overlays(corrections,
-                                 decimation_factor=decimation_factor,
-                                 colorizing=True)
+        self.add_ground_overlays()
 
     def set_timespan(self, duration=30, range_=1500000):
-        swath = self.etad[list(self.etad.swath_list)[0]]
-        burst = swath[list(swath.burst_list)[0]]
+        record = self._selection.iloc[0]
+        swath = self.etad[record.swathID]
+        burst = swath[record.bIndex]
+
         lon0, lat0, lon1, lat1 = burst.get_footprint().bounds
         lat = np.mean([lat0, lat1])
         lon = np.mean([lon0, lon1])
@@ -81,7 +96,7 @@ class Sentinel1EtadKmlWriter:
         return corners
 
     def add_overall_footprint(self):
-        data_footprint = self.etad.get_footprint(merge=True)
+        data_footprint = self.etad.get_footprint(self._selection, merge=True)
         corners = Sentinel1EtadKmlWriter._get_footprint_corners(data_footprint)
 
         polygon = self.kml_root.newpolygon(name='footprint')
@@ -128,13 +143,12 @@ class Sentinel1EtadKmlWriter:
         polygon.timespan.end = t1.isoformat()
 
     def add_burst_footprints(self):
-        selection = None
         t_ref = self.etad.min_azimuth_time
         kml_footprint_dir = self.kml_root.newfolder(name='burst_footprint',
                                                     open=self._open_folders)
-        for swath in self.etad.iter_swaths(selection):
+        for swath in self.etad.iter_swaths(self._selection):
             kml_swath_dir = kml_footprint_dir.newfolder(name=swath.swath_id)
-            for burst in swath.iter_bursts(selection):
+            for burst in swath.iter_bursts(self._selection):
                 self._add_burst_footprint(burst, kml_swath_dir, t_ref)
 
     def _colorbar_overlay(self, correction, dim, kml_cor_dir, color_table):
@@ -181,16 +195,15 @@ class Sentinel1EtadKmlWriter:
 
         etad_correction = func(meter=True)
         data = etad_correction[dim]
-        if colorizing is not None:
+        if colorizing:
             data = 255 / np.abs(vmax - vmin) * (data - vmin)
 
         data = np.flipud(data)  # TODO: check ascending/descending
 
         return data
 
-    def add_ground_overlays(self, corrections, selection=None,
-                            decimation_factor=1, colorizing=False):
-        for correction, dim in iter_corrections(corrections):
+    def add_ground_overlays(self):
+        for correction, dim in iter_corrections(self._corrections):
             # only enable sum of corrections in range
             # TODO: make configurable
             # TODO: support cases in which SUM is not in the corrections list
@@ -206,25 +219,26 @@ class Sentinel1EtadKmlWriter:
             vmax = statistics[dim].max
 
             gdal_palette = None
-            if colorizing:
+            if self._colorizing:
                 color_table = Colorizer(vmin, vmax)
                 gdal_palette = color_table.gdal_palette()
                 colorbar_overlay = self._colorbar_overlay(
                     correction, dim, kml_correction_dir, color_table)
                 colorbar_overlay.visibility = visibility
 
-            for swath in self.etad.iter_swaths(selection):
+            for swath in self.etad.iter_swaths(self._selection):
                 kml_swath_dir = kml_correction_dir.newfolder(
                     name=swath.swath_id)
 
-                for burst in swath.iter_bursts(selection):
+                for burst in swath.iter_bursts(self._selection):
                     ground = self._ground_overlay_node(kml_swath_dir, burst)
                     ground.visibility = visibility
 
                     data = self._ground_overlay_data(correction, burst, dim,
-                                                     vmin, vmax, colorizing)
+                                                     vmin, vmax,
+                                                     self._colorizing)
 
-                    if colorizing is not None:
+                    if self._colorizing:
                         pixel_depth = gdal.GDT_Byte
                     else:
                         pixel_depth = gdal.GDT_Float32
@@ -239,7 +253,7 @@ class Sentinel1EtadKmlWriter:
                                       color_table=gdal_palette,
                                       pixel_depth=pixel_depth,
                                       driver='GTiff',
-                                      decimation_factor=decimation_factor,
+                                      decimation_factor=self._decimation_factor,
                                       gcp_list=None)
 
                     ground.icon.href = pathlib.Path(ds.GetDescription()).name
@@ -278,6 +292,7 @@ def array2raster(outfile, array, gcp_list=None, color_table=None,
 
     driver = gdal.GetDriverByName(driver)
     outraster = driver.Create(str(outfile), cols, rows, 1, pixel_depth)
+    assert outraster is not None
 
     # outRaster.SetGeoTransform(
     #     (originX, pixelWidth, 0, originY, 0, pixelHeight))

@@ -17,6 +17,7 @@ from matplotlib import cm
 from matplotlib import pyplot
 
 from .product import Sentinel1Etad, ECorrectionType
+from .utils import iter_corrections
 
 
 __all__ = ['etad_to_kmz', 'Sentinel1EtadKmlWriter']
@@ -136,19 +137,6 @@ class Sentinel1EtadKmlWriter:
             for burst in swath.iter_bursts(selection):
                 self._add_burst_footprint(burst, kml_swath_dir, t_ref)
 
-    # TODO: rewrite (do not access private members of etad)
-    def _correction_iter(self, corrections):
-        from s1etad.product import _STATS_TAG_MAP
-        for correction in corrections:
-            correction = ECorrectionType(correction)
-            xp = f".//qualityAndStatistics/{_STATS_TAG_MAP[correction]}"
-            for child in self.etad._annot.find(xp).getchildren():
-                tag = child.tag
-                if 'range' in tag:
-                    yield correction, 'x', tag
-                elif 'azimuth' in tag:
-                    yield correction, 'y', tag
-
     def _colorbar_overlay(self, correction, dim, kml_cor_dir, color_table):
         assert isinstance(correction, ECorrectionType)
         color_table.build_colorbar(
@@ -202,7 +190,7 @@ class Sentinel1EtadKmlWriter:
 
     def add_ground_overlays(self, corrections, selection=None,
                             decimation_factor=1, colorizing=False):
-        for correction, dim, tag in self._correction_iter(corrections):
+        for correction, dim in iter_corrections(corrections):
             # only enable sum of corrections in range
             # TODO: make configurable
             # TODO: support cases in which SUM is not in the corrections list

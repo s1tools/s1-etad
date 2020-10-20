@@ -8,7 +8,7 @@ from .. import __version__
 try:
     import argcomplete
 except ImportError:
-    argcomplete + None
+    argcomplete = None
 
 
 def set_logging_control_args(parser, default_loglevel='WARNING'):

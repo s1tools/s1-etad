@@ -14,12 +14,18 @@ s1etad v0.3.0 (UNRELEASED)
     footprints of all bursts
 
 * New :meth:`s1etad.product.Sentinel1Etad.get_statistics` method.
-* Added missing attributes to :class:`s1etad.product.Sentinel1EtadSwath` and
+* Added missing attributes to :class:`s1etad.product.Sentinel1Etad`,
+  :class:`s1etad.product.Sentinel1EtadSwath` and
   :class:`s1etad.product.Sentinel1EtadBurst` classes.
 * Removed :meth:`s1etad.product.Sentinel1Etad.xpath_to_list` method from
   the public API (the private one is still available)
 * Strongly improved KMZ export function.
-* New Command Line Interface (CLI) ofr basic functions
+
+  - new dedicated :mod:`s1etad.kmz` module (providing the
+    :func:`s1etad.kmz.s1etad_to_kmz` function)
+  - removed the obsolete :meth:`s1etad.product.Sentinel1Etad.to_kml` method
+
+* New Command Line Interface (CLI) for basic functions
   (only "export-kmz" at the moment).
 * Documentation:
 

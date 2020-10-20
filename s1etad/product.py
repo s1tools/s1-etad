@@ -594,28 +594,6 @@ class Sentinel1Etad:
         correction['name'] = correction_type.value
         return correction
 
-    def to_kml(self, kml_file):
-        kml = simplekml.Kml()
-
-        # get the footprints
-        burst_ftps = self.get_footprint()
-        kml_dir = kml.newfolder(name=f"Sentinel1 Timing Correction Grid ")
-        for ix, ftp in enumerate(burst_ftps):
-            x, y = ftp.exterior.xy
-            corner = [(x[i], y[i]) for i in range(len(x))]
-
-            pol = kml_dir.newpolygon(name=str(ix))
-            pol.outerboundaryis = corner
-            pol.altitudeMode = 'absolute'
-            pol.tessellate = 1
-            pol.polystyle.fill = 0
-            pol.style.linestyle.width = 2
-
-        if kml_file is not None:
-            kml.save(kml_file)
-
-        return kml
-
 
 class Sentinel1EtadSwath:
     """Object representing a swath in the S1-ETAD product.

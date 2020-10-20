@@ -50,13 +50,6 @@ class Sentinel1EtadKmlWriter:
         self._colorizing = colorizing
         self._open_folders = open_folders
 
-        # TODO: should depend on the output filename
-        self._kmzdir = pathlib.Path(self.etad.product.stem)
-        if self._kmzdir.exists():
-            raise FileExistsError(
-                f'output path already exists "{self._kmzdir}"')
-        self._kmzdir.mkdir()
-
         self.kml = Kml(open=self._open_folders)
         self.kml_root = self.kml.newfolder(name=self.etad.product.stem,
                                            open=self._open_folders)
@@ -67,8 +60,6 @@ class Sentinel1EtadKmlWriter:
 
         self.add_overall_footprint()
         self.add_burst_footprints()
-        # TODO: move this to the save method
-        self.add_ground_overlays()
 
     def set_timespan(self, duration=30, range_=1500000):
         record = self._selection.iloc[0]
@@ -151,13 +142,15 @@ class Sentinel1EtadKmlWriter:
             for burst in swath.iter_bursts(self._selection):
                 self._add_burst_footprint(burst, kml_swath_dir, t_ref)
 
-    def _colorbar_overlay(self, correction, dim, kml_cor_dir, color_table):
+    def _colorbar_overlay(self, correction, dim, kml_cor_dir, color_table,
+                          outpath):
         assert isinstance(correction, ECorrectionType)
-        color_table.build_colorbar(
-            self._kmzdir / f'{correction.value}_{dim}_cb.png')
+
+        filename = f'{correction.value}_{dim}_cb.png'
+        color_table.build_colorbar(outpath / filename)
 
         screen = kml_cor_dir.newscreenoverlay(name='ColorBar')
-        screen.icon.href = f'{correction.value}_{dim}_cb.png'
+        screen.icon.href = filename
         screen.overlayxy = OverlayXY(x=0, y=0,
                                      xunits=Units.fraction,
                                      yunits=Units.fraction)
@@ -202,7 +195,10 @@ class Sentinel1EtadKmlWriter:
 
         return data
 
-    def add_ground_overlays(self):
+    def add_ground_overlays(self, outpath):
+        outpath = pathlib.Path(outpath)
+        outpath.mkdir(exist_ok=True)
+
         for correction, dim in iter_corrections(self._corrections):
             # only enable sum of corrections in range
             # TODO: make configurable
@@ -223,7 +219,7 @@ class Sentinel1EtadKmlWriter:
                 color_table = Colorizer(vmin, vmax)
                 gdal_palette = color_table.gdal_palette()
                 colorbar_overlay = self._colorbar_overlay(
-                    correction, dim, kml_correction_dir, color_table)
+                    correction, dim, kml_correction_dir, color_table, outpath)
                 colorbar_overlay.visibility = visibility
 
             for swath in self.etad.iter_swaths(self._selection):
@@ -249,7 +245,7 @@ class Sentinel1EtadKmlWriter:
                         f'{correction.value}_{dim}'
                     )
 
-                    ds = array2raster(self._kmzdir / burst_img, data,
+                    ds = array2raster(outpath / burst_img, data,
                                       color_table=gdal_palette,
                                       pixel_depth=pixel_depth,
                                       driver='GTiff',
@@ -260,17 +256,26 @@ class Sentinel1EtadKmlWriter:
 
     def save(self, outpath='preview.kmz'):
         outpath = pathlib.Path(outpath)
+
         assert outpath.suffix.lower() in {'.kml', '.kmz', ''}
-        self._kmzdir.mkdir(exist_ok=True)
-        self.kml.save(self._kmzdir / 'doc.kml')
+        if outpath.exists():
+            raise FileExistsError(f'output path already exists "{outpath}"')
+
+        kmzdir = outpath.with_suffix('')
+        if kmzdir.exists():
+            raise FileExistsError(f'output path already exists "{kmzdir}"')
+        kmzdir.mkdir()
+
+        self.add_ground_overlays(kmzdir)
+        self.kml.save(kmzdir / 'doc.kml')
 
         if outpath.name.lower().endswith('.kmz'):
             shutil.make_archive(str(outpath.with_suffix('')),
-                                format='zip', root_dir=str(self._kmzdir))
+                                format='zip', root_dir=str(kmzdir))
             shutil.move(outpath.with_suffix('.zip'), outpath)
-            shutil.rmtree(self._kmzdir)
+            shutil.rmtree(kmzdir)
         else:
-            shutil.move(self._kmzdir, outpath)
+            shutil.move(kmzdir, outpath)
 
 
 def array2raster(outfile, array, gcp_list=None, color_table=None,

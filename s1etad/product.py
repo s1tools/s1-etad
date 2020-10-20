@@ -18,8 +18,6 @@ import pandas as pd
 from shapely.geometry import Polygon, MultiPolygon
 import shapely.ops
 
-import simplekml
-
 
 __all__ = [
     'Sentinel1Etad', 'Sentinel1EtadSwath', 'Sentinel1EtadBurst',

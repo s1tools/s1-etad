@@ -99,6 +99,8 @@ autodoc_mock_imports = [
     'dateutil',
     'shapely',
     'simplekml',
+    'osgeo',
+    'matplotlib',
 ]
 
 # -- Options for ReadTheDocs integration -------------------------------------

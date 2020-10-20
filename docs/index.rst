@@ -16,7 +16,7 @@ s1etad documentation
 
    quickstart
    notebooks/s1etad-tutorial
-   api
+   api/modules
    TODO
    news
 

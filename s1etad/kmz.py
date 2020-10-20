@@ -27,6 +27,7 @@ class Sentinel1EtadKmlWriter:
     # TODO: only SUM by default
     DEFAULT_CORRECTIONS = (ECorrectionType.SUM, ECorrectionType.TROPOSPHERIC)
     DEFAULT_TIMESPAN = 30  # [s]
+    DEFAULT_LOOKAT_RANGE = 1500000
     DEFAULT_OPEN_FOLDER = False
 
     def __init__(self, etad, corrections=None, timespan=DEFAULT_TIMESPAN,
@@ -61,7 +62,8 @@ class Sentinel1EtadKmlWriter:
         self.add_overall_footprint()
         self.add_burst_footprints()
 
-    def set_timespan(self, duration=30, range_=1500000):
+    def set_timespan(self, duration=DEFAULT_TIMESPAN,
+                     range_=DEFAULT_LOOKAT_RANGE):
         record = self._selection.iloc[0]
         swath = self.etad[record.swathID]
         burst = swath[record.bIndex]

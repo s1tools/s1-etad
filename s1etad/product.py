@@ -16,6 +16,7 @@ from netCDF4 import Dataset
 import pandas as pd
 
 from shapely.geometry import Polygon, MultiPolygon
+from shapely.geometry.base import BaseGeometry
 import shapely.ops
 
 
@@ -231,7 +232,7 @@ class Sentinel1Etad:
         return df
 
     def query_burst(self, first_time=None, product_name=None, last_time=None,
-                    swath=None):
+                    swath=None, geometry=None):
         """Query the burst catalogue to retrieve the burst matching by time.
 
         Parameters
@@ -245,6 +246,8 @@ class Sentinel1Etad:
             S1B_IW_SLC__1SDV_20190805T162509_20190805T162...SAFE
         swath : str or list
             list of swathID e.g. 'IW1' or ['IW1'] or ['IW1', 'IW2']
+        geometry : shapely.geometry.[Point, Polygon, ...]
+            A shapely geometry for which interstion will be searched
 
         Returns
         -------
@@ -275,6 +278,11 @@ class Sentinel1Etad:
             if isinstance(swath, str):
                 swath = [swath]
             ix0 = ix0 & df.swathID.isin(swath)
+
+        if geometry is not None:
+            bix_list = self.intersects(geometry)
+            ix0 = ix0 & df.bIndex.isin(bix_list)
+
 
         return df.loc[ix0]
 
@@ -412,6 +420,25 @@ class Sentinel1Etad:
             polys = MultiPolygon(polys)
 
         return polys
+
+    def intersects(self, geometry):
+        """
+            Computes the intersection of the footprint of the swath (all bursts)
+            with the input Geometry
+
+            Parameters:
+            ----------
+            geometry : shapely.geometry.[Point, Polygon, MultiPolygon, line]
+
+            Returns
+            -------
+                bix_list : list
+                    list of all the burst intersecting with the input shape geometry
+        """
+        bix_list=[ self[swath].intersects(geometry) for swath in self.swath_list]
+        #flattening the list of list
+        bix_list = functools.reduce(lambda x,y: x+y,bix_list)
+        return bix_list
 
     def _swath_merger(self, burst_var, selection=None, set_auto_mask=False,
                       transpose=True, meter=False):
@@ -705,6 +732,29 @@ class Sentinel1EtadSwath:
 
         return polys
 
+    def intersects(self, geometry):
+        """
+            Computes the intersection of the footprint of the swath (all bursts)
+            with the input Geometry
+
+            Parameters:
+            ----------
+            geometry : shapely.geometry.[Point, Polygon, MultiPolygon, line]
+
+            Returns
+            -------
+                bix_list : list
+                    list of all the burst intersecting with the input shape geometry
+        """
+
+        bix_list = []
+        assert (isinstance(geometry, BaseGeometry)), 'The input shaope is not a shapely BaseGeometry object'
+        footprints = self.get_footprint()
+        ftp_union = shapely.ops.cascaded_union(footprints)
+        if ftp_union.intersects(geometry):
+            bix_list = [ bix for bix in self.burst_list if self[bix].intersects(geometry)]
+        return bix_list
+
     def _burst_merger(self, burst_var, selection=None,
                       az_time_min=None, az_time_max=None,
                       set_auto_mask=False, transpose=True, meter=False):
@@ -955,6 +1005,21 @@ class Sentinel1EtadBurst:
             etaf_burst_footprint.append((lon_, lat_, h_))
         etaf_burst_footprint = Polygon(etaf_burst_footprint)
         return etaf_burst_footprint
+
+    def intersects(self, geometry):
+        """Intersects the footprint of the burst with the provided shape
+
+        Parameters
+        ----------
+            geometry : shapely.geometry.[Point, Polygon, MultiPolygon, line]
+
+        Returns
+        -------
+            True if intersects, False else
+        """
+        assert (isinstance(geometry, BaseGeometry)), 'Not a shapely BaseGeometry object'
+        ftp = self.get_footprint()
+        return ftp.intersects(geometry)
 
     def get_burst_grid(self):
         """Return the t, tau grid of the burst."""

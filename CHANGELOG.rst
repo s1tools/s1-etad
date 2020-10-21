@@ -25,6 +25,8 @@ s1etad v0.3.0 (UNRELEASED)
     :func:`s1etad.kmz.s1etad_to_kmz` function)
   - removed the obsolete :meth:`s1etad.product.Sentinel1Etad.to_kml` method
 
+* New methods to find points (and geometries) intersecting
+  the burst/swath/product footprint.
 * New Command Line Interface (CLI) for basic functions
   (only "export-kmz" at the moment).
 * Documentation:

@@ -964,6 +964,7 @@ class Sentinel1EtadBurst:
     def __init__(self, nc_group, daz_m):
         self._grp = nc_group
         self._daz_m = daz_m
+        self._geocoder = None
 
     def __repr__(self):
         return f'{self.__class__.__name__}("{self._grp.path}")  0x{id(self):x}'
@@ -1173,6 +1174,88 @@ class Sentinel1EtadBurst:
                                                transpose=transpose, meter=meter)
         correction['name'] = name
         return correction
+
+    def _get_geocoder(self):
+        if self._geocoder is None:
+            from .geometry import GridGeocoding
+            azimuth, range_ = self.get_burst_grid()
+            lats, lons, heights = self.get_lat_lon_height()
+            self._geocoder = GridGeocoding(lats, lons, heights,
+                                           xaxis=range_, yaxis=azimuth)
+        return self._geocoder
+
+    def radar_to_geodetic(self, tau, t, deg=True):
+        """Convert RADAR coordinates into geodetic coordinates.
+
+        Compute the geodetic coordinates (lat, lon, h) corresponding to
+        RADAR coordinates (tau, t), i.e. fast time (range time) and slow
+        time (azimuth time expressed in seconds form the reference
+        :data:`Sentinel1Etad.min_azimuth_time`)::
+
+            (tau, t) -> (lat, lon, h)
+
+        If ``deg`` is True the output ``lat`` and ``lon`` are expressed
+        in degrees, otherwise in radians.
+
+        The implementation is approximated and exploits pre-computed grids
+        of latitude, longitude and height values.
+
+        The method is not as accurate as solving the range-Doppler equations.
+
+        .. seealso:: :class:`s1etad.geometry.GridGeocoding`.
+        """
+        return self._get_geocoder().forward_geocode(tau, t, deg=deg)
+
+    def geodetic_to_radar(self, lat, lon, h=0, deg=True):
+        """Convert geodetic coordinates into RADAR coordinates.
+
+        Compute the RADAR coordinates (tau, t), i.e. fast time (range time)
+        and slow time (azimuth time expressed in seconds form the reference
+        :data:`Sentinel1Etad.min_azimuth_time`) corresponding to
+        geodetic coordinates (lat, lon, h)::
+
+            (lat, lon, h) -> (tau, t)
+
+        If ``deg`` is True it is assumed that input ``lat`` and ``lon``
+        are expressed in degrees, otherwise it is assumed that angles
+        are expressed in radians.
+
+        The implementation is approximated and exploits pre-computed grids
+        of latitude, longitude and height values.
+
+        The method is not as accurate as solving the range-Doppler equations.
+
+        .. seealso:: :class:`s1etad.geometry.GridGeocoding`.
+        """
+        return self._get_geocoder().backward_geocode(lat, lon, h, deg=deg)
+
+    def radar_to_image(self, t, tau):
+        """Convert RADAR coordinates into image coordinates.
+
+        Compute the image coordinates (line, sample) corresponding
+        to RADAR coordinates (tau, t), i.e. fast time (range time) and
+        slow time (azimuth time expressed in seconds form the reference
+        :data:`Sentinel1Etad.min_azimuth_time`)::
+
+            (tau, t) -> (line, sample)
+        """
+        line = (t - self.sampling_start['y']) / self.sampling['y']
+        sample = (tau - self.sampling_start['x']) / self.sampling['x']
+        return line, sample
+
+    def image_to_radar(self, line, sample):
+        """Convert image coordinates into RADAR coordinates.
+
+        Compute the RADAR coordinates (tau, t), i.e. fast time (range time)
+        and slow time (azimuth time expressed in seconds form the reference
+        :data:`Sentinel1Etad.min_azimuth_time`) corresponding to
+        image coordinates (line, sample)::
+
+            (line, sample) -> (t, tau)
+        """
+        t = self.sampling_start['y'] + line * self.sampling['y']
+        tau = self.sampling_start['x'] + sample * self.sampling['x']
+        return t, tau
 
 
 class Sentinel1ProductName:

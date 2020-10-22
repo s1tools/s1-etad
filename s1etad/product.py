@@ -321,6 +321,31 @@ class Sentinel1Etad:
         for swath_name in swath_list:
             yield self[swath_name]
 
+    def iter_bursts(self, selection=None):
+        """Iterate over burst according to the specified selection.
+
+        Parameters
+        ----------
+        selection : list(int) or pd.Dataframe, optional
+            the list of selected burst indexes or the result of a
+            Sentinel1Etad.query_burst query.
+            If the selection is None (default) the iteration is performed
+            on all the bursts of the product.
+        """
+        if not isinstance(selection, pd.DataFrame):
+            # assume it is a list of burst indexes
+            bursts = selection
+            if isinstance(bursts, int):
+                bursts = [selection]
+            # NOTE: preserve the order
+            selection = self.burst_catalogue.bIndex.isin(bursts)
+
+        assert isinstance(selection, pd.DataFrame)
+
+        for idx, row in selection.iterrows():
+            burst = self[row.swathID][row.bIndex]
+            yield burst
+
     @staticmethod
     def _xpath_to_list(root, xpath, dtype=None, namespace=None,
                        parse_time_func=None):

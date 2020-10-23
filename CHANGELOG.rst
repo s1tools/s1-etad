@@ -27,6 +27,8 @@ s1etad v0.3.0 (UNRELEASED)
 
 * New methods to find points (and geometries) intersecting
   the burst/swath/product footprint.
+* New method and functions for direct and inverse geocoding
+  (approximated algorithm)
 * New Command Line Interface (CLI) for basic functions
   (only "export-kmz" at the moment).
 * Documentation:

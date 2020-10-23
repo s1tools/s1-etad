@@ -20,6 +20,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   s1etad.geometry
    s1etad.kmz
    s1etad.product
    s1etad.utils

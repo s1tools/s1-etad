@@ -4,4 +4,5 @@ Examples
 .. toctree::
    :maxdepth: 2
 
-   notebooks/corner_reflector_with_grid_geocoder
+   notebooks/example_statistics
+   notebooks/example_corner_reflector_with_grid_geocoder

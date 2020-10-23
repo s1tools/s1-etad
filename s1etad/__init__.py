@@ -15,4 +15,4 @@ from .product import (
     Sentinel1Etad, Sentinel1EtadSwath, Sentinel1EtadBurst, ECorrectionType,
 )
 
-__version__ = '0.3.0.dev1'
+__version__ = '0.3.0.dev2'

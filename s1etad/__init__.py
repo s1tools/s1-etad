@@ -16,3 +16,9 @@ from .product import (
 )
 
 __version__ = '0.3.0.dev2'
+
+
+# register display functions for Jupyter
+from ._jupyter_support import _register_jupyter_formatters
+_register_jupyter_formatters()
+del _register_jupyter_formatters

@@ -16,6 +16,11 @@ s1etad documentation
 
    quickstart
    notebooks/s1etad-tutorial
+   notebooks/use-case-01_burst_selection
+   notebooks/use-case-02_corrections
+   notebooks/use-case-03_footprints
+   notebooks/use-case-04_corner_reflector
+   examples
    api/modules
    TODO
    news

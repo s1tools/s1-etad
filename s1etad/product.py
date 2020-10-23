@@ -452,7 +452,7 @@ class Sentinel1Etad:
         Computes the intersection of the footprint of the swath (all bursts)
         with the input geometry.
 
-        Parameters:
+        Parameters
         ----------
         geometry : shapely.geometry.[Point, Polygon, MultiPolygon, line]
 
@@ -765,7 +765,7 @@ class Sentinel1EtadSwath:
         Computes the intersection of the footprint of the swath (all bursts)
         with the input Geometry
 
-        Parameters:
+        Parameters
         ----------
         geometry : shapely.geometry.[Point, Polygon, MultiPolygon, line]
 

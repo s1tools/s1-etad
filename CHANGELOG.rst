@@ -1,7 +1,7 @@
 Version history
 ===============
 
-s1etad v0.3.0 (UNRELEASED)
+s1etad v0.3.0 (27/10/2020)
 --------------------------
 
 * Now ``s1etad`` is a package.

@@ -63,9 +63,10 @@ Requirements
 * `lxml <https://lxml.de>`_
 * `netCDF4 <https://github.com/Unidata/netcdf4-python>`_
 * `pandas <https://pandas.pydata.org>`_
-* `python-dateutil <https://dateutil.readthedocs.io>`_
 * `shapely <https://github.com/Toblerity/Shapely>`_
 * `simplekml <https://pypi.org/project/simplekml>`_
+* `GDAL <https://gdal.org> `_
+* `matplotlib <https://matplotlib.org>`_
 
 
 Installation

@@ -689,7 +689,7 @@ class Sentinel1EtadSwath:
     @property
     def swath_index(self):
         """The swath index (int)."""
-        return self._grp.swathID
+        return self._grp.sIndex
 
     @property
     def sampling_start(self):
@@ -857,7 +857,7 @@ class Sentinel1EtadSwath:
                 'The azimuth sampling is changing long azimuth'
             assert(first_burst.sampling_start['x'] ==
                    burst_.sampling_start['x']), \
-                'The 2-way range gridStartRangeTime0 is changing long azimuth'
+                'The 2-way range gridStartRangeTime is changing long azimuth'
 
             # get the timing of the burst and convert into line index
             az_time_, rg_time_ = burst_.get_burst_grid()
@@ -1072,8 +1072,8 @@ class Sentinel1EtadBurst:
         # TODO: put a reference in the docstring to the proper
         #       Sentinel1Etad property.
         return dict(
-            x=self._grp.gridStartRangeTime0,
-            y=self._grp.gridStartAzimuthTime0,
+            x=self._grp.gridStartRangeTime,
+            y=self._grp.gridStartAzimuthTime,
             units='s',
         )
 

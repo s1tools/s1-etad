@@ -12,6 +12,8 @@ def _sentinel1_etad_repr_pretty_(obj, p, cycle):
         plist = obj.s1_product_list()
         if isinstance(plist, str):
             plist = [plist]
+        p.text(f'Number of Sentinel-1 slices: {len(plist)}')
+        p.break_()
         with p.group(2, 'Sentinel-1 products list:'):
             for name in plist:
                 p.break_()

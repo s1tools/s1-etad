@@ -470,7 +470,7 @@ class Sentinel1Etad:
         return list(itertools.chain(*lists_of_burst_indexes))
 
     def _swath_merger(self, burst_var, selection=None, set_auto_mask=False,
-                      transpose=True, meter=False):
+                      meter=False):
         if selection is None:
             df = self.burst_catalogue
         elif not isinstance(selection, pd.DataFrame):
@@ -510,8 +510,7 @@ class Sentinel1Etad:
             # NOTE: use the private "Sentinel1EtadSwath._burst_merger" method
             # to be able to work only on the specified NetCDF variable
             dd_ = swath._burst_merger(burst_var, selection=df,  # noqa
-                                      set_auto_mask=set_auto_mask,
-                                      transpose=transpose, meter=meter)
+                                      set_auto_mask=set_auto_mask, meter=meter)
             yoffset = dd_['first_azimuth_time'] - az_first_time_rel
             xoffset = dd_['first_slant_range_time'] - rg_first_time
             line_ofs = np.round(yoffset / dy).astype(np.int)
@@ -530,12 +529,11 @@ class Sentinel1Etad:
         }
 
     def _core_merge_correction(self, prm_list, selection=None,
-                               set_auto_mask=True, transpose=True, meter=False):
+                               set_auto_mask=True, meter=False):
         dd = {}
         for dim, field in prm_list.items():
             dd_ = self._swath_merger(field, selection=selection,
-                                     set_auto_mask=set_auto_mask,
-                                     transpose=transpose, meter=meter)
+                                     set_auto_mask=set_auto_mask, meter=meter)
             dd[dim] = dd_[field]
             dd['sampling'] = dd_['sampling']
             dd['first_azimuth_time'] = dd_['first_azimuth_time']
@@ -563,18 +561,18 @@ class Sentinel1Etad:
 
         dd['lats'] = self._swath_merger('lats', selection=filled_selection,
                                         set_auto_mask=set_auto_mask,
-                                        transpose=transpose, meter=False)
+                                        meter=False)
         dd['lons'] = self._swath_merger('lons', selection=filled_selection,
                                         set_auto_mask=set_auto_mask,
-                                        transpose=transpose, meter=False)
+                                        meter=False)
         dd['height'] = self._swath_merger('height', selection=filled_selection,
                                           set_auto_mask=set_auto_mask,
-                                          transpose=transpose, meter=False)
+                                          meter=False)
         return dd
 
     def merge_correction(self, name: CorrectionType = ECorrectionType.SUM,
-                         selection=None, set_auto_mask=True, transpose=True,
-                         meter=False, direction=None):
+                         selection=None, set_auto_mask=True, meter=False,
+                         direction=None):
         """Merge multiple swaths of the specified correction variable.
 
         Data of the selected swaths (typically overlapped) are merged
@@ -604,9 +602,6 @@ class Sentinel1Etad:
             list of selected bursts (by default all bursts are selected)
         set_auto_mask : bool
             requested for netCDF4 to avoid retrieving a masked array
-        transpose : bool
-            requested to retrieve the correction in array following the
-            numpy convention for dimensions
         meter : bool
             transform the result in meters
         direction : str or None
@@ -643,7 +638,6 @@ class Sentinel1Etad:
             prm_list = {direction: prm_list[direction]}
         correction = self._core_merge_correction(prm_list, selection=selection,
                                                  set_auto_mask=set_auto_mask,
-                                                 transpose=transpose,
                                                  meter=meter)
         correction['name'] = correction_type.value
         return correction
@@ -790,7 +784,7 @@ class Sentinel1EtadSwath:
 
     def _burst_merger(self, burst_var, selection=None,
                       az_time_min=None, az_time_max=None,
-                      set_auto_mask=False, transpose=True, meter=False):
+                      set_auto_mask=False, meter=False):
         """Low level method to de-burst a NetCDF variable.
 
         The de-burst strategy is simple as the latest line is on top of the
@@ -810,9 +804,6 @@ class Sentinel1EtadSwath:
             (relative to the reference annotated in the NetCDF root)
         set_auto_mask : bool
             requested for netCDF4 to avoid retrieving a masked array
-        transpose : bool
-            requested to retrieve the correction in array following the
-            numpy convention for dimensions
         meter : bool
             transform the result in meters
 
@@ -867,7 +858,7 @@ class Sentinel1EtadSwath:
             # to be able to work only on the specified NetCDF variable
             var_ = burst_._get_etad_param(burst_var,  # noqa
                                           set_auto_mask=set_auto_mask,
-                                          transpose=transpose, meter=meter)
+                                          meter=meter)
 
             debursted_var[line_index_, :] = var_
 
@@ -879,32 +870,28 @@ class Sentinel1EtadSwath:
         }
 
     def _core_merge_correction(self, prm_list, selection=None,
-                               set_auto_mask=True, transpose=True, meter=False):
+                               set_auto_mask=True, meter=False):
         dd = {}
         for dim, field in prm_list.items():
             dd_ = self._burst_merger(field, selection=selection,
-                                     set_auto_mask=set_auto_mask,
-                                     transpose=transpose, meter=meter)
+                                     set_auto_mask=set_auto_mask, meter=meter)
             dd[dim] = dd_[field]
             dd['sampling'] = dd_['sampling']
             dd['first_azimuth_time'] = dd_['first_azimuth_time']
             dd['first_slant_range_time'] = dd_['first_slant_range_time']
 
         dd['unit'] = 'm' if meter else 's'
-        dd['lats'] = self._burst_merger('lats', transpose=transpose,
-                                        meter=False,
+        dd['lats'] = self._burst_merger('lats', meter=False,
                                         set_auto_mask=set_auto_mask)
-        dd['lons'] = self._burst_merger('lons', transpose=transpose,
-                                        meter=False,
+        dd['lons'] = self._burst_merger('lons', meter=False,
                                         set_auto_mask=set_auto_mask)
-        dd['height'] = self._burst_merger('height', transpose=transpose,
-                                          meter=False,
+        dd['height'] = self._burst_merger('height', meter=False,
                                           set_auto_mask=set_auto_mask)
         return dd
 
     def merge_correction(self, name: CorrectionType = ECorrectionType.SUM,
-                         selection=None, set_auto_mask=True,
-                         transpose=True, meter=False, direction=None):
+                         selection=None, set_auto_mask=True, meter=False,
+                         direction=None):
         """Merge multiple bursts of the specified correction variable.
 
         Data of the selected bursts (typically overlapped) are merged
@@ -934,9 +921,6 @@ class Sentinel1EtadSwath:
             list of selected bursts (by default all bursts are selected)
         set_auto_mask : bool
             requested for netCDF4 to avoid retrieving a masked array
-        transpose : bool
-            requested to retrieve the correction in array following the
-            numpy convention for dimensions
         meter : bool
             transform the result in meters
         direction : str or None
@@ -971,10 +955,8 @@ class Sentinel1EtadSwath:
         prm_list = _CORRECTION_NAMES_MAP[correction_type.value]
         if direction is not None:
             prm_list = {direction: prm_list[direction]}
-        correction = self._core_merge_correction(prm_list,
-                                                 selection=selection,
+        correction = self._core_merge_correction(prm_list, selection=selection,
                                                  set_auto_mask=set_auto_mask,
-                                                 transpose=transpose,
                                                  meter=meter)
         correction['name'] = correction_type.value
         return correction
@@ -1103,7 +1085,7 @@ class Sentinel1EtadBurst:
         """The number of samples in the burst."""
         return self._grp.dimensions['rangeExtent'].size
 
-    def _get_etad_param(self, name, set_auto_mask=False, transpose=True,
+    def _get_etad_param(self, name, set_auto_mask=False, transpose=False,
                         meter=False):
         assert name in self._grp.variables, f'Parameter {name!r} is not allowed'
 
@@ -1130,7 +1112,7 @@ class Sentinel1EtadBurst:
 
         return field
 
-    def get_lat_lon_height(self, transpose=True):
+    def get_lat_lon_height(self, transpose=False):
         """Return the latitude, longitude and height for each point.
 
         Data are returned as (3) matrices (lines x samples).
@@ -1146,7 +1128,7 @@ class Sentinel1EtadBurst:
         return lats, lons, h
 
     def _core_get_correction(self, prm_list, set_auto_mask=False,
-                             transpose=True, meter=False):
+                             transpose=False, meter=False):
         correction = {}
         for dim, field in prm_list.items():
             correction[dim] = self._get_etad_param(
@@ -1158,7 +1140,7 @@ class Sentinel1EtadBurst:
         return correction
 
     def get_correction(self, name: CorrectionType = ECorrectionType.SUM,
-                       set_auto_mask=False, transpose=True, meter=False,
+                       set_auto_mask=False, transpose=False, meter=False,
                        direction=None):
         """Retrieve the correction for the specified correction "name".
 
@@ -1172,7 +1154,7 @@ class Sentinel1EtadBurst:
             requested for netCDF4 to avoid retrieving a masked array
         transpose : bool
             requested to retrieve the correction in array following the
-            numpy convention for dimensions
+            numpy convention for dimensions (default: False)
         meter : bool
             transform the result in meters
         direction : str or None

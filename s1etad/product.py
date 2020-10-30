@@ -102,8 +102,9 @@ class Sentinel1Etad:
 
     def _init_measurement_dataset(self):
         """Open the nc dataset."""
-        list_ = [i for i in self.product.glob("measurement/*.nc")]
-        rootgrp = Dataset(list_[0], "r")
+        # @TODO: retrieve form manifest
+        netcdf_file = next(self.product.glob("measurement/*.nc"))
+        rootgrp = Dataset(netcdf_file, "r")
         rootgrp.set_auto_mask(False)
         return rootgrp
 
@@ -206,32 +207,35 @@ class Sentinel1Etad:
             dd[correction] = ret
         return dd
 
+    @staticmethod
+    def _to_tdelta64(t):
+        return np.float64(t * 1e9).astype('timedelta64[ns]')
+
     def _init_burst_catalogue(self):
         """Build the burst catalog.
 
-        Parses the XML annotation dataset to create a panda DataFrame
-        containing all the elements allowing to index properly a burst.
+        Using information stored in the NetCDF file create a
+        pandas.DataFrame containing all the elements allowing to index
+        properly a burst.
         """
-        df = None
-        for burst_ in self._annot.findall('.//etadBurst'):
-            burst_dict = dict(burst_.find('burstData').attrib)
-            burst_dict['productID'] = burst_.find('burstData/productID').text
-            burst_dict['swathID'] = burst_.find('burstData/swathID').text
-            burst_dict['azimuthTimeMin'] = self._xpath_to_list(
-                burst_, 'burstCoverage/temporalCoverage/azimuthTimeMin',
-                parse_time_func=lambda x: x)
-            burst_dict['azimuthTimeMax'] = self._xpath_to_list(
-                burst_, 'burstCoverage/temporalCoverage/azimuthTimeMax',
-                parse_time_func=lambda x: x)
+        data = collections.defaultdict(list)
+        t0 = np.datetime64(self.ds.azimuthTimeMin, 'ns')
+        for swath in self.ds.groups.values():
+            for burst in swath.groups.values():
+                ax = burst.variables['azimuth']
+                tmin = t0 + self._to_tdelta64(ax[0])
+                tmax = t0 + self._to_tdelta64(ax[-1])
 
-            burst_dict['pIndex'] = int(burst_dict['pIndex'])
-            burst_dict['sIndex'] = int(burst_dict['sIndex'])
-            burst_dict['bIndex'] = int(burst_dict['bIndex'])
+                data['bIndex'].append(burst.bIndex)
+                data['pIndex'].append(burst.pIndex)
+                data['sIndex'].append(burst.sIndex)
+                data['productID'].append(burst.productID)
+                data['swathID'].append(burst.swathID)
+                data['azimuthTimeMin'].append(tmin)
+                data['azimuthTimeMax'].append(tmax)
 
-            if df is None:
-                df = pd.DataFrame(burst_dict, index=[0])
-            else:
-                df = df.append(burst_dict, ignore_index=True)
+        df = pd.DataFrame(data=data)
+
         return df
 
     def query_burst(self, first_time=None, product_name=None, last_time=None,

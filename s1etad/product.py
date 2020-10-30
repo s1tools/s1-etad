@@ -171,15 +171,13 @@ class Sentinel1Etad:
     @property
     def grid_sampling(self):
         """Return the grid spacing in s."""
-        xp_list = {
-            'x': './/productInformation/gridSampling/range',
-            'y': './/productInformation/gridSampling/azimuth',
-        }
-        dd = {}
-        for tag, xp in xp_list.items():
-            dd[tag] = self._xpath_to_list(self._annot, xp, dtype=np.float)
-        dd['unit'] = 's'
-        return dd
+        swath = next(self.ds.groups.values())   # first swath
+        burst = next(swath.groups.values())     # first burst
+        return dict(
+            y=burst.gridSamplingAzimuth,
+            x=burst.gridSamplingRange,
+            unit='s',
+        )
 
     @property
     def min_azimuth_time(self):

@@ -195,25 +195,22 @@ class Sentinel1Etad:
         Read the xml file to identify the corrections performed.
         If a correction is not performed the matrix is filled with zeros.
         """
-        correction_list = [
-            'troposphericDelayCorrection', 'ionosphericDelayCorrection',
-            'solidEarthTideCorrection', 'bistaticAzimuthCorrection',
-            'dopplerShiftRangeCorrection', 'FMMismatchAzimuthCorrection',
-        ]
-        dd = {}
-        xp_root = (
-            'processingInformation/processor/setapConfigurationFile/'
-            'processorSettings/'
-        )
-        for correction in correction_list:
-            xp = xp_root + correction
-            ret = self._xpath_to_list(self._annot, xp)
-            if ret == 'true':
-                ret = True
-            else:
-                ret = False
-            dd[correction] = ret
-        return dd
+        correction_name_map = {
+            'troposphericDelayCorrection': 'troposphericCorrectionRg',
+            'ionosphericDelayCorrection': 'ionosphericCorrectionRg',
+            'solidEarthTideCorrection': 'geodeticCorrectionRg',
+            'bistaticAzimuthCorrection': 'bistaticCorrectionAz',
+            'dopplerShiftRangeCorrection': 'dopplerRangeShiftRg',
+            'FMMismatchAzimuthCorrection': 'fmMismatchCorrectionAz',
+        }
+
+        # assume that the sampling is the same in all burst
+        swath = next(self.ds.groups.values())   # first swath
+        burst = next(swath.groups.values())     # first burst
+        return {
+            name: bool(burst[ncname].correctionPerformed)
+            for name, ncname in correction_name_map.items()
+        }
 
     @staticmethod
     def _to_tdelta64(t):

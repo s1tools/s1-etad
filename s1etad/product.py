@@ -217,10 +217,6 @@ class Sentinel1Etad:
             dd[correction] = ret
         return dd
 
-    @staticmethod
-    def _to_tdelta64(t):
-        return np.float64(t * 1e9).astype('timedelta64[ns]')
-
     def _init_burst_catalogue(self):
         """Build the burst catalog.
 
@@ -228,13 +224,16 @@ class Sentinel1Etad:
         pandas.DataFrame containing all the elements allowing to index
         properly a burst.
         """
+        def _to_tdelta64(t):
+            return np.float64(t * 1e9).astype('timedelta64[ns]')
+
         data = collections.defaultdict(list)
         t0 = np.datetime64(self.ds.azimuthTimeMin, 'ns')
         for swath in self.ds.groups.values():
             for burst in swath.groups.values():
                 ax = burst.variables['azimuth']
-                tmin = t0 + self._to_tdelta64(ax[0])
-                tmax = t0 + self._to_tdelta64(ax[-1])
+                tmin = t0 + _to_tdelta64(ax[0])
+                tmax = t0 + _to_tdelta64(ax[-1])
 
                 data['bIndex'].append(burst.bIndex)
                 data['pIndex'].append(burst.pIndex)

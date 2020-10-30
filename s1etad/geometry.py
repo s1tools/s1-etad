@@ -257,15 +257,15 @@ class GridGeocoding:
         Requires to perform geographic to cartesian conversion.
         """
         # TODO: cache this at least for multipoint conversion
-        point_list_cart = geodetic_to_ecef(self._grid_lats.flatten(),
-                                           self._grid_lons.flatten(),
-                                           self._grid_heights.flatten(),
+        point_list_cart = geodetic_to_ecef(self._grid_lats,
+                                           self._grid_lons,
+                                           self._grid_heights,
                                            deg=True)
         point_cart = geodetic_to_ecef(lat, lon, h, deg=deg)
 
-        r = np.asarray(point_list_cart).T - np.asarray(point_cart).T
+        r = np.asarray(point_list_cart) - np.asarray(point_cart)[:, None, None]
         dist = np.linalg.norm(r, axis=0)
-        ixmin = np.argmin(dist)
+        ixmin = np.argmin(dist.flatten())
         y, x = np.unravel_index(ixmin, self._grid_lats.shape)
         return x, y
 

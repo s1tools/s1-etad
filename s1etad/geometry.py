@@ -3,7 +3,7 @@
 import numpy as np
 
 from scipy.optimize import fsolve
-from scipy.interpolate import interp2d, interp1d
+from scipy.interpolate import interp2d
 
 try:
     import pyproj as _pyproj
@@ -89,19 +89,15 @@ class GridGeocoding:
         assert self._grid_lons.shape == shape
         assert self._grid_heights.shape == shape
 
-        # define the indices of the grid as regular grid: x:range, y:azimuth
-        self._yaxis = np.arange(shape[0])
-        self._xaxis = np.arange(shape[1])
-
-        self._yaxis_out = yaxis
         if yaxis is not None:
-            self.y_xy_to_time = interp1d(self._yaxis, self._yaxis_out)
-            self.y_time_to_xy = interp1d(self._yaxis_out, self._yaxis)
+            self._yaxis = np.asarray(yaxis)
+        else:
+            self._yaxis = np.arange(shape[0])
 
-        self._xaxis_out = xaxis
         if xaxis is not None:
-            self.x_xy_to_time = interp1d(self._xaxis, self._xaxis_out)
-            self.x_time_to_xy = interp1d(self._xaxis_out, self._xaxis)
+            self._xaxis = np.asarray(xaxis)
+        else:
+            self._xaxis = np.arange(shape[1])
 
         # the backward geocoding will be performed by interpolating the input
         # regular grid
@@ -113,33 +109,6 @@ class GridGeocoding:
                                kind=interpolation_kind)
         self._f_h = interp2d(self._xaxis, self._yaxis, self._grid_heights,
                              kind=interpolation_kind)
-
-    def _latitude(self, x, y):
-        return self._f_lat(x, y)
-
-    def _longitude(self, x, y):
-        return self._f_lon(x, y)
-
-    def _height(self, x, y):
-        return self._f_h(x, y)
-
-    def _xy_to_time(self, x, y):
-        if self._xaxis_out is not None:
-            x = self.x_xy_to_time(x)
-        if self._yaxis_out is not None:
-            y = self.y_xy_to_time(y)
-        return x, y
-
-    def _time_to_xy(self, x, y):
-        if self._xaxis_out is not None:
-            assert self._xaxis_out.min() < x < self._xaxis_out.max(), \
-                "Interpolation can't be performed in x"
-            x = self.x_time_to_xy(x)
-        if self._yaxis_out is not None:
-            assert self._yaxis_out.min() < y < self._yaxis_out.max(), \
-                "Interpolation can't be performed in x"
-            y = self.y_time_to_xy(y)
-        return x, y
 
     def latitude(self, x, y):
         """Interpolate the latitude grid at the (x, y) coordinates.
@@ -162,9 +131,7 @@ class GridGeocoding:
         ndarray
             interpolated latitude ([deg])
         """
-        # perform coordinate conversion if necessary
-        x, y = self._time_to_xy(x, y)
-        return self._latitude(x, y)
+        return self._f_lat(x, y)
 
     def longitude(self, x, y):
         """Interpolate the longitude grid at the (x, y) coordinates.
@@ -187,9 +154,7 @@ class GridGeocoding:
         ndarray
             interpolated longitude ([deg])
         """
-        # perform coordinate conversion if necessary
-        x, y = self._time_to_xy(x, y)
-        return self._longitude(x, y)
+        return self._f_lon(x, y)
 
     def height(self, x, y):
         """Interpolate the height grid at the (x, y) coordinates.
@@ -212,9 +177,7 @@ class GridGeocoding:
         ndarray
             interpolated height
         """
-        # perform coordinate conversion if necessary
-        x, y = self._time_to_xy(x, y)
-        return self._height(x, y)
+        return self._f_h(x, y)
 
     def _back_equation(self, xy, lat0, lon0):
         """Equation to minimise for back geocoding based on the grid.
@@ -240,12 +203,12 @@ class GridGeocoding:
         """
         x, y = xy
 
-        lat = self._latitude(x, y)
-        lon = self._longitude(x, y)
-        # h = self._height(x, y)
+        lat = self.latitude(x, y)
+        lon = self.longitude(x, y)
+        # h = self.height(x, y)
 
-        eq1 = (lat - lat0).squeeze()
-        eq2 = (lon - lon0).squeeze()
+        eq1 = (lon - lon0).squeeze()
+        eq2 = (lat - lat0).squeeze()
 
         return [eq1, eq2]
 
@@ -267,7 +230,7 @@ class GridGeocoding:
         dist = np.linalg.norm(r, axis=0)
         ixmin = np.argmin(dist.flatten())
         y, x = np.unravel_index(ixmin, self._grid_lats.shape)
-        return x, y
+        return self._xaxis[x], self._yaxis[y]
 
     def backward_geocode(self, lats, lons, heights=0, deg=True):
         """Perform the back geocoding: (lat, lon) -> (x, y)
@@ -320,9 +283,6 @@ class GridGeocoding:
                                           np.asarray([x_guess, y_guess]),
                                           args=(lat, lon), full_output=True)
             x0[idx], y0[idx] = sol[0], sol[1]
-
-        # perform coordinate conversion if necessary
-        x0, y0 = self._xy_to_time(x0, y0)
 
         # TODO: output the convergence flag
         return x0, y0

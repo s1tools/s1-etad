@@ -118,7 +118,7 @@ class Sentinel1Etad:
     @functools.lru_cache()
     def __getitem__(self, index):
         assert index in self.swath_list, f"{index} is not in {self.swath_list}"
-        return Sentinel1EtadSwath(self.ds[index], self.grid_spacing['y'])
+        return Sentinel1EtadSwath(self.ds[index])
 
     def __iter__(self):
         yield from self.iter_swaths()
@@ -663,14 +663,13 @@ class Sentinel1EtadSwath:
     It is not expected that the user instantiates this objects directly.
     """
 
-    def __init__(self, nc_group, daz_m):
+    def __init__(self, nc_group):
         self._grp = nc_group
-        self._daz_m = daz_m
 
     @functools.lru_cache()
     def __getitem__(self, burst_index):
         burst_name = f"Burst{burst_index:04d}"
-        return Sentinel1EtadBurst(self._grp[burst_name], self._daz_m)
+        return Sentinel1EtadBurst(self._grp[burst_name])
 
     def __iter__(self):
         yield from self.iter_bursts()
@@ -983,9 +982,8 @@ class Sentinel1EtadBurst:
     It is not expected that the user instantiates this objects directly.
     """
 
-    def __init__(self, nc_group, daz_m):
+    def __init__(self, nc_group):
         self._grp = nc_group
-        self._daz_m = daz_m
         self._geocoder = None
 
     def __repr__(self):
@@ -1112,7 +1110,7 @@ class Sentinel1EtadBurst:
 
         if meter:
             if name.endswith('Az'):
-                k = self._daz_m / self.sampling['y']
+                k = self._grp.averageZeroDopplerVelocity
             elif name.endswith('Rg'):
                 k = constants.c / 2
             else:

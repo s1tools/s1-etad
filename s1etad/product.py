@@ -141,9 +141,19 @@ class Sentinel1Etad:
 
     def s1_product_list(self):
         """Return the list of S-1 products used to compose the ETAD one."""
-        xp = 'productComponents/inputProductList/inputProduct/productID'
-        dd = self._xpath_to_list(self._annot, xp)
-        return dd
+        df = self.burst_catalogue
+
+        # this ensures that each product name is located at the correct pIndex
+        product_list = [
+            item[1] for item in sorted(set(zip(df['pIndex'], df['productID'])))
+        ]
+
+        # @TODO: check and remove
+        # compatibility with previous implementation
+        if len(product_list) == 1:
+            product_list = product_list[0]
+
+        return product_list
 
     @property
     def grid_spacing(self):

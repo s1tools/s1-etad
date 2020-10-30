@@ -179,13 +179,13 @@ class GridGeocoding:
         """
         return self._f_h(x, y)
 
-    def _back_equation(self, xy, lat0, lon0):
+    def _back_equation(self, xy, lat0, lon0):  # , h0=0):
         """Equation to minimise for back geocoding based on the grid.
 
         Need to find the root of the following system::
 
-            f(x,y) = latitude_grid(x,y) - lat0 = 0
-            g(x,y) = longitude_grid(x,y) -lon0 = 0
+            f(x, y) = longitude_grid(x, y) - lon0 = 0
+            g(x, y) = latitude_grid(x, y)  - lat0 = 0
 
         Parameters
         ----------
@@ -209,31 +209,32 @@ class GridGeocoding:
 
         eq1 = (lon - lon0).squeeze()
         eq2 = (lat - lat0).squeeze()
+        # eq3 = (h - h0).squeeze()
 
         return [eq1, eq2]
 
-    def _initial_guess(self, lat, lon, h=0, deg=True):
+    def _initial_guess(self, lat, lon, h=0, deg=True, ecef_grid=None):
         """Return the initial tentative solution for the iterative solver.
 
         Compute the distance between the point defined by its
         lat, lon and the points of the grid.
         Requires to perform geographic to cartesian conversion.
         """
-        # TODO: cache this at least for multipoint conversion
-        point_list_cart = geodetic_to_ecef(self._grid_lats,
-                                           self._grid_lons,
-                                           self._grid_heights,
-                                           deg=True)
-        point_cart = geodetic_to_ecef(lat, lon, h, deg=deg)
+        if ecef_grid is None:
+            ecef_grid = geodetic_to_ecef(self._grid_lats,
+                                         self._grid_lons,
+                                         self._grid_heights,
+                                         deg=True)
+        ecef0 = geodetic_to_ecef(lat, lon, h, deg=deg)
 
-        r = np.asarray(point_list_cart) - np.asarray(point_cart)[:, None, None]
+        r = np.asarray(ecef_grid) - np.asarray(ecef0)[:, None, None]
         dist = np.linalg.norm(r, axis=0)
         ixmin = np.argmin(dist.flatten())
         y, x = np.unravel_index(ixmin, self._grid_lats.shape)
         return self._xaxis[x], self._yaxis[y]
 
     def backward_geocode(self, lats, lons, heights=0, deg=True):
-        """Perform the back geocoding: (lat, lon) -> (x, y)
+        """Perform the back geocoding: (lat, lon, h) -> (x, y)
 
         Parameters
         ----------
@@ -271,13 +272,19 @@ class GridGeocoding:
             heights = np.full_like(lons, heights.item())
 
         assert lats.shape == lons.shape == heights.shape, \
-            "latitude_list shall be of the same shape as longitude_list"
+            "'lats' shall be of the same shape as 'lons'"
 
         x0 = np.zeros(lats.shape)
         y0 = np.zeros(lats.shape)
 
-        for idx, (lat, lon) in enumerate(zip(lats, lons)):
-            x_guess, y_guess = self._initial_guess(lat, lon, deg=deg)
+        ecef_grid = geodetic_to_ecef(self._grid_lats,
+                                     self._grid_lons,
+                                     self._grid_heights,
+                                     deg=True)
+
+        for idx, (lat, lon, h) in enumerate(zip(lats, lons, heights)):
+            x_guess, y_guess = self._initial_guess(lat, lon, h, deg=deg,
+                                                   ecef_grid=ecef_grid)
 
             sol, info, ier, mesg = fsolve(self._back_equation,
                                           np.asarray([x_guess, y_guess]),

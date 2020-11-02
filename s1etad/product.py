@@ -347,7 +347,9 @@ class Sentinel1Etad:
             If the selection is None (default) the iteration is performed
             on all the bursts of the product.
         """
-        if not isinstance(selection, pd.DataFrame):
+        if selection is None:
+            selection = self.burst_catalogue
+        elif not isinstance(selection, pd.DataFrame):
             # assume it is a list of burst indexes
             bursts = selection
             if isinstance(bursts, int):

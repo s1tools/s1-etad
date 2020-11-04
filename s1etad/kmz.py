@@ -90,7 +90,35 @@ class Sentinel1EtadKmlWriter:
 
     def add_overall_footprint(self):
         data_footprint = self.etad.get_footprint(self._selection, merge=True)
-        corners = Sentinel1EtadKmlWriter._get_footprint_corners(data_footprint)
+        if not hasattr(data_footprint, 'exterior'):
+            # it is a multipolygon
+
+            # option 1
+            # data_footprint = data_footprint.convex_hull
+
+            # option 2
+            # import shapely.ops
+            # data_footprint = shapely.ops.cascaded_union(
+            #     [data_footprint, data_footprint.convex_hull])
+
+            # option 3: write multiple footprints
+            data_footprints = data_footprint
+            for data_footprint in data_footprints:
+                corners = Sentinel1EtadKmlWriter._get_footprint_corners(
+                    data_footprint)
+
+                polygon = self.kml_root.newpolygon(name='footprint')
+                polygon.outerboundaryis = corners
+                polygon.altitudeMode = 'absolute'
+                polygon.tessellate = 1
+                polygon.polystyle.fill = 0
+                polygon.style.linestyle.width = 2
+
+            return
+            # TODO: find a better solution
+
+        corners = Sentinel1EtadKmlWriter._get_footprint_corners(
+            data_footprint)
 
         polygon = self.kml_root.newpolygon(name='footprint')
         polygon.outerboundaryis = corners

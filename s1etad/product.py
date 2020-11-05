@@ -142,6 +142,8 @@ class Sentinel1Etad:
         """Return the list of S-1 products used to compose the ETAD one."""
         xp = 'productComponents/inputProductList/inputProduct/productID'
         dd = self._xpath_to_list(self._annot, xp)
+        if isinstance(dd, str):
+            dd = [dd]
         return dd
 
     @property

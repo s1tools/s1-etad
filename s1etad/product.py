@@ -273,7 +273,7 @@ class Sentinel1Etad:
             # build a regex based on the name to avoid issues with annotation
             # products and CRC
             product_name = Sentinel1ProductName(product_name)
-            product_name.to_annotation(value='[AD]')
+            product_name.to_annotation(value='[AS]')
             product_name.crc = ''
             filter_ = product_name.recompose(with_suffix=False)
             ix0 = ix0 & self.burst_catalogue.productID.str.contains(filter_,

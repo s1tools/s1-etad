@@ -148,11 +148,6 @@ class Sentinel1Etad:
             item[1] for item in sorted(set(zip(df['pIndex'], df['productID'])))
         ]
 
-        # @TODO: check and remove
-        # compatibility with previous implementation
-        if len(product_list) == 1:
-            product_list = product_list[0]
-
         return product_list
 
     @property

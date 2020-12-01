@@ -191,6 +191,16 @@ class Sentinel1Etad:
         """The maximum azimuth time of all bursts in the product."""
         return datetime.datetime.fromisoformat(self.ds.azimuthTimeMax)
 
+    @property
+    def min_range_time(self):
+        """The minimum range time of all bursts in the product."""
+        return self.ds.rangeTimeMin
+
+    @property
+    def max_range_time(self):
+        """The maximum range time of all bursts in the product."""
+        return self.ds.rangeTimeMax
+
     def processing_setting(self):
         """Return the corrections performed.
 

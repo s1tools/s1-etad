@@ -23,6 +23,18 @@ def _sentinel1_etad_repr_pretty_(obj, p, cycle):
         p.break_()
         p.text('Swath list: {}'.format(', '.join(obj.swath_list)))
         p.break_()
+        with p.group(2, 'Azimuth time:'):
+            p.break_()
+            p.text(f'min: {obj.min_azimuth_time}')
+            p.break_()
+            p.text(f'max: {obj.max_azimuth_time}')
+        p.break_()
+        with p.group(2, 'Range time:'):
+            p.break_()
+            p.text(f'min: {obj.min_range_time}')
+            p.break_()
+            p.text(f'max: {obj.max_range_time}')
+        p.break_()
         with p.group(2, 'Grid sampling:'):
             for key, value in obj.grid_sampling.items():
                 p.break_()

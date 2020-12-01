@@ -1,7 +1,7 @@
 Version history
 ===============
 
-s1etad v0.4.0 (UNRELEASED)
+s1etad v0.4.0 (01/12/2020)
 --------------------------
 
 * Implement ETAD-DLR-PS-0014 "Product Format Specification" v1.2.

@@ -5,13 +5,35 @@ s1etad v0.4.0 (UNRELEASED)
 --------------------------
 
 * Implement ETAD-DLR-PS-0014 "Product Format Specification" v1.2.
+* The burst catalogue initialization and the
+  :meth:`s1etad.product.Sentinel1Etad.s1_product_list` method have been
+  re-implemented to exploit NetCDF instead of XML (30% faster product loading).
+* All notebooks have been update to use the new demo products
+  (with updated format).
+* The back-geocoding implementation has been simplified and improved
+  (caching of ECEF coordinates during guess computation).
+* Fixed :meth:`s1etad.product.Sentinel1Etad.iter_bursts` in case of empty
+  ``selection``.
+* Fixed KMZ generation in case of missing slices.
+* Added min/max range time attributes to :class:`s1etad.product.Sentinel1Etad`
+  class.
+* New notebook providing a basic step by step guide to perform the
+  correction of a single Sentinel-1 SLC burst with the timings provided
+  by the S1-ETAD products.
+* Now the :meth:`s1etad.product.Sentinel1Etad.s1_product_list` always returns
+  a list. Previously a string was returned in case of single swath.
+* Fixed the :meth:`s1etad.product.Sentinel1Etad.query` method in the case
+  in which the ``product_name`` parameter is used to search for S1 Standard
+  ("S") products.
+* Always use the `Sphinx RTD Theme <https://sphinx-rtd-theme.readthedocs.io/>`_
+  (also for local builds).
 
 
 s1etad v0.3.0 (27/10/2020)
 --------------------------
 
 * Now ``s1etad`` is a package.
-* Improved ``get_gootprint`` methods:
+* Improved ``get_footprint`` methods:
 
   - support for extended selection semantics (also accept the result of
     a query as parameter)

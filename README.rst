@@ -65,7 +65,7 @@ Requirements
 * `pandas <https://pandas.pydata.org>`_
 * `shapely <https://github.com/Toblerity/Shapely>`_
 * `simplekml <https://pypi.org/project/simplekml>`_
-* `GDAL <https://gdal.org> `_
+* `GDAL <https://gdal.org>`_
 * `matplotlib <https://matplotlib.org>`_
 
 

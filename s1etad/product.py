@@ -71,7 +71,7 @@ class Sentinel1Etad:
     """Sentinel-1 ETAD product.
 
     Class to decode and access the elements of the Sentinel ETAD product
-    which specification is governed by ETAD-DLR-PS-0014
+    which specification is governed by ETAD-DLR-PS-0014.
 
     The index operator [] (implemented with the __getitem__ method) returns
     a Sentinel1EtadSwath instance.

@@ -4,7 +4,7 @@ Version history
 s1etad v0.4.0 (UNRELEASED)
 --------------------------
 
-* TBW
+* Implement ETAD-DLR-PS-0014 "Product Format Specification" v1.2.
 
 
 s1etad v0.3.0 (27/10/2020)

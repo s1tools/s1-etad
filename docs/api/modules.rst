@@ -1,5 +1,5 @@
-s1etad
-======
+s1etad API
+==========
 
 .. toctree::
    :maxdepth: 4

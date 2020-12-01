@@ -20,6 +20,7 @@ s1etad documentation
    notebooks/use-case-02_corrections
    notebooks/use-case-03_footprints
    notebooks/use-case-04_corner_reflector
+   notebooks/S1-ETAD-Product_Quick_User_Guide
    examples
    api/modules
    TODO

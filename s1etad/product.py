@@ -159,7 +159,7 @@ class Sentinel1Etad:
         }
         dd = {}
         for tag, xp in xp_list.items():
-            dd[tag] = self._xpath_to_list(self._annot, xp, dtype=np.float)
+            dd[tag] = self._xpath_to_list(self._annot, xp, dtype=float)
         dd['unit'] = 'm'
         return dd
 
@@ -172,7 +172,7 @@ class Sentinel1Etad:
         }
         dd = {}
         for tag, xp in xp_list.items():
-            dd[tag] = self._xpath_to_list(self._annot, xp, dtype=np.float)
+            dd[tag] = self._xpath_to_list(self._annot, xp, dtype=float)
         dd['unit'] = 's'
         return dd
 
@@ -519,10 +519,10 @@ class Sentinel1Etad:
 
         num_samples = np.round(
             (rg_last_time - rg_first_time) / dx
-        ).astype(np.int) + 1
+        ).astype(int) + 1
         num_lines = np.round(
             (az_last_time - az_first_time).total_seconds() / dy
-        ).astype(np.int) + 1
+        ).astype(int) + 1
 
         img = np.zeros((num_lines, num_samples))
 
@@ -533,8 +533,8 @@ class Sentinel1Etad:
                                       set_auto_mask=set_auto_mask, meter=meter)
             yoffset = dd_['first_azimuth_time'] - az_first_time_rel
             xoffset = dd_['first_slant_range_time'] - rg_first_time
-            line_ofs = np.round(yoffset / dy).astype(np.int)
-            sample_ofs = np.round(xoffset / dx).astype(np.int)
+            line_ofs = np.round(yoffset / dy).astype(int)
+            sample_ofs = np.round(xoffset / dx).astype(int)
 
             slice_y = slice(line_ofs, line_ofs + dd_[burst_var].shape[0])
             slice_x = slice(sample_ofs, sample_ofs + dd_[burst_var].shape[1])
@@ -857,7 +857,7 @@ class Sentinel1EtadSwath:
         # azimuth grid sampling
         dt = first_burst.sampling['y']
 
-        num_lines = np.round((t1 - t0) / dt).astype(np.int) + 1
+        num_lines = np.round((t1 - t0) / dt).astype(int) + 1
         num_samples = first_burst.samples
 
         debursted_var = np.zeros((num_lines, num_samples))
@@ -871,7 +871,7 @@ class Sentinel1EtadSwath:
 
             # get the timing of the burst and convert into line index
             az_time_, rg_time_ = burst_.get_burst_grid()
-            line_index_ = np.round((az_time_ - t0) / dt).astype(np.int)
+            line_index_ = np.round((az_time_ - t0) / dt).astype(int)
 
             # NOTE: use the private "Sentinel1EtadBurst._get_etad_param" method
             # to be able to work only on the specified NetCDF variable

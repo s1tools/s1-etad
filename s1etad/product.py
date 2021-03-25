@@ -196,6 +196,19 @@ class Sentinel1Etad:
         """The maximum range time of all bursts in the product."""
         return self.ds.rangeTimeMax
 
+    @property
+    def vg(self):
+        """Mean ground velocity [m/s]."""
+        try:
+            xp = (
+                'productInformation/gridGroundSampling/'
+                'averageZeroDopplerVelocity'
+            )
+            vg = float(self._annot.find(xp).taxt)
+        except (AttributeError, ValueError):
+            vg = self.grid_spacing['y'] / self.grid_sampling['y']
+        return vg
+
     def processing_setting(self):
         """Return the corrections performed.
 

@@ -503,7 +503,7 @@ class Sentinel1Etad:
         return list(itertools.chain(*lists_of_burst_indexes))
 
     def _swath_merger(self, burst_var, selection=None, set_auto_mask=False,
-                      meter=False):
+                      meter=False, fill_value=0.):
         if selection is None:
             df = self.burst_catalogue
         elif not isinstance(selection, pd.DataFrame):
@@ -537,7 +537,9 @@ class Sentinel1Etad:
             (az_last_time - az_first_time).total_seconds() / dy
         ).astype(int) + 1
 
-        img = np.zeros((num_lines, num_samples))
+        img = np.full((num_lines, num_samples), fill_value=fill_value)
+        # TODO: add some control option
+        img = np.ma.array(img, mask=True, fill_value=fill_value)
 
         for swath in self.iter_swaths(df):
             # NOTE: use the private "Sentinel1EtadSwath._burst_merger" method
@@ -594,13 +596,14 @@ class Sentinel1Etad:
 
         dd['lats'] = self._swath_merger('lats', selection=filled_selection,
                                         set_auto_mask=set_auto_mask,
-                                        meter=False)
+                                        meter=False, fill_value=np.nan)['lats']
         dd['lons'] = self._swath_merger('lons', selection=filled_selection,
                                         set_auto_mask=set_auto_mask,
-                                        meter=False)
+                                        meter=False, fill_value=np.nan)['lons']
         dd['height'] = self._swath_merger('height', selection=filled_selection,
                                           set_auto_mask=set_auto_mask,
-                                          meter=False)
+                                          meter=False,
+                                          fill_value=np.nan)['height']
         return dd
 
     def merge_correction(self, name: CorrectionType = ECorrectionType.SUM,
@@ -816,7 +819,7 @@ class Sentinel1EtadSwath:
 
     def _burst_merger(self, burst_var, selection=None,
                       az_time_min=None, az_time_max=None,
-                      set_auto_mask=False, meter=False):
+                      set_auto_mask=False, meter=False, fill_value=0.):
         """Low level method to de-burst a NetCDF variable.
 
         The de-burst strategy is simple as the latest line is on top of the
@@ -873,7 +876,11 @@ class Sentinel1EtadSwath:
         num_lines = np.round((t1 - t0) / dt).astype(int) + 1
         num_samples = first_burst.samples
 
-        debursted_var = np.zeros((num_lines, num_samples))
+        debursted_var = np.full((num_lines, num_samples),
+                                fill_value=fill_value)
+        # TODO: add some control option
+        debursted_var = np.ma.array(debursted_var,
+                                    mask=True, fill_value=fill_value)
 
         for burst_ in self.iter_bursts(burst_index_list):
             assert(dt == burst_.sampling['y']), \
@@ -913,12 +920,13 @@ class Sentinel1EtadSwath:
             dd['first_slant_range_time'] = dd_['first_slant_range_time']
 
         dd['unit'] = 'm' if meter else 's'
-        dd['lats'] = self._burst_merger('lats', meter=False,
-                                        set_auto_mask=set_auto_mask)
-        dd['lons'] = self._burst_merger('lons', meter=False,
-                                        set_auto_mask=set_auto_mask)
-        dd['height'] = self._burst_merger('height', meter=False,
-                                          set_auto_mask=set_auto_mask)
+        dd['lats'] = self._burst_merger('lats', set_auto_mask=set_auto_mask,
+                                        meter=False)['lats']
+        dd['lons'] = self._burst_merger('lons', set_auto_mask=set_auto_mask,
+                                        meter=False)['lons']
+        dd['height'] = self._burst_merger('height',
+                                          set_auto_mask=set_auto_mask,
+                                          meter=False)['height']
         return dd
 
     def merge_correction(self, name: CorrectionType = ECorrectionType.SUM,

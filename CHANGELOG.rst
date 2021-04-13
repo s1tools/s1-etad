@@ -1,10 +1,10 @@
 Version history
 ===============
 
-s1etad v0.4.1 (UNRELEASED)
+s1etad v0.5.0 (UNRELEASED)
 --------------------------
 
-* TBW
+* Merger functions now return masked arrays.
 
 
 s1etad v0.4.0 (01/12/2020)

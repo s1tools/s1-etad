@@ -21,7 +21,7 @@ import sphinx_rtd_theme
 # -- Project information -----------------------------------------------------
 
 project = 's1etad'
-copyright = '2020, s1etad Developers'
+copyright = '2020-2021, s1etad Developers'
 author = 'Nuno Miranda <nuno.miranda@esa.int>'
 
 with open('../s1etad/__init__.py') as fd:
@@ -111,7 +111,7 @@ autodoc_mock_imports = [
 master_doc = 'index'
 html_context = {
     "display_gitlab": True,
-    "gitlab_user": "nuno.miranda",
+    "gitlab_user": "s1-etad",
     "gitlab_repo": "s1-etad",
     "gitlab_version": "master",
     "conf_py_path": "docs",

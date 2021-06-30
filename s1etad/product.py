@@ -1170,6 +1170,24 @@ class Sentinel1EtadBurst:
 
         return data
 
+    def get_timing_calibration_constants(self) -> dict:
+        try:
+            return dict(
+                x=self._grp.instrumentTimingCalibrationRange,
+                y=self._grp.instrumentTimingCalibrationAzimuth,
+                units='s',
+            )
+        except AttributeError:
+            # @COMPATIBILITY: with SETAP , v1.6
+            warnings.warn(
+                'instrument timing calibration constants are not available '
+                'in the NetCDF data component this product. '
+                'Calibration constants have been added to the NetCDF '
+                'component in in SETAP v1.6 (ETAD-DLR-PS-0014 - '
+                '"ETAD Product Format Specification" Issue 1.5).'
+            )
+            return dict(x=0, y=0, units='s')
+
     def _get_etad_param(self, name, set_auto_mask=False, transpose=False,
                         meter=False):
         assert name in self._grp.variables, f'Parameter {name!r} is not allowed'

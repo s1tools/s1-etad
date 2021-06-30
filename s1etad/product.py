@@ -1129,6 +1129,47 @@ class Sentinel1EtadBurst:
         """Average zero-Doppler ground velocity [m/s]."""
         return self._grp.averageZeroDopplerVelocity
 
+    @property
+    def reference_polarization(self) -> str:
+        """Reverence polarization (string)."""
+        return self._grp.referencePolarization
+
+    def get_polarimetric_channel_offset(self, channel: str) -> dict:
+        """Polarimetric channel delay.
+
+        Return the electronic delay of the specified polarimetric channel
+        w.r.t. the reference one (see
+        :data:`Sentinel1EtadBurst.reference_polarization`).
+
+        channel : str
+            the string ID of the requested polarimetric channel:
+            * 'VV' or 'VH' for DV products
+            * 'HH' or 'HV' for DH products
+        """
+        if channel not in {'HH', 'HV', 'VV', 'VH'}:
+            raise ValueError(f'invalid channel ID: {channel!r}')
+
+        if channel[0] != self._grp.referencePolarization[0]:
+            raise ValueError(
+                f'polarimetric channel not available: {channel!r}')
+
+        data = dict(units='s')
+
+        if channel == 'HH':
+            data['x'] = self._grp.rangeOffsetHH,
+            data['y'] = self._grp.rangeOffsetHH,
+        elif channel == 'HV':
+            data['x'] = self._grp.rangeOffsetHV,
+            data['y'] = self._grp.rangeOffsetHV,
+        elif channel == 'VH':
+            data['x'] = self._grp.rangeOffsetVH,
+            data['y'] = self._grp.rangeOffsetVH,
+        elif channel == 'VV':
+            data['x'] = self._grp.rangeOffsetVV,
+            data['y'] = self._grp.rangeOffsetVV,
+
+        return data
+
     def _get_etad_param(self, name, set_auto_mask=False, transpose=False,
                         meter=False):
         assert name in self._grp.variables, f'Parameter {name!r} is not allowed'

@@ -1124,6 +1124,11 @@ class Sentinel1EtadBurst:
         """The number of samples in the burst."""
         return self._grp.dimensions['rangeExtent'].size
 
+    @property
+    def vg(self) -> float:
+        """Average zero-Doppler ground velocity [m/s]."""
+        return self._grp.averageZeroDopplerVelocity
+
     def _get_etad_param(self, name, set_auto_mask=False, transpose=False,
                         meter=False):
         assert name in self._grp.variables, f'Parameter {name!r} is not allowed'

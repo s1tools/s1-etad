@@ -5,6 +5,25 @@ s1etad v0.5.0 (UNRELEASED)
 --------------------------
 
 * Merger functions now return masked arrays.
+* New :class:`s1etad.product.Sentinel1EtadBurst` class now has two new
+  properties:
+
+  - :data:`s1etad.product.Sentinel1EtadBurst.vg`, the average zero-Doppler
+    ground velocity
+  - :data:`s1etad.product.Sentinel1EtadBurst.reference_polarization`,
+    a string identifying the reference polarization
+
+  and a new method:
+
+  - :meth:`s1etad.product.Sentinel1EtadBurst.get_polarimetric_channel_offset`
+    to get the constant time offset of a polarimetric channel w.r.t. the
+    reference one
+
+* Support for ETAD-DLR-PS-0014 "ETAD Product Format Specification" Issue 1.5
+  (SETAP v1.6):
+  - new method (
+    :meth:`s1etad.product.Sentinel1EtadBurst.get_timing_calibration_constants`)
+    for retrieving timing calibration constants
 
 
 s1etad v0.4.0 (01/12/2020)

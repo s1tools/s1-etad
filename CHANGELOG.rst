@@ -21,9 +21,12 @@ s1etad v0.5.0 (UNRELEASED)
 
 * Support for ETAD-DLR-PS-0014 "ETAD Product Format Specification" Issue 1.5
   (SETAP v1.6):
+
   - new method (
     :meth:`s1etad.product.Sentinel1EtadBurst.get_timing_calibration_constants`)
     for retrieving timing calibration constants
+
+* new :mod:`s1etad.ql` module for geocoded quick-look images generation
 
 
 s1etad v0.4.0 (01/12/2020)

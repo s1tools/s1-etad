@@ -23,4 +23,5 @@ Submodules
    s1etad.geometry
    s1etad.kmz
    s1etad.product
+   s1etad.ql
    s1etad.utils

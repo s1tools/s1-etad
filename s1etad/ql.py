@@ -99,11 +99,19 @@ def _compute_gcp_spacing(xsize, ysize, max_gcp_num: int = MAX_GCP_NUM):
     return gcp_step
 
 
+@functools.lru_cache()  # COMPATIBILITY with Python < 3.8
 def _get_color_table(name=DEFAULT_COLOR_TABLE_NAME):
     from matplotlib import cm
     from .kmz import Colorizer  # noqa
 
-    return Colorizer(0, 255, color_table=getattr(cm, name)).gdal_palette()
+    cmap = getattr(cm, name)
+    # return Colorizer(1, 255, color_table=cmap).gdal_palette()
+
+    table = gdal.ColorTable()
+    table.SetColorEntry(0, (0, 0, 0, 0))  # zero is transparent
+    for i, v in enumerate(np.linspace(0., 1., 255), start=1):
+        table.SetColorEntry(i, cmap(v, bytes=True))
+    return table
 
 
 def save_geocoded_data(outfile, data, lat, lon, h=None, *,

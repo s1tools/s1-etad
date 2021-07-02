@@ -1183,7 +1183,7 @@ class Sentinel1EtadBurst:
                 'instrument timing calibration constants are not available '
                 'in the NetCDF data component this product. '
                 'Calibration constants have been added to the NetCDF '
-                'component in in SETAP v1.6 (ETAD-DLR-PS-0014 - '
+                'component in SETAP v1.6 (ETAD-DLR-PS-0014 - '
                 '"ETAD Product Format Specification" Issue 1.5).'
             )
             return dict(x=0, y=0, units='s')

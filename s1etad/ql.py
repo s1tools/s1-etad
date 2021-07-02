@@ -55,17 +55,17 @@ def create_gcps(lat, lon, h=None, gcp_step=(10, 10)) -> List[gdal.GCP]:
 
 def save_with_gcps(outfile: str, data, lat, lon, h=None,
                    *, drv_name: str = 'GTIFF', nodata: float = -9999.,
-                   gcp_step=(10, 10), srs='wgs84', createion_options=None):
+                   gcp_step=(10, 10), srs='wgs84', creation_options=None):
     """Save data into a GDAL dataset and GCPs for coordinates matrices."""
     drv = gdal.GetDriverByName(drv_name)
     assert drv is not None
 
     ysize, xsize = data.shape
-    if createion_options is None:
-        createion_options = []
+    if creation_options is None:
+        creation_options = []
     ds = drv.Create(str(outfile), xsize=xsize, ysize=ysize,
                     bands=1, eType=gdal.GDT_Float32,
-                    options=createion_options)
+                    options=creation_options)
 
     if isinstance(srs, str):
         srs_str = srs
@@ -109,7 +109,7 @@ def _get_color_table(name=DEFAULT_COLOR_TABLE_NAME):
 def save_geocoded_data(outfile, data, lat, lon, h=None, *,
                        gcp_step: Optional[Tuple[int, int]] = None,
                        srs='wgs84', out_spacing=DEFAULT_LATLON_SPACING_DEG,
-                       drv_name='GTIFF', createion_options=None,
+                       drv_name='GTIFF', creation_options=None,
                        palette=DEFAULT_COLOR_TABLE_NAME):
     """Save a geo-coded version of input data into a GDAL dataset."""
     ysize, xsize = data.shape
@@ -150,10 +150,10 @@ def save_geocoded_data(outfile, data, lat, lon, h=None, *,
     del band
 
     # Save to disk
-    if createion_options is None:
-        createion_options = []
+    if creation_options is None:
+        creation_options = []
     ds_out = gdal.Translate(outfile, ds_geocoded_bytes, format=drv_name,
-                            creationOptions=createion_options)
+                            creationOptions=creation_options)  # , rgbExpand='rgba')
 
     return ds_out
 
@@ -161,7 +161,7 @@ def save_geocoded_data(outfile, data, lat, lon, h=None, *,
 def etad2ql(etad_prodyct, outfile, *,
             correction_type: CorrectionType = ECorrectionType.SUM,
             direction: Literal['x', 'y'] = 'x', meter: bool = True,
-            drv_name: str = 'PNG', createion_options='WORLDFILE=YES'):
+            drv_name: str = 'PNG', creation_options='WORLDFILE=YES'):
     """Generate a geo-coded quick-look image starting from an ETAD product."""
     if not isinstance(etad_prodyct, Sentinel1Etad):
         etad = Sentinel1Etad(etad_prodyct)
@@ -178,4 +178,4 @@ def etad2ql(etad_prodyct, outfile, *,
 
     return save_geocoded_data(outfile, data, lat, lon, height,
                               drv_name=drv_name,
-                              createion_options=createion_options)
+                              creation_options=creation_options)

@@ -870,11 +870,19 @@ class Sentinel1EtadSwath:
         else:
             t1 = az_time_max
 
-        # azimuth grid sampling
+        tau0 = min(
+            burst.sampling_start['x']
+            for burst in self.iter_bursts(burst_index_list)
+        )
+
+        # grid sampling
         dt = first_burst.sampling['y']
+        dtau = first_burst.sampling['x']
 
         num_lines = np.round((t1 - t0) / dt).astype(int) + 1
-        num_samples = first_burst.samples
+        num_samples = max(
+            burst.samples for burst in self.iter_bursts(burst_index_list)
+        )
 
         debursted_var = np.full((num_lines, num_samples),
                                 fill_value=fill_value)
@@ -892,6 +900,7 @@ class Sentinel1EtadSwath:
             # get the timing of the burst and convert into line index
             az_time_, rg_time_ = burst_.get_burst_grid()
             line_index_ = np.round((az_time_ - t0) / dt).astype(int)
+            p0 = np.round((rg_time_[0] - tau0) / dtau).astype(int)
 
             # NOTE: use the private "Sentinel1EtadBurst._get_etad_param" method
             # to be able to work only on the specified NetCDF variable
@@ -899,7 +908,8 @@ class Sentinel1EtadSwath:
                                           set_auto_mask=set_auto_mask,
                                           meter=meter)
 
-            debursted_var[line_index_, :] = var_
+            _, burst_samples = var_.shape
+            debursted_var[line_index_, p0:p0+burst_samples] = var_
 
         return {
             burst_var: debursted_var,

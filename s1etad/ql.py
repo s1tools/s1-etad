@@ -118,7 +118,7 @@ def save_geocoded_data(outfile, data, lat, lon, h=None, *,
                        gcp_step: Optional[Tuple[int, int]] = None,
                        srs='wgs84', out_spacing=DEFAULT_LATLON_SPACING_DEG,
                        drv_name='GTIFF', creation_options=None,
-                       palette=DEFAULT_COLOR_TABLE_NAME):
+                       palette=DEFAULT_COLOR_TABLE_NAME, margin=100):
     """Save a geo-coded version of input data into a GDAL dataset."""
     ysize, xsize = data.shape
     if gcp_step is None:
@@ -130,7 +130,7 @@ def save_geocoded_data(outfile, data, lat, lon, h=None, *,
 
     # geocode the floating point image
     bbox = (lon.min(), lat.min(), lon.max(), lat.max())
-    bbox = _clip_bbox(bbox, out_spacing, margin=50)
+    bbox = _clip_bbox(bbox, out_spacing, margin=margin)
 
     ds_geocoded_float = gdal.Warp('', ds_sr_with_gcps,
                                   format='MEM',
@@ -166,15 +166,18 @@ def save_geocoded_data(outfile, data, lat, lon, h=None, *,
     return ds_out
 
 
-def etad2ql(etad_prodyct, outfile, *,
+def etad2ql(etad, outpath, *,
             correction_type: CorrectionType = ECorrectionType.SUM,
             direction: Literal['x', 'y'] = 'x', meter: bool = True,
             drv_name: str = 'PNG', creation_options='WORLDFILE=YES'):
     """Generate a geo-coded quick-look image starting from an ETAD product."""
-    if not isinstance(etad_prodyct, Sentinel1Etad):
-        etad = Sentinel1Etad(etad_prodyct)
+    if not isinstance(etad, Sentinel1Etad):
+        etad = Sentinel1Etad(etad)
     else:
-        etad = etad_prodyct
+        etad = etad
+
+    if outpath is None:
+        outpath = etad.product.with_suffix('.png').name
 
     merged_correction = etad.merge_correction(correction_type, meter=meter)
 
@@ -184,6 +187,6 @@ def etad2ql(etad_prodyct, outfile, *,
     lon = merged_correction['lons']
     height = merged_correction['height']
 
-    return save_geocoded_data(outfile, data, lat, lon, height,
+    return save_geocoded_data(outpath, data, lat, lon, height,
                               drv_name=drv_name,
                               creation_options=creation_options)

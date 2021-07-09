@@ -11,7 +11,7 @@ import logging
 import argparse
 
 from . import utils as cliutils
-from . import exportkmz
+from . import exportkmz, ql
 
 try:
     from os import EX_OK
@@ -24,6 +24,7 @@ PROG = __package__.split('.')[0]
 # LOGFMT = '%(asctime)s %(levelname)-8s -- %(message)s'
 LOGFMT = '%(asctime)s %(name)s %(levelname)s -- %(message)s'
 
+
 def get_parser():
     """Instantiate the command line argument parser."""
     description = __doc__
@@ -32,6 +33,7 @@ def get_parser():
     # Sub-command management
     subparsers = parser.add_subparsers(title='sub-commands')  # dest='func'
     exportkmz.get_parser(subparsers=subparsers)
+    ql.get_parser(subparsers=subparsers)
 
     parser = cliutils.finalize_parser(parser)
 

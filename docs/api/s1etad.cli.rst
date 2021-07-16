@@ -14,4 +14,5 @@ Submodules
 
    s1etad.cli.exportkmz
    s1etad.cli.main
+   s1etad.cli.ql
    s1etad.cli.utils

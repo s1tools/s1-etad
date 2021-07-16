@@ -1,7 +1,7 @@
 Version history
 ===============
 
-s1etad v0.5.0 (UNRELEASED)
+s1etad v0.5.0 (16/07/2021)
 --------------------------
 
 * Merger functions now return masked arrays.

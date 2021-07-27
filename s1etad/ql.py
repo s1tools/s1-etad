@@ -1,7 +1,11 @@
 """Geo-coded QuickLook image generation for ETAD."""
 
 import functools
-from typing import List, Literal, Optional, Tuple
+from typing import List, Optional, Tuple
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 import numpy as np
 from osgeo import gdal, osr

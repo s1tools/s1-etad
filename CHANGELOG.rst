@@ -1,6 +1,12 @@
 Version history
 ===============
 
+s1etad v0.5.2 (27/07/2021)
+--------------------------
+
+* Fix imports from ``typing`` (fall-back typing-extensions when necessary).
+
+
 s1etad v0.5.1 (27/07/2021)
 --------------------------
 

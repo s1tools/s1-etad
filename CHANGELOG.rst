@@ -1,10 +1,10 @@
 Version history
 ===============
 
-s1etad v0.6.0 (UNRELEASED)
+s1etad v0.5.1 (27/07/2021)
 --------------------------
 
-* TBW
+* Add missing dependency form ``typing-extensions`` for Python < 3.8.
 
 
 s1etad v0.5.0 (16/07/2021)

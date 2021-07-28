@@ -1,6 +1,7 @@
 """Geo-coded QuickLook image generation for ETAD."""
 
 import functools
+import os
 from typing import List, Optional, Tuple
 try:
     from typing import Literal
@@ -164,8 +165,9 @@ def save_geocoded_data(outfile, data, lat, lon, h=None, *,
     # Save to disk
     if creation_options is None:
         creation_options = []
-    ds_out = gdal.Translate(outfile, ds_geocoded_bytes, format=drv_name,
-                            creationOptions=creation_options)  # , rgbExpand='rgba')
+    ds_out = gdal.Translate(os.fspath(outfile), ds_geocoded_bytes,
+                            format=drv_name, creationOptions=creation_options)
+    # , rgbExpand='rgba')
 
     return ds_out
 

@@ -15,7 +15,7 @@ from .product import (
     Sentinel1Etad, Sentinel1EtadSwath, Sentinel1EtadBurst, ECorrectionType,
 )
 
-__version__ = '0.5.2'
+__version__ = '0.5.3.dev0'
 
 
 # register display functions for Jupyter

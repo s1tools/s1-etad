@@ -175,7 +175,7 @@ def save_geocoded_data(outfile, data, lat, lon, h=None, *,
 def etad2ql(etad, outpath, *,
             correction_type: CorrectionType = ECorrectionType.SUM,
             direction: Literal['x', 'y'] = 'x', meter: bool = True,
-            drv_name: str = 'PNG', creation_options='WORLDFILE=YES'):
+            drv_name: str = 'PNG', creation_options=['WORLDFILE=YES']):
     """Generate a geo-coded quick-look image starting from an ETAD product."""
     if not isinstance(etad, Sentinel1Etad):
         etad = Sentinel1Etad(etad)

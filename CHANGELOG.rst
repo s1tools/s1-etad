@@ -17,7 +17,7 @@ s1etad v0.5.0 (16/07/2021)
 --------------------------
 
 * Merger functions now return masked arrays.
-* New :class:`s1etad.product.Sentinel1EtadBurst` class now has two new
+* The :class:`s1etad.product.Sentinel1EtadBurst` class now has two new
   properties:
 
   - :data:`s1etad.product.Sentinel1EtadBurst.vg`, the average zero-Doppler

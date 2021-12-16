@@ -18,7 +18,7 @@ The ``s1etad`` Python package provides tools for easy access to
 Sentinel-1 Extended Timing Annotation Datasets.
 
 The current version of the package is based on the Product Format
-Specification Document (ETAD-DLR-PS-0014) Issue 1.2.
+Specification Document (ETAD-DLR-PS-0014) Issue 1.5.
 
 Main features provided are:
 

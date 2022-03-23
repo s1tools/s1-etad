@@ -6,7 +6,7 @@ s1etad Python package
     :alt: Documentation Status
 
 
-:copyright: 2020-2021 Nuno Mirada, Antonio Valentino
+:copyright: 2020-2022 Nuno Mirada, Antonio Valentino
 
 
 .. contents

@@ -1,6 +1,12 @@
 Version history
 ===============
 
+s1etad v0.5.3 (23/03/2022)
+--------------------------
+
+* Improve compatibility with GDAL 3.x.
+
+
 s1etad v0.5.2 (27/07/2021)
 --------------------------
 

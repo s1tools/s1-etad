@@ -229,12 +229,19 @@ class GridGeocoding:
 
         r = np.asarray(ecef_grid) - np.asarray(ecef0)[:, None, None]
         dist = np.linalg.norm(r, axis=0)
-        ixmin = np.argmin(dist.flatten())
+        ixmin = np.argmin(dist.flatten())  # TODO: use np.argmin(dist.ravel())
         y, x = np.unravel_index(ixmin, self._grid_lats.shape)
         return self._xaxis[x], self._yaxis[y]
 
     def backward_geocode(self, lats, lons, heights=0, deg=True):
         """Perform the back geocoding: (lat, lon, h) -> (x, y)
+
+        .. important::
+        
+            The current implementation alway returns the solution of the
+            backward geocoding at the heigh corresponding to the reference
+            surface included in the ETAD product (provides latitude longitude
+            and h grids), which is computed using the Coperficus DEM 90m.
 
         Parameters
         ----------
@@ -243,7 +250,12 @@ class GridGeocoding:
         lons : list or ndarray
             array [N] of longitude for which the back geocoding is requested
         heights : float, list or ndarray
-            height for which the back geocoding is requested
+            height for which the back geocoding is requested.
+
+            .. warning::
+
+                this paraemter is not used in the current implementation.
+
         deg : bool
             True if input geodetic coordinates are expressed in degrees,
             False otherwise

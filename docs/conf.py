@@ -21,7 +21,7 @@ import sphinx_rtd_theme
 # -- Project information -----------------------------------------------------
 
 project = 's1etad'
-copyright = '2020-2022, s1etad Developers'
+copyright = '2020-2023, s1etad Developers'
 author = 'Nuno Miranda <nuno.miranda@esa.int>'
 
 with open('../s1etad/__init__.py') as fd:

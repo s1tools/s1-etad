@@ -64,6 +64,7 @@ Requirements
 * `netCDF4 <https://github.com/Unidata/netcdf4-python>`_
 * `pandas <https://pandas.pydata.org>`_
 * `shapely <https://github.com/Toblerity/Shapely>`_
+* `pymap3d <https://github.com/geospace-code/pymap3d>`_
 * `simplekml <https://pypi.org/project/simplekml>`_
 * `GDAL <https://gdal.org>`_
 * `matplotlib <https://matplotlib.org>`_

@@ -1,0 +1,11 @@
+[flake8]
+# max_line_length = 79
+# max-complexity = 10
+extend_ignore = E203,W503
+extend_select = W504
+per-file-ignores =
+    */*: D105,D107
+    tests/*: D
+    */tests/*: D
+statistics = True
+count = True

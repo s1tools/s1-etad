@@ -49,7 +49,7 @@ def create_gcps(lat, lon, h=None, gcp_step=(10, 10)) -> List[gdal.GCP]:
                 continue
             height = h[line, pix] if h is not None else 0.0
             gcp_info = ""
-            gcp_id = f"len(gcps)"
+            gcp_id = f"{len(gcps)}"
             gcp = gdal.GCP(
                 lon[line, pix],
                 lat[line, pix],

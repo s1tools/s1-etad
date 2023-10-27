@@ -22,7 +22,7 @@ import sphinx_rtd_theme
 
 project = 's1etad'
 copyright = '2020-2023, s1etad Developers'
-author = 'Nuno Miranda <nuno.miranda@esa.int>'
+author = 'Nuno Miranda, Antonio Valentino'
 
 with open('../s1etad/__init__.py') as fd:
     s = fd.read()

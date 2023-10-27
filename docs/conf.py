@@ -110,9 +110,9 @@ autodoc_mock_imports = [
 # -- Options for ReadTheDocs integration -------------------------------------
 master_doc = 'index'
 html_context = {
-    "display_gitlab": True,
-    "gitlab_user": "s1-etad",
-    "gitlab_repo": "s1-etad",
-    "gitlab_version": "master",
+    "display_github": True,
+    "github_user": "s1tools",
+    "github_repo": "s1-etad",
+    "github_version": "main",
     "conf_py_path": "docs",
 }

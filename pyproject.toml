@@ -1,3 +1,65 @@
 [build-system]
-requires = ["setuptools >= 40.6.0", "wheel"]
+requires = ["setuptools >= 61.0.0"]
 build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "s1etad"
+authors = [
+    {name = "Nuno Miranda"},
+    {name = "Antonio Valentino"},
+]
+description = "Reader for Sentinel-1 Extended Timing Annotation Dataset"
+readme = "README.rst"
+requires-python = ">=3.6"
+keywords = [
+    "sentinel", "copernicus", "esa", "remote-sensing", "satellite-imagery"
+]
+license = {text = "MIT License"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+    "typing-extensions; python_version<'3.8'",
+    "numpy",
+    "scipy",
+    "lxml",
+    "netCDF4",
+    "pandas",
+    "shapely",
+    "pymap3d",
+]
+dynamic = ["version"]
+
+
+[project.optional-dependencies]
+kmz = ["simplekml", "gdal", "matplotlib"]
+ql = ["gdal", "matplotlib"]
+cli = ["argcomplete"]
+docs = ["sphinx", "nbsphinx", "sphinx-rtd-theme"]
+all = ["s1etad[kmz]", "s1etad[ql]", "s1etad[cli]", "s1etad[docs]"]
+
+
+[project.scripts]
+s1etad-cli = "s1etad.cli.main:main"
+
+
+[project.urls]
+Homepage = "https://github.com/s1tools/s1-etad"
+Documentation = "https://s1etad.readthedocs.io"
+Repository = "https://github.com/s1tools/s1-etad"
+Changelog = "https://github.com/s1tools/s1-etad/blob/main/CHANGELOG.rst"
+Issues = "https://github.com/s1tools/s1-etad/issues"
+
+
+[tool.setuptools]
+packages = ["s1etad"]
+
+
+[tool.setuptools.dynamic]
+version = {attr = "s1etad.__version__"}

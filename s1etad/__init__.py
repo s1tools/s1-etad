@@ -12,13 +12,17 @@ Basic elements are:
 """
 
 from .product import (
-    Sentinel1Etad, Sentinel1EtadSwath, Sentinel1EtadBurst, ECorrectionType,
+    Sentinel1Etad,
+    Sentinel1EtadSwath,
+    Sentinel1EtadBurst,
+    ECorrectionType,
 )
 
-__version__ = '0.5.4.dev0'
+__version__ = "0.5.4.dev0"
 
 
 # register display functions for Jupyter
 from ._jupyter_support import _register_jupyter_formatters
+
 _register_jupyter_formatters()
 del _register_jupyter_formatters

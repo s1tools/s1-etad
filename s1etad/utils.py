@@ -12,12 +12,14 @@ def iter_corrections(corrections=None):
 
     for correction in corrections:
         correction = ECorrectionType(correction)
-        if correction in {ECorrectionType.TROPOSPHERIC,
-                          ECorrectionType.IONOSPHERIC,
-                          ECorrectionType.DOPPLER}:
-            yield correction, 'x'
+        if correction in {
+            ECorrectionType.TROPOSPHERIC,
+            ECorrectionType.IONOSPHERIC,
+            ECorrectionType.DOPPLER,
+        }:
+            yield correction, "x"
         elif correction in {ECorrectionType.BISTATIC, ECorrectionType.FMRATE}:
-            yield correction, 'y'
+            yield correction, "y"
         elif correction in {ECorrectionType.SUM, ECorrectionType.GEODETIC}:
-            yield correction, 'x'
-            yield correction, 'y'
+            yield correction, "x"
+            yield correction, "y"

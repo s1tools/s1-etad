@@ -24,47 +24,49 @@ from ._s1utils import Sentinel1ProductName
 
 
 __all__ = [
-    'Sentinel1Etad', 'Sentinel1EtadSwath', 'Sentinel1EtadBurst',
-    'ECorrectionType',
+    "Sentinel1Etad",
+    "Sentinel1EtadSwath",
+    "Sentinel1EtadBurst",
+    "ECorrectionType",
 ]
 
 
 class ECorrectionType(enum.Enum):
-    TROPOSPHERIC = 'tropospheric'
-    IONOSPHERIC = 'ionospheric'
-    GEODETIC = 'geodetic'
-    BISTATIC = 'bistatic'
-    DOPPLER = 'doppler'
-    FMRATE = 'fmrate'
-    SUM = 'sum'
+    TROPOSPHERIC = "tropospheric"
+    IONOSPHERIC = "ionospheric"
+    GEODETIC = "geodetic"
+    BISTATIC = "bistatic"
+    DOPPLER = "doppler"
+    FMRATE = "fmrate"
+    SUM = "sum"
 
 
 CorrectionType = Union[ECorrectionType, str]
 
 
 _CORRECTION_NAMES_MAP = {
-    'tropospheric': {'x': 'troposphericCorrectionRg'},
-    'ionospheric': {'x': 'ionosphericCorrectionRg'},
-    'geodetic': {'x': 'geodeticCorrectionRg', 'y': 'geodeticCorrectionAz'},
-    'bistatic': {'y': 'bistaticCorrectionAz'},
-    'doppler': {'x': 'dopplerRangeShiftRg'},
-    'fmrate': {'y': 'fmMismatchCorrectionAz'},
-    'sum': {'x': 'sumOfCorrectionsRg', 'y': 'sumOfCorrectionsAz'},
+    "tropospheric": {"x": "troposphericCorrectionRg"},
+    "ionospheric": {"x": "ionosphericCorrectionRg"},
+    "geodetic": {"x": "geodeticCorrectionRg", "y": "geodeticCorrectionAz"},
+    "bistatic": {"y": "bistaticCorrectionAz"},
+    "doppler": {"x": "dopplerRangeShiftRg"},
+    "fmrate": {"y": "fmMismatchCorrectionAz"},
+    "sum": {"x": "sumOfCorrectionsRg", "y": "sumOfCorrectionsAz"},
 }
 
 
 _STATS_TAG_MAP = {
-    ECorrectionType.TROPOSPHERIC: 'troposphericCorrection',
-    ECorrectionType.IONOSPHERIC: 'ionosphericCorrection',
-    ECorrectionType.GEODETIC: 'geodeticCorrection',
-    ECorrectionType.BISTATIC: 'bistaticCorrection',
-    ECorrectionType.DOPPLER: 'dopplerRangeShift',
-    ECorrectionType.FMRATE: 'fmMismatchCorrection',
-    ECorrectionType.SUM: 'sumOfCorrections',
+    ECorrectionType.TROPOSPHERIC: "troposphericCorrection",
+    ECorrectionType.IONOSPHERIC: "ionosphericCorrection",
+    ECorrectionType.GEODETIC: "geodeticCorrection",
+    ECorrectionType.BISTATIC: "bistaticCorrection",
+    ECorrectionType.DOPPLER: "dopplerRangeShift",
+    ECorrectionType.FMRATE: "fmMismatchCorrection",
+    ECorrectionType.SUM: "sumOfCorrections",
 }
 
 
-Statistics = collections.namedtuple('Statistics', ['min', 'mean', 'max'])
+Statistics = collections.namedtuple("Statistics", ["min", "mean", "max"])
 
 
 class Sentinel1Etad:
@@ -145,7 +147,7 @@ class Sentinel1Etad:
 
         # this ensures that each product name is located at the correct pIndex
         product_list = [
-            item[1] for item in sorted(set(zip(df['pIndex'], df['productID'])))
+            item[1] for item in sorted(set(zip(df["pIndex"], df["productID"])))
         ]
 
         return product_list
@@ -154,26 +156,26 @@ class Sentinel1Etad:
     def grid_spacing(self):
         """Return the grid spacing in meters."""
         xp_list = {
-            'x': './/correctionGridRangeSampling',
-            'y': './/correctionGridAzimuthSampling',
+            "x": ".//correctionGridRangeSampling",
+            "y": ".//correctionGridAzimuthSampling",
         }
         dd = {}
         for tag, xp in xp_list.items():
             dd[tag] = self._xpath_to_list(self._annot, xp, dtype=float)
-        dd['unit'] = 'm'
+        dd["unit"] = "m"
         return dd
 
     @property
     def grid_sampling(self):
         """Return the grid spacing in s."""
         xp_list = {
-            'x': './/productInformation/gridSampling/range',
-            'y': './/productInformation/gridSampling/azimuth',
+            "x": ".//productInformation/gridSampling/range",
+            "y": ".//productInformation/gridSampling/azimuth",
         }
         dd = {}
         for tag, xp in xp_list.items():
             dd[tag] = self._xpath_to_list(self._annot, xp, dtype=float)
-        dd['unit'] = 's'
+        dd["unit"] = "s"
         return dd
 
     @property
@@ -201,12 +203,12 @@ class Sentinel1Etad:
         """Mean ground velocity [m/s]."""
         try:
             xp = (
-                'productInformation/gridGroundSampling/'
-                'averageZeroDopplerVelocity'
+                "productInformation/gridGroundSampling/"
+                "averageZeroDopplerVelocity"
             )
             vg = float(self._annot.find(xp).taxt)
         except (AttributeError, ValueError):
-            vg = self.grid_spacing['y'] / self.grid_sampling['y']
+            vg = self.grid_spacing["y"] / self.grid_sampling["y"]
         return vg
 
     def processing_setting(self):
@@ -216,19 +218,22 @@ class Sentinel1Etad:
         If a correction is not performed the matrix is filled with zeros.
         """
         correction_list = [
-            'troposphericDelayCorrection', 'ionosphericDelayCorrection',
-            'solidEarthTideCorrection', 'bistaticAzimuthCorrection',
-            'dopplerShiftRangeCorrection', 'FMMismatchAzimuthCorrection',
+            "troposphericDelayCorrection",
+            "ionosphericDelayCorrection",
+            "solidEarthTideCorrection",
+            "bistaticAzimuthCorrection",
+            "dopplerShiftRangeCorrection",
+            "FMMismatchAzimuthCorrection",
         ]
         dd = {}
         xp_root = (
-            'processingInformation/processor/setapConfigurationFile/'
-            'processorSettings/'
+            "processingInformation/processor/setapConfigurationFile/"
+            "processorSettings/"
         )
         for correction in correction_list:
             xp = xp_root + correction
             ret = self._xpath_to_list(self._annot, xp)
-            if ret == 'true':
+            if ret == "true":
                 ret = True
             else:
                 ret = False
@@ -242,31 +247,38 @@ class Sentinel1Etad:
         pandas.DataFrame containing all the elements allowing to index
         properly a burst.
         """
+
         def _to_tdelta64(t):
-            return np.float64(t * 1e9).astype('timedelta64[ns]')
+            return np.float64(t * 1e9).astype("timedelta64[ns]")
 
         data = collections.defaultdict(list)
-        t0 = np.datetime64(self.ds.azimuthTimeMin, 'ns')
+        t0 = np.datetime64(self.ds.azimuthTimeMin, "ns")
         for swath in self.ds.groups.values():
             for burst in swath.groups.values():
-                ax = burst.variables['azimuth']
+                ax = burst.variables["azimuth"]
                 tmin = t0 + _to_tdelta64(ax[0])
                 tmax = t0 + _to_tdelta64(ax[-1])
 
-                data['bIndex'].append(burst.bIndex)
-                data['pIndex'].append(burst.pIndex)
-                data['sIndex'].append(burst.sIndex)
-                data['productID'].append(burst.productID)
-                data['swathID'].append(burst.swathID)
-                data['azimuthTimeMin'].append(tmin)
-                data['azimuthTimeMax'].append(tmax)
+                data["bIndex"].append(burst.bIndex)
+                data["pIndex"].append(burst.pIndex)
+                data["sIndex"].append(burst.sIndex)
+                data["productID"].append(burst.productID)
+                data["swathID"].append(burst.swathID)
+                data["azimuthTimeMin"].append(tmin)
+                data["azimuthTimeMax"].append(tmax)
 
         df = pd.DataFrame(data=data)
 
         return df
 
-    def query_burst(self, first_time=None, product_name=None, last_time=None,
-                    swath=None, geometry=None):
+    def query_burst(
+        self,
+        first_time=None,
+        product_name=None,
+        last_time=None,
+        swath=None,
+        geometry=None,
+    ):
         """Query the burst catalogue to retrieve the burst matching by time.
 
         Parameters
@@ -289,24 +301,26 @@ class Sentinel1Etad:
             Filtered panda dataframe
         """
         # first sort the burst by time
-        df = self.burst_catalogue.sort_values(by=['azimuthTimeMin'])
+        df = self.burst_catalogue.sort_values(by=["azimuthTimeMin"])
         if first_time is None:
             first_time = df.iloc[0].azimuthTimeMin
         if last_time is None:
             last_time = df.iloc[-1].azimuthTimeMax
 
-        ix0 = ((df.azimuthTimeMin >= first_time) &
-               (df.azimuthTimeMax <= last_time))
+        ix0 = (df.azimuthTimeMin >= first_time) & (
+            df.azimuthTimeMax <= last_time
+        )
 
         if product_name is not None:
             # build a regex based on the name to avoid issues with annotation
             # products and CRC
             product_name = Sentinel1ProductName(product_name)
-            product_name.to_annotation(value='[AS]')
-            product_name.crc = ''
+            product_name.to_annotation(value="[AS]")
+            product_name.crc = ""
             filter_ = product_name.recompose(with_suffix=False)
-            ix0 = ix0 & self.burst_catalogue.productID.str.contains(filter_,
-                                                                    regex=True)
+            ix0 = ix0 & self.burst_catalogue.productID.str.contains(
+                filter_, regex=True
+            )
 
         if swath is not None:
             if isinstance(swath, str):
@@ -332,6 +346,7 @@ class Sentinel1Etad:
         else:
             # assume it is a list of swaths already
             import collections.abc
+
             assert isinstance(selection, collections.abc.Iterable)
             assert all(isinstance(item, str) for item in selection)
             burst_selection = None
@@ -382,9 +397,9 @@ class Sentinel1Etad:
             yield burst
 
     @staticmethod
-    def _xpath_to_list(root, xpath, dtype=None, namespace=None,
-                       parse_time_func=None):
-
+    def _xpath_to_list(
+        root, xpath, dtype=None, namespace=None, parse_time_func=None
+    ):
         ll = [elt.text for elt in root.findall(xpath, namespace)]
         if parse_time_func is not None:
             ll = [datetime.datetime.fromisoformat(t) for t in ll]
@@ -425,23 +440,23 @@ class Sentinel1Etad:
             :unit:
                 the units of the returned statistics ("m" or "s")
         """
-        units = 'm' if meter else 's'
+        units = "m" if meter else "s"
 
-        stat_xp = './qualityAndStatistics'
+        stat_xp = "./qualityAndStatistics"
         target = ECorrectionType(correction)
         target_tag = _STATS_TAG_MAP[target]
 
-        statistics = {'unit': units}
+        statistics = {"unit": units}
 
         # NOTE: looping on element and heuristic test on tags is necessary
         #       due to inconsistent naming of range and azimuth element
         # TODO: report the inconsistency to DLR? (TBD)
-        correction_elem = self._annot.find(f'{stat_xp}/{target_tag}')
+        correction_elem = self._annot.find(f"{stat_xp}/{target_tag}")
         for elem in correction_elem:
-            if 'range' in elem.tag:
-                direction = 'x'
-            elif 'azimuth' in elem.tag:
-                direction = 'y'
+            if "range" in elem.tag:
+                direction = "x"
+            elif "azimuth" in elem.tag:
+                direction = "y"
             else:
                 continue
 
@@ -502,8 +517,14 @@ class Sentinel1Etad:
         # return the flattened list
         return list(itertools.chain(*lists_of_burst_indexes))
 
-    def _swath_merger(self, burst_var, selection=None, set_auto_mask=False,
-                      meter=False, fill_value=0.):
+    def _swath_merger(
+        self,
+        burst_var,
+        selection=None,
+        set_auto_mask=False,
+        meter=False,
+        fill_value=0.0,
+    ):
         if selection is None:
             df = self.burst_catalogue
         elif not isinstance(selection, pd.DataFrame):
@@ -518,24 +539,29 @@ class Sentinel1Etad:
         last_swath = self[df.swathID.max()]
         far_burst = last_swath[last_swath.burst_list[0]]
 
-        rg_first_time = near_burst.sampling_start['x']
-        rg_last_time = (far_burst.sampling_start['x'] +
-                        far_burst.sampling['x'] * far_burst.samples)
+        rg_first_time = near_burst.sampling_start["x"]
+        rg_last_time = (
+            far_burst.sampling_start["x"]
+            + far_burst.sampling["x"] * far_burst.samples
+        )
         az_first_time = df.azimuthTimeMin.min()
         az_last_time = df.azimuthTimeMax.max()
         az_ref_time = self.min_azimuth_time
         az_first_time_rel = (az_first_time - az_ref_time).total_seconds()
 
         sampling = self.grid_sampling
-        dx = sampling['x']
-        dy = sampling['y']
+        dx = sampling["x"]
+        dy = sampling["y"]
 
-        num_samples = np.round(
-            (rg_last_time - rg_first_time) / dx
-        ).astype(int) + 1
-        num_lines = np.round(
-            (az_last_time - az_first_time).total_seconds() / dy
-        ).astype(int) + 1
+        num_samples = (
+            np.round((rg_last_time - rg_first_time) / dx).astype(int) + 1
+        )
+        num_lines = (
+            np.round(
+                (az_last_time - az_first_time).total_seconds() / dy
+            ).astype(int)
+            + 1
+        )
 
         img = np.full((num_lines, num_samples), fill_value=fill_value)
         # TODO: add some control option
@@ -544,10 +570,14 @@ class Sentinel1Etad:
         for swath in self.iter_swaths(df):
             # NOTE: use the private "Sentinel1EtadSwath._burst_merger" method
             # to be able to work only on the specified NetCDF variable
-            dd_ = swath._burst_merger(burst_var, selection=df,  # noqa
-                                      set_auto_mask=set_auto_mask, meter=meter)
-            yoffset = dd_['first_azimuth_time'] - az_first_time_rel
-            xoffset = dd_['first_slant_range_time'] - rg_first_time
+            dd_ = swath._burst_merger(
+                burst_var,
+                selection=df,  # noqa
+                set_auto_mask=set_auto_mask,
+                meter=meter,
+            )
+            yoffset = dd_["first_azimuth_time"] - az_first_time_rel
+            xoffset = dd_["first_slant_range_time"] - rg_first_time
             line_ofs = np.round(yoffset / dy).astype(int)
             sample_ofs = np.round(xoffset / dx).astype(int)
 
@@ -558,23 +588,28 @@ class Sentinel1Etad:
 
         return {
             burst_var: img,
-            'first_azimuth_time': az_first_time,
-            'first_slant_range_time': rg_first_time,
-            'sampling': sampling,
+            "first_azimuth_time": az_first_time,
+            "first_slant_range_time": rg_first_time,
+            "sampling": sampling,
         }
 
-    def _core_merge_correction(self, prm_list, selection=None,
-                               set_auto_mask=True, meter=False):
+    def _core_merge_correction(
+        self, prm_list, selection=None, set_auto_mask=True, meter=False
+    ):
         dd = {}
         for dim, field in prm_list.items():
-            dd_ = self._swath_merger(field, selection=selection,
-                                     set_auto_mask=set_auto_mask, meter=meter)
+            dd_ = self._swath_merger(
+                field,
+                selection=selection,
+                set_auto_mask=set_auto_mask,
+                meter=meter,
+            )
             dd[dim] = dd_[field]
-            dd['sampling'] = dd_['sampling']
-            dd['first_azimuth_time'] = dd_['first_azimuth_time']
-            dd['first_slant_range_time'] = dd_['first_slant_range_time']
+            dd["sampling"] = dd_["sampling"]
+            dd["first_azimuth_time"] = dd_["first_azimuth_time"]
+            dd["first_slant_range_time"] = dd_["first_slant_range_time"]
 
-        dd['unit'] = 'm' if meter else 's'
+        dd["unit"] = "m" if meter else "s"
 
         # To compute lat/lon/h make a new selection with all gaps filled
         swath_list, _ = self._selection_to_swath_list(selection)
@@ -584,31 +619,48 @@ class Sentinel1Etad:
         idx &= self.burst_catalogue.swathID <= far_swath
         swaths = self.burst_catalogue.swathID[idx].unique()
 
-        data = dd['x' if 'x' in prm_list else 'y']
+        data = dd["x" if "x" in prm_list else "y"]
         lines = data.shape[0]
-        duration = lines * self.grid_sampling['y']
-        duration = np.float64(duration * 1e9).astype('timedelta64[ns]')
-        first_time = dd['first_azimuth_time']
+        duration = lines * self.grid_sampling["y"]
+        duration = np.float64(duration * 1e9).astype("timedelta64[ns]")
+        first_time = dd["first_azimuth_time"]
         last_time = first_time + duration
 
-        filled_selection = self.query_burst(first_time=first_time,
-                                            last_time=last_time, swath=swaths)
+        filled_selection = self.query_burst(
+            first_time=first_time, last_time=last_time, swath=swaths
+        )
 
-        dd['lats'] = self._swath_merger('lats', selection=filled_selection,
-                                        set_auto_mask=set_auto_mask,
-                                        meter=False, fill_value=np.nan)['lats']
-        dd['lons'] = self._swath_merger('lons', selection=filled_selection,
-                                        set_auto_mask=set_auto_mask,
-                                        meter=False, fill_value=np.nan)['lons']
-        dd['height'] = self._swath_merger('height', selection=filled_selection,
-                                          set_auto_mask=set_auto_mask,
-                                          meter=False,
-                                          fill_value=np.nan)['height']
+        dd["lats"] = self._swath_merger(
+            "lats",
+            selection=filled_selection,
+            set_auto_mask=set_auto_mask,
+            meter=False,
+            fill_value=np.nan,
+        )["lats"]
+        dd["lons"] = self._swath_merger(
+            "lons",
+            selection=filled_selection,
+            set_auto_mask=set_auto_mask,
+            meter=False,
+            fill_value=np.nan,
+        )["lons"]
+        dd["height"] = self._swath_merger(
+            "height",
+            selection=filled_selection,
+            set_auto_mask=set_auto_mask,
+            meter=False,
+            fill_value=np.nan,
+        )["height"]
         return dd
 
-    def merge_correction(self, name: CorrectionType = ECorrectionType.SUM,
-                         selection=None, set_auto_mask=True, meter=False,
-                         direction=None):
+    def merge_correction(
+        self,
+        name: CorrectionType = ECorrectionType.SUM,
+        selection=None,
+        set_auto_mask=True,
+        meter=False,
+        direction=None,
+    ):
         """Merge multiple swaths of the specified correction variable.
 
         Data of the selected swaths (typically overlapped) are merged
@@ -672,10 +724,13 @@ class Sentinel1Etad:
         prm_list = _CORRECTION_NAMES_MAP[correction_type.value]
         if direction is not None:
             prm_list = {direction: prm_list[direction]}
-        correction = self._core_merge_correction(prm_list, selection=selection,
-                                                 set_auto_mask=set_auto_mask,
-                                                 meter=meter)
-        correction['name'] = correction_type.value
+        correction = self._core_merge_correction(
+            prm_list,
+            selection=selection,
+            set_auto_mask=set_auto_mask,
+            meter=meter,
+        )
+        correction["name"] = correction_type.value
         return correction
 
 
@@ -782,7 +837,9 @@ class Sentinel1EtadSwath:
             if set to True return a single polygon that is the union of the
             footprints of all bursts
         """
-        polys = [burst.get_footprint() for burst in self.iter_bursts(selection)]
+        polys = [
+            burst.get_footprint() for burst in self.iter_bursts(selection)
+        ]
         if merge:
             polys = shapely.ops.cascaded_union(polys)
         else:
@@ -806,20 +863,29 @@ class Sentinel1EtadSwath:
             list of the indexes of all bursts intersecting with the input
             geometry
         """
-        assert isinstance(geometry, BaseGeometry), \
-            'The input shape is not a shapely BaseGeometry object'
+        assert isinstance(
+            geometry, BaseGeometry
+        ), "The input shape is not a shapely BaseGeometry object"
         burst_index_list = []
         swath_footprint = self.get_footprint(merge=True)
         if swath_footprint.intersects(geometry):
             burst_index_list = [
-                b.burst_index for b in self.iter_bursts()
+                b.burst_index
+                for b in self.iter_bursts()
                 if b.intersects(geometry)
             ]
         return burst_index_list
 
-    def _burst_merger(self, burst_var, selection=None,
-                      az_time_min=None, az_time_max=None,
-                      set_auto_mask=False, meter=False, fill_value=0.):
+    def _burst_merger(
+        self,
+        burst_var,
+        selection=None,
+        az_time_min=None,
+        az_time_max=None,
+        set_auto_mask=False,
+        meter=False,
+        fill_value=0.0,
+    ):
         """Low level method to de-burst a NetCDF variable.
 
         The de-burst strategy is simple as the latest line is on top of the
@@ -860,7 +926,7 @@ class Sentinel1EtadSwath:
         last_burst = self[burst_index_list[-1]]
 
         if az_time_min is None:
-            t0 = first_burst.sampling_start['y']
+            t0 = first_burst.sampling_start["y"]
         else:
             t0 = az_time_min
 
@@ -871,31 +937,34 @@ class Sentinel1EtadSwath:
             t1 = az_time_max
 
         tau0 = min(
-            burst.sampling_start['x']
+            burst.sampling_start["x"]
             for burst in self.iter_bursts(burst_index_list)
         )
 
         # grid sampling
-        dt = first_burst.sampling['y']
-        dtau = first_burst.sampling['x']
+        dt = first_burst.sampling["y"]
+        dtau = first_burst.sampling["x"]
 
         num_lines = np.round((t1 - t0) / dt).astype(int) + 1
         num_samples = max(
             burst.samples for burst in self.iter_bursts(burst_index_list)
         )
 
-        debursted_var = np.full((num_lines, num_samples),
-                                fill_value=fill_value)
+        debursted_var = np.full(
+            (num_lines, num_samples), fill_value=fill_value
+        )
         # TODO: add some control option
-        debursted_var = np.ma.array(debursted_var,
-                                    mask=True, fill_value=fill_value)
+        debursted_var = np.ma.array(
+            debursted_var, mask=True, fill_value=fill_value
+        )
 
         for burst_ in self.iter_bursts(burst_index_list):
-            assert(dt == burst_.sampling['y']), \
-                'The azimuth sampling is changing long azimuth'
-            assert(first_burst.sampling_start['x'] ==
-                   burst_.sampling_start['x']), \
-                'The 2-way range gridStartRangeTime is changing long azimuth'
+            assert (
+                dt == burst_.sampling["y"]
+            ), "The azimuth sampling is changing long azimuth"
+            assert (
+                first_burst.sampling_start["x"] == burst_.sampling_start["x"]
+            ), "The 2-way range gridStartRangeTime is changing long azimuth"
 
             # get the timing of the burst and convert into line index
             az_time_, rg_time_ = burst_.get_burst_grid()
@@ -904,44 +973,56 @@ class Sentinel1EtadSwath:
 
             # NOTE: use the private "Sentinel1EtadBurst._get_etad_param" method
             # to be able to work only on the specified NetCDF variable
-            var_ = burst_._get_etad_param(burst_var,  # noqa
-                                          set_auto_mask=set_auto_mask,
-                                          meter=meter)
+            var_ = burst_._get_etad_param(
+                burst_var, set_auto_mask=set_auto_mask, meter=meter  # noqa
+            )
 
             _, burst_samples = var_.shape
-            debursted_var[line_index_, p0:p0+burst_samples] = var_
+            debursted_var[line_index_, p0 : p0 + burst_samples] = var_
 
         return {
             burst_var: debursted_var,
-            'first_azimuth_time': t0,
-            'first_slant_range_time': first_burst.sampling_start['x'],
-            'sampling': first_burst.sampling,
+            "first_azimuth_time": t0,
+            "first_slant_range_time": first_burst.sampling_start["x"],
+            "sampling": first_burst.sampling,
         }
 
-    def _core_merge_correction(self, prm_list, selection=None,
-                               set_auto_mask=True, meter=False):
+    def _core_merge_correction(
+        self, prm_list, selection=None, set_auto_mask=True, meter=False
+    ):
         dd = {}
         for dim, field in prm_list.items():
-            dd_ = self._burst_merger(field, selection=selection,
-                                     set_auto_mask=set_auto_mask, meter=meter)
+            dd_ = self._burst_merger(
+                field,
+                selection=selection,
+                set_auto_mask=set_auto_mask,
+                meter=meter,
+            )
             dd[dim] = dd_[field]
-            dd['sampling'] = dd_['sampling']
-            dd['first_azimuth_time'] = dd_['first_azimuth_time']
-            dd['first_slant_range_time'] = dd_['first_slant_range_time']
+            dd["sampling"] = dd_["sampling"]
+            dd["first_azimuth_time"] = dd_["first_azimuth_time"]
+            dd["first_slant_range_time"] = dd_["first_slant_range_time"]
 
-        dd['unit'] = 'm' if meter else 's'
-        dd['lats'] = self._burst_merger('lats', set_auto_mask=set_auto_mask,
-                                        meter=False)['lats']
-        dd['lons'] = self._burst_merger('lons', set_auto_mask=set_auto_mask,
-                                        meter=False)['lons']
-        dd['height'] = self._burst_merger('height',
-                                          set_auto_mask=set_auto_mask,
-                                          meter=False)['height']
+        dd["unit"] = "m" if meter else "s"
+        dd["lats"] = self._burst_merger(
+            "lats", set_auto_mask=set_auto_mask, meter=False
+        )["lats"]
+        dd["lons"] = self._burst_merger(
+            "lons", set_auto_mask=set_auto_mask, meter=False
+        )["lons"]
+        dd["height"] = self._burst_merger(
+            "height", set_auto_mask=set_auto_mask, meter=False
+        )["height"]
         return dd
 
-    def merge_correction(self, name: CorrectionType = ECorrectionType.SUM,
-                         selection=None, set_auto_mask=True, meter=False,
-                         direction=None):
+    def merge_correction(
+        self,
+        name: CorrectionType = ECorrectionType.SUM,
+        selection=None,
+        set_auto_mask=True,
+        meter=False,
+        direction=None,
+    ):
         """Merge multiple bursts of the specified correction variable.
 
         Data of the selected bursts (typically overlapped) are merged
@@ -1005,10 +1086,13 @@ class Sentinel1EtadSwath:
         prm_list = _CORRECTION_NAMES_MAP[correction_type.value]
         if direction is not None:
             prm_list = {direction: prm_list[direction]}
-        correction = self._core_merge_correction(prm_list, selection=selection,
-                                                 set_auto_mask=set_auto_mask,
-                                                 meter=meter)
-        correction['name'] = correction_type.value
+        correction = self._core_merge_correction(
+            prm_list,
+            selection=selection,
+            set_auto_mask=set_auto_mask,
+            meter=meter,
+        )
+        correction["name"] = correction_type.value
         return correction
 
 
@@ -1084,14 +1168,15 @@ class Sentinel1EtadBurst:
         bool
             True if intersects, False otherwise
         """
-        assert isinstance(geometry, BaseGeometry), \
-            'Not a shapely BaseGeometry object'
+        assert isinstance(
+            geometry, BaseGeometry
+        ), "Not a shapely BaseGeometry object"
         return self.get_footprint().intersects(geometry)
 
     def get_burst_grid(self):
         """Return the t, tau grid of the burst."""
-        azimuth = self._get_etad_param('azimuth', set_auto_mask=True)
-        range_ = self._get_etad_param('range', set_auto_mask=True)
+        azimuth = self._get_etad_param("azimuth", set_auto_mask=True)
+        range_ = self._get_etad_param("range", set_auto_mask=True)
         return azimuth, range_
 
     @property
@@ -1105,7 +1190,7 @@ class Sentinel1EtadBurst:
         return dict(
             x=self._grp.gridStartRangeTime,
             y=self._grp.gridStartAzimuthTime,
-            units='s',
+            units="s",
         )
 
     @property
@@ -1121,18 +1206,18 @@ class Sentinel1EtadBurst:
         return dict(
             x=self._grp.gridSamplingRange,
             y=self._grp.gridSamplingAzimuth,
-            units='s',
+            units="s",
         )
 
     @property
     def lines(self):
         """The number of lines in  the burst."""
-        return self._grp.dimensions['azimuthExtent'].size
+        return self._grp.dimensions["azimuthExtent"].size
 
     @property
     def samples(self):
         """The number of samples in the burst."""
-        return self._grp.dimensions['rangeExtent'].size
+        return self._grp.dimensions["rangeExtent"].size
 
     @property
     def vg(self) -> float:
@@ -1156,27 +1241,28 @@ class Sentinel1EtadBurst:
             * 'VV' or 'VH' for DV products
             * 'HH' or 'HV' for DH products
         """
-        if channel not in {'HH', 'HV', 'VV', 'VH'}:
-            raise ValueError(f'invalid channel ID: {channel!r}')
+        if channel not in {"HH", "HV", "VV", "VH"}:
+            raise ValueError(f"invalid channel ID: {channel!r}")
 
         if channel[0] != self._grp.referencePolarization[0]:
             raise ValueError(
-                f'polarimetric channel not available: {channel!r}')
+                f"polarimetric channel not available: {channel!r}"
+            )
 
-        data = dict(units='s')
+        data = dict(units="s")
 
-        if channel == 'HH':
-            data['x'] = self._grp.rangeOffsetHH,
-            data['y'] = self._grp.rangeOffsetHH,
-        elif channel == 'HV':
-            data['x'] = self._grp.rangeOffsetHV,
-            data['y'] = self._grp.rangeOffsetHV,
-        elif channel == 'VH':
-            data['x'] = self._grp.rangeOffsetVH,
-            data['y'] = self._grp.rangeOffsetVH,
-        elif channel == 'VV':
-            data['x'] = self._grp.rangeOffsetVV,
-            data['y'] = self._grp.rangeOffsetVV,
+        if channel == "HH":
+            data["x"] = (self._grp.rangeOffsetHH,)
+            data["y"] = (self._grp.rangeOffsetHH,)
+        elif channel == "HV":
+            data["x"] = (self._grp.rangeOffsetHV,)
+            data["y"] = (self._grp.rangeOffsetHV,)
+        elif channel == "VH":
+            data["x"] = (self._grp.rangeOffsetVH,)
+            data["y"] = (self._grp.rangeOffsetVH,)
+        elif channel == "VV":
+            data["x"] = (self._grp.rangeOffsetVV,)
+            data["y"] = (self._grp.rangeOffsetVV,)
 
         return data
 
@@ -1185,22 +1271,25 @@ class Sentinel1EtadBurst:
             return dict(
                 x=self._grp.instrumentTimingCalibrationRange,
                 y=self._grp.instrumentTimingCalibrationAzimuth,
-                units='s',
+                units="s",
             )
         except AttributeError:
             # @COMPATIBILITY: with SETAP , v1.6
             warnings.warn(
-                'instrument timing calibration constants are not available '
-                'in the NetCDF data component this product. '
-                'Calibration constants have been added to the NetCDF '
-                'component in SETAP v1.6 (ETAD-DLR-PS-0014 - '
+                "instrument timing calibration constants are not available "
+                "in the NetCDF data component this product. "
+                "Calibration constants have been added to the NetCDF "
+                "component in SETAP v1.6 (ETAD-DLR-PS-0014 - "
                 '"ETAD Product Format Specification" Issue 1.5).'
             )
-            return dict(x=0, y=0, units='s')
+            return dict(x=0, y=0, units="s")
 
-    def _get_etad_param(self, name, set_auto_mask=False, transpose=False,
-                        meter=False):
-        assert name in self._grp.variables, f'Parameter {name!r} is not allowed'
+    def _get_etad_param(
+        self, name, set_auto_mask=False, transpose=False, meter=False
+    ):
+        assert (
+            name in self._grp.variables
+        ), f"Parameter {name!r} is not allowed"
 
         self._grp.set_auto_mask(set_auto_mask)
 
@@ -1211,16 +1300,17 @@ class Sentinel1EtadBurst:
             field = np.transpose(field)
 
         if meter:
-            if name.endswith('Az'):
+            if name.endswith("Az"):
                 k = self._grp.averageZeroDopplerVelocity
-            elif name.endswith('Rg'):
+            elif name.endswith("Rg"):
                 k = constants.c / 2
             else:
                 # it is not a correction (azimuth, range, lats, lons, height)
                 k = 1
                 warnings.warn(
-                    f'the {name} is not a correction: '
-                    'the "meter" parameter will be ignored')
+                    f"the {name} is not a correction: "
+                    'the "meter" parameter will be ignored'
+                )
             field *= k
 
         return field
@@ -1233,28 +1323,40 @@ class Sentinel1EtadBurst:
         expressed in meters.
         """
         lats = self._get_etad_param(
-            'lats', transpose=transpose, meter=False, set_auto_mask=True)
+            "lats", transpose=transpose, meter=False, set_auto_mask=True
+        )
         lons = self._get_etad_param(
-            'lons', transpose=transpose, meter=False, set_auto_mask=True)
+            "lons", transpose=transpose, meter=False, set_auto_mask=True
+        )
         h = self._get_etad_param(
-            'height', transpose=transpose, meter=False, set_auto_mask=True)
+            "height", transpose=transpose, meter=False, set_auto_mask=True
+        )
         return lats, lons, h
 
-    def _core_get_correction(self, prm_list, set_auto_mask=False,
-                             transpose=False, meter=False):
+    def _core_get_correction(
+        self, prm_list, set_auto_mask=False, transpose=False, meter=False
+    ):
         correction = {}
         for dim, field in prm_list.items():
             correction[dim] = self._get_etad_param(
-                field, set_auto_mask=set_auto_mask, transpose=transpose,
-                meter=meter)
+                field,
+                set_auto_mask=set_auto_mask,
+                transpose=transpose,
+                meter=meter,
+            )
 
-        correction['unit'] = 'm' if meter else 's'
+        correction["unit"] = "m" if meter else "s"
 
         return correction
 
-    def get_correction(self, name: CorrectionType = ECorrectionType.SUM,
-                       set_auto_mask=False, transpose=False, meter=False,
-                       direction=None):
+    def get_correction(
+        self,
+        name: CorrectionType = ECorrectionType.SUM,
+        set_auto_mask=False,
+        transpose=False,
+        meter=False,
+        direction=None,
+    ):
         """Retrieve the correction for the specified correction "name".
 
         Puts the results in a dict.
@@ -1291,19 +1393,24 @@ class Sentinel1EtadBurst:
         prm_list = _CORRECTION_NAMES_MAP[name]
         if direction is not None:
             prm_list = {direction: prm_list[direction]}
-        correction = self._core_get_correction(prm_list,
-                                               set_auto_mask=set_auto_mask,
-                                               transpose=transpose, meter=meter)
-        correction['name'] = name
+        correction = self._core_get_correction(
+            prm_list,
+            set_auto_mask=set_auto_mask,
+            transpose=transpose,
+            meter=meter,
+        )
+        correction["name"] = name
         return correction
 
     def _get_geocoder(self):
         if self._geocoder is None:
             from .geometry import GridGeocoding
+
             azimuth, range_ = self.get_burst_grid()
             lats, lons, heights = self.get_lat_lon_height()
-            self._geocoder = GridGeocoding(lats, lons, heights,
-                                           xaxis=range_, yaxis=azimuth)
+            self._geocoder = GridGeocoding(
+                lats, lons, heights, xaxis=range_, yaxis=azimuth
+            )
         return self._geocoder
 
     def radar_to_geodetic(self, tau, t, deg=True):
@@ -1361,8 +1468,8 @@ class Sentinel1EtadBurst:
 
             (tau, t) -> (line, sample)
         """
-        line = (t - self.sampling_start['y']) / self.sampling['y']
-        sample = (tau - self.sampling_start['x']) / self.sampling['x']
+        line = (t - self.sampling_start["y"]) / self.sampling["y"]
+        sample = (tau - self.sampling_start["x"]) / self.sampling["x"]
         return line, sample
 
     def image_to_radar(self, line, sample):
@@ -1375,6 +1482,6 @@ class Sentinel1EtadBurst:
 
             (line, sample) -> (t, tau)
         """
-        t = self.sampling_start['y'] + line * self.sampling['y']
-        tau = self.sampling_start['x'] + sample * self.sampling['x']
+        t = self.sampling_start["y"] + line * self.sampling["y"]
+        tau = self.sampling_start["x"] + sample * self.sampling["x"]
         return t, tau

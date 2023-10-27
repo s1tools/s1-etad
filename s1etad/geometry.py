@@ -8,16 +8,16 @@ from scipy.interpolate import interp2d
 try:
     import pyproj as _pyproj
 
-    def geodetic_to_ecef(lat, lon, h, ell='WGS84', deg=True):
-        ecef = _pyproj.crs.CRS(proj='geocent', ellps=ell, datum=ell)
-        geodetic = _pyproj.crs.CRS(proj='latlong', ellps=ell, datum=ell)
+    def geodetic_to_ecef(lat, lon, h, ell="WGS84", deg=True):
+        ecef = _pyproj.crs.CRS(proj="geocent", ellps=ell, datum=ell)
+        geodetic = _pyproj.crs.CRS(proj="latlong", ellps=ell, datum=ell)
         transformer = _pyproj.Transformer.from_crs(geodetic, ecef)
         x, y, z = transformer.transform(lon, lat, h, radians=bool(not deg))
         return x, y, z
 
-    def ecef_to_geodetic(x, y, z, ell='WGS84', deg=True):
-        ecef = _pyproj.crs.CRS(proj='geocent', ellps=ell, datum=ell)
-        geodetic = _pyproj.crs.CRS(proj='latlong', ellps=ell, datum=ell)
+    def ecef_to_geodetic(x, y, z, ell="WGS84", deg=True):
+        ecef = _pyproj.crs.CRS(proj="geocent", ellps=ell, datum=ell)
+        geodetic = _pyproj.crs.CRS(proj="latlong", ellps=ell, datum=ell)
         transformer = _pyproj.Transformer.from_crs(geodetic, ecef)
         lon, lat, h = transformer.itransform(x, y, z, radians=bool(not deg))
         return lat, lon, h
@@ -25,20 +25,20 @@ try:
 except ImportError:
     import pymap3d as _pymap3d
 
-    def geodetic_to_ecef(lat, lon, h, ell='WGS84', deg=True):
+    def geodetic_to_ecef(lat, lon, h, ell="WGS84", deg=True):
         if ell and not isinstance(ell, _pymap3d.ellipsoid.Ellipsoid):
             ell = _pymap3d.ellipsoid.Ellipsoid(ell.lower())
         x, y, z = _pymap3d.ecef.geodetic2ecef(lat, lon, h, ell=ell, deg=deg)
         return x, y, z
 
-    def ecef_to_geodetic(x, y, z, ell='WGS84', deg=True):
+    def ecef_to_geodetic(x, y, z, ell="WGS84", deg=True):
         if ell and not isinstance(ell, _pymap3d.ellipsoid.Ellipsoid):
             ell = _pymap3d.ellipsoid.Ellipsoid(ell.lower())
         lat, lon, h = _pymap3d.ecef.ecef2geodetic(x, y, z, ell=ell, deg=deg)
         return lat, lon, h
 
 
-__all__ = ['GridGeocoding', 'geodetic_to_ecef', 'ecef_to_geodetic']
+__all__ = ["GridGeocoding", "geodetic_to_ecef", "ecef_to_geodetic"]
 
 
 class GridGeocoding:
@@ -74,9 +74,16 @@ class GridGeocoding:
         Default: "cubic"
     """
 
-    def __init__(self, grid_latitude, grid_longitude, grid_height=0,
-                 xaxis=None, yaxis=None, ellipsoid_name='WGS84',
-                 interpolation_kind='cubic'):
+    def __init__(
+        self,
+        grid_latitude,
+        grid_longitude,
+        grid_height=0,
+        xaxis=None,
+        yaxis=None,
+        ellipsoid_name="WGS84",
+        interpolation_kind="cubic",
+    ):
         self._grid_lats = np.asarray(grid_latitude)
         self._grid_lons = np.asarray(grid_longitude)
         self._grid_heights = np.asarray(grid_height)
@@ -103,12 +110,18 @@ class GridGeocoding:
         # regular grid
         # TODO: interp2d is the simplest interpolator.
         #       Other interpolators could be used.
-        self._f_lat = interp2d(self._xaxis, self._yaxis, self._grid_lats,
-                               kind=interpolation_kind)
-        self._f_lon = interp2d(self._xaxis, self._yaxis, self._grid_lons,
-                               kind=interpolation_kind)
-        self._f_h = interp2d(self._xaxis, self._yaxis, self._grid_heights,
-                             kind=interpolation_kind)
+        self._f_lat = interp2d(
+            self._xaxis, self._yaxis, self._grid_lats, kind=interpolation_kind
+        )
+        self._f_lon = interp2d(
+            self._xaxis, self._yaxis, self._grid_lons, kind=interpolation_kind
+        )
+        self._f_h = interp2d(
+            self._xaxis,
+            self._yaxis,
+            self._grid_heights,
+            kind=interpolation_kind,
+        )
 
     def latitude(self, x, y):
         """Interpolate the latitude grid at the (x, y) coordinates.
@@ -221,10 +234,9 @@ class GridGeocoding:
         Requires to perform geographic to cartesian conversion.
         """
         if ecef_grid is None:
-            ecef_grid = geodetic_to_ecef(self._grid_lats,
-                                         self._grid_lons,
-                                         self._grid_heights,
-                                         deg=True)
+            ecef_grid = geodetic_to_ecef(
+                self._grid_lats, self._grid_lons, self._grid_heights, deg=True
+            )
         ecef0 = geodetic_to_ecef(lat, lon, h, deg=deg)
 
         r = np.asarray(ecef_grid) - np.asarray(ecef0)[:, None, None]
@@ -237,7 +249,7 @@ class GridGeocoding:
         """Perform the back geocoding: (lat, lon, h) -> (x, y)
 
         .. important::
-        
+
             The current implementation alway returns the solution of the
             backward geocoding at the heigh corresponding to the reference
             surface included in the ETAD product (provides latitude longitude
@@ -283,24 +295,28 @@ class GridGeocoding:
         if heights.size == 1:
             heights = np.full_like(lons, heights.item())
 
-        assert lats.shape == lons.shape == heights.shape, \
-            "'lats' shall be of the same shape as 'lons'"
+        assert (
+            lats.shape == lons.shape == heights.shape
+        ), "'lats' shall be of the same shape as 'lons'"
 
         x0 = np.zeros(lats.shape)
         y0 = np.zeros(lats.shape)
 
-        ecef_grid = geodetic_to_ecef(self._grid_lats,
-                                     self._grid_lons,
-                                     self._grid_heights,
-                                     deg=True)
+        ecef_grid = geodetic_to_ecef(
+            self._grid_lats, self._grid_lons, self._grid_heights, deg=True
+        )
 
         for idx, (lat, lon, h) in enumerate(zip(lats, lons, heights)):
-            x_guess, y_guess = self._initial_guess(lat, lon, h, deg=deg,
-                                                   ecef_grid=ecef_grid)
+            x_guess, y_guess = self._initial_guess(
+                lat, lon, h, deg=deg, ecef_grid=ecef_grid
+            )
 
-            sol, info, ier, mesg = fsolve(self._back_equation,
-                                          np.asarray([x_guess, y_guess]),
-                                          args=(lat, lon), full_output=True)
+            sol, info, ier, mesg = fsolve(
+                self._back_equation,
+                np.asarray([x_guess, y_guess]),
+                args=(lat, lon),
+                full_output=True,
+            )
             x0[idx], y0[idx] = sol[0], sol[1]
 
         # TODO: output the convergence flag

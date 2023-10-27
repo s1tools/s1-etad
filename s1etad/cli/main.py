@@ -20,9 +20,9 @@ except ImportError:
 EX_FAILURE = 1
 EX_INTERRUPT = 130
 
-PROG = __package__.split('.')[0]
+PROG = __package__.split(".")[0]
 # LOGFMT = '%(asctime)s %(levelname)-8s -- %(message)s'
-LOGFMT = '%(asctime)s %(name)s %(levelname)s -- %(message)s'
+LOGFMT = "%(asctime)s %(name)s %(levelname)s -- %(message)s"
 
 
 def get_parser():
@@ -31,7 +31,7 @@ def get_parser():
     parser = argparse.ArgumentParser(description=description, prog=PROG)
 
     # Sub-command management
-    subparsers = parser.add_subparsers(title='sub-commands')  # dest='func'
+    subparsers = parser.add_subparsers(title="sub-commands")  # dest='func'
     exportkmz.get_parser(subparsers=subparsers)
     ql.get_parser(subparsers=subparsers)
 
@@ -50,8 +50,8 @@ def parse_args(args=None, namespace=None, parser=None):
     # Common pre-processing of parsed arguments and consistency checks
     # ...
 
-    if getattr(args, 'func', None) is None:
-        parser.error('no sub-commnd specified.')
+    if getattr(args, "func", None) is None:
+        parser.error("no sub-commnd specified.")
 
     return args
 
@@ -70,19 +70,21 @@ def main(*argv):
     exit_code = EX_OK
     try:
         log.setLevel(args.loglevel)
-        log.debug('args: %s', args)
+        log.debug("args: %s", args)
 
         func = cliutils.get_function(args.func)
         kwargs = cliutils.get_kwargs(args)
         func(**kwargs)
     except Exception as exc:
         log.critical(
-            'unexpected exception caught: {!r} {}'.format(
-                type(exc).__name__, exc))
-        log.debug('stacktrace:', exc_info=True)
+            "unexpected exception caught: {!r} {}".format(
+                type(exc).__name__, exc
+            )
+        )
+        log.debug("stacktrace:", exc_info=True)
         exit_code = EX_FAILURE
     except KeyboardInterrupt:
-        log.warning('Keyboard interrupt received: exit the program')
+        log.warning("Keyboard interrupt received: exit the program")
         exit_code = EX_INTERRUPT
 
     return exit_code

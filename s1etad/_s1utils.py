@@ -10,12 +10,12 @@ class Sentinel1ProductName:
         self.__product_name = pathlib.Path(product_name)
         self.suffix = self.__product_name.suffix
         self.file_name = self.__product_name.stem
-        self._parts = self.file_name.split('_')
+        self._parts = self.file_name.split("_")
 
         # trick for SLC
-        if len(self._parts) == 10 and 'SLC' in self.ptype:
+        if len(self._parts) == 10 and "SLC" in self.ptype:
             del self._parts[3]
-            self.ptype = 'SLC_'
+            self.ptype = "SLC_"
 
     def __repr__(self):
         class_name = self.__class__.__name__
@@ -94,23 +94,23 @@ class Sentinel1ProductName:
         self._parts[8] = value
 
     def is_annotation(self):
-        if self.typepol[1] == 'A':
+        if self.typepol[1] == "A":
             return True
         else:
             return False
 
-    def to_annotation(self, value='A'):
+    def to_annotation(self, value="A"):
         ll = list(self.typepol)
         ll[1] = value
-        self.typepol = ''.join(ll)
+        self.typepol = "".join(ll)
 
     def to_standard(self):
         ll = list(self.typepol)
-        ll[1] = 'S'
-        self.typepol = ''.join(ll)
+        ll[1] = "S"
+        self.typepol = "".join(ll)
 
     def recompose(self, with_suffix=True):
-        path = '_'.join(self._parts)
+        path = "_".join(self._parts)
         if with_suffix:
             path += self.suffix
         return path

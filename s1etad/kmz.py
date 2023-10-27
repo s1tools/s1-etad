@@ -20,7 +20,7 @@ from .product import Sentinel1Etad, ECorrectionType
 from .utils import iter_corrections
 
 
-__all__ = ['etad_to_kmz', 'Sentinel1EtadKmlWriter']
+__all__ = ["etad_to_kmz", "Sentinel1EtadKmlWriter"]
 
 
 class Sentinel1EtadKmlWriter:
@@ -30,9 +30,16 @@ class Sentinel1EtadKmlWriter:
     DEFAULT_LOOKAT_RANGE = 1500000
     DEFAULT_OPEN_FOLDER = False
 
-    def __init__(self, etad, corrections=None, timespan=DEFAULT_TIMESPAN,
-                 selection=None, decimation_factor=1, colorizing=True,
-                 open_folders=DEFAULT_OPEN_FOLDER):
+    def __init__(
+        self,
+        etad,
+        corrections=None,
+        timespan=DEFAULT_TIMESPAN,
+        selection=None,
+        decimation_factor=1,
+        colorizing=True,
+        open_folders=DEFAULT_OPEN_FOLDER,
+    ):
         assert isinstance(etad, Sentinel1Etad)
         self.etad = etad
 
@@ -43,7 +50,7 @@ class Sentinel1EtadKmlWriter:
             selection = self.etad.burst_catalogue
 
         if len(selection) < 1:
-            raise ValueError(f'no burst found in selection: {selection}')
+            raise ValueError(f"no burst found in selection: {selection}")
 
         self._corrections = corrections
         self._selection = selection
@@ -52,8 +59,9 @@ class Sentinel1EtadKmlWriter:
         self._open_folders = open_folders
 
         self.kml = Kml(open=self._open_folders)
-        self.kml_root = self.kml.newfolder(name=self.etad.product.stem,
-                                           open=self._open_folders)
+        self.kml_root = self.kml.newfolder(
+            name=self.etad.product.stem, open=self._open_folders
+        )
 
         if timespan is not None:
             timespan = self.DEFAULT_TIMESPAN if timespan is True else timespan
@@ -62,8 +70,9 @@ class Sentinel1EtadKmlWriter:
         self.add_overall_footprint()
         self.add_burst_footprints()
 
-    def set_timespan(self, duration=DEFAULT_TIMESPAN,
-                     range_=DEFAULT_LOOKAT_RANGE):
+    def set_timespan(
+        self, duration=DEFAULT_TIMESPAN, range_=DEFAULT_LOOKAT_RANGE
+    ):
         record = self._selection.iloc[0]
         swath = self.etad[record.swathID]
         burst = swath[record.bIndex]
@@ -90,7 +99,7 @@ class Sentinel1EtadKmlWriter:
 
     def add_overall_footprint(self):
         data_footprint = self.etad.get_footprint(self._selection, merge=True)
-        if not hasattr(data_footprint, 'exterior'):
+        if not hasattr(data_footprint, "exterior"):
             # it is a multipolygon
 
             # option 1
@@ -105,11 +114,12 @@ class Sentinel1EtadKmlWriter:
             data_footprints = data_footprint
             for data_footprint in data_footprints:
                 corners = Sentinel1EtadKmlWriter._get_footprint_corners(
-                    data_footprint)
+                    data_footprint
+                )
 
-                polygon = self.kml_root.newpolygon(name='footprint')
+                polygon = self.kml_root.newpolygon(name="footprint")
                 polygon.outerboundaryis = corners
-                polygon.altitudeMode = 'absolute'
+                polygon.altitudeMode = "absolute"
                 polygon.tessellate = 1
                 polygon.polystyle.fill = 0
                 polygon.style.linestyle.width = 2
@@ -117,12 +127,11 @@ class Sentinel1EtadKmlWriter:
             return
             # TODO: find a better solution
 
-        corners = Sentinel1EtadKmlWriter._get_footprint_corners(
-            data_footprint)
+        corners = Sentinel1EtadKmlWriter._get_footprint_corners(data_footprint)
 
-        polygon = self.kml_root.newpolygon(name='footprint')
+        polygon = self.kml_root.newpolygon(name="footprint")
         polygon.outerboundaryis = corners
-        polygon.altitudeMode = 'absolute'
+        polygon.altitudeMode = "absolute"
         polygon.tessellate = 1
         polygon.polystyle.fill = 0
         polygon.style.linestyle.width = 2
@@ -141,11 +150,12 @@ class Sentinel1EtadKmlWriter:
     @staticmethod
     def _add_burst_footprint(burst, kml_dir, t_ref):
         corners = Sentinel1EtadKmlWriter._get_footprint_corners(
-            burst.get_footprint())
+            burst.get_footprint()
+        )
         t0, t1 = Sentinel1EtadKmlWriter._get_burst_time_span(burst, t_ref)
 
         polygon = kml_dir.newpolygon(name=burst.burst_id)
-        polygon.description = (f'''\
+        polygon.description = f"""\
 <![CDATA[
 <p>{burst.product_id}</p>
 <p>swath = {burst.swath_id},</p>
@@ -154,9 +164,9 @@ class Sentinel1EtadKmlWriter:
 <p>Index (product, swath, burst) =
  ({burst.product_index}, {burst.swath_index}, {burst.burst_index})
 </p>
-]]>''')
+]]>"""
         polygon.outerboundaryis = corners
-        polygon.altitudeMode = 'absolute'
+        polygon.altitudeMode = "absolute"
         polygon.tessellate = 1
         polygon.polystyle.fill = 0
         polygon.style.linestyle.width = 2
@@ -165,38 +175,40 @@ class Sentinel1EtadKmlWriter:
 
     def add_burst_footprints(self):
         t_ref = self.etad.min_azimuth_time
-        kml_footprint_dir = self.kml_root.newfolder(name='burst_footprint',
-                                                    open=self._open_folders)
+        kml_footprint_dir = self.kml_root.newfolder(
+            name="burst_footprint", open=self._open_folders
+        )
         for swath in self.etad.iter_swaths(self._selection):
             kml_swath_dir = kml_footprint_dir.newfolder(name=swath.swath_id)
             for burst in swath.iter_bursts(self._selection):
                 self._add_burst_footprint(burst, kml_swath_dir, t_ref)
 
-    def _colorbar_overlay(self, correction, dim, kml_cor_dir, color_table,
-                          outpath):
+    def _colorbar_overlay(
+        self, correction, dim, kml_cor_dir, color_table, outpath
+    ):
         assert isinstance(correction, ECorrectionType)
 
-        filename = f'{correction.value}_{dim}_cb.png'
+        filename = f"{correction.value}_{dim}_cb.png"
         color_table.build_colorbar(outpath / filename)
 
-        screen = kml_cor_dir.newscreenoverlay(name='ColorBar')
+        screen = kml_cor_dir.newscreenoverlay(name="ColorBar")
         screen.icon.href = filename
-        screen.overlayxy = OverlayXY(x=0, y=0,
-                                     xunits=Units.fraction,
-                                     yunits=Units.fraction)
-        screen.screenxy = ScreenXY(x=0.015, y=0.075,
-                                   xunits=Units.fraction,
-                                   yunits=Units.fraction)
-        screen.rotationXY = RotationXY(x=0.5, y=0.5,
-                                       xunits=Units.fraction,
-                                       yunits=Units.fraction)
+        screen.overlayxy = OverlayXY(
+            x=0, y=0, xunits=Units.fraction, yunits=Units.fraction
+        )
+        screen.screenxy = ScreenXY(
+            x=0.015, y=0.075, xunits=Units.fraction, yunits=Units.fraction
+        )
+        screen.rotationXY = RotationXY(
+            x=0.5, y=0.5, xunits=Units.fraction, yunits=Units.fraction
+        )
         return screen
 
     def _ground_overlay_node(self, kml_dir, burst):
         corners = self._get_footprint_corners(burst.get_footprint())
         t0, t1 = self._get_burst_time_span(burst, self.etad.min_azimuth_time)
 
-        ground = kml_dir.newgroundoverlay(name='GroundOverlay')
+        ground = kml_dir.newgroundoverlay(name="GroundOverlay")
         ground.name = burst.burst_id
 
         ground.timespan.begin = t0.isoformat()
@@ -214,7 +226,8 @@ class Sentinel1EtadKmlWriter:
     @staticmethod
     def _ground_overlay_data(correction, burst, dim, vmin, vmax, colorizing):
         func = functools.partial(
-            burst.get_correction, name=correction, direction=dim)
+            burst.get_correction, name=correction, direction=dim
+        )
 
         etad_correction = func(meter=True)
         data = etad_correction[dim]
@@ -233,13 +246,14 @@ class Sentinel1EtadKmlWriter:
             # only enable sum of corrections in range
             # TODO: make configurable
             # TODO: support cases in which SUM is not in the corrections list
-            if correction == ECorrectionType.SUM and dim == 'x':
+            if correction == ECorrectionType.SUM and dim == "x":
                 visibility = True
             else:
                 visibility = False
 
             kml_correction_dir = self.kml_root.newfolder(
-                name=f"{correction.value}_{dim}", open=self._open_folders)
+                name=f"{correction.value}_{dim}", open=self._open_folders
+            )
             statistics = self.etad.get_statistics(correction, meter=True)
             vmin = statistics[dim].min
             vmax = statistics[dim].max
@@ -249,20 +263,22 @@ class Sentinel1EtadKmlWriter:
                 color_table = Colorizer(vmin, vmax)
                 gdal_palette = color_table.gdal_palette()
                 colorbar_overlay = self._colorbar_overlay(
-                    correction, dim, kml_correction_dir, color_table, outpath)
+                    correction, dim, kml_correction_dir, color_table, outpath
+                )
                 colorbar_overlay.visibility = visibility
 
             for swath in self.etad.iter_swaths(self._selection):
                 kml_swath_dir = kml_correction_dir.newfolder(
-                    name=swath.swath_id)
+                    name=swath.swath_id
+                )
 
                 for burst in swath.iter_bursts(self._selection):
                     ground = self._ground_overlay_node(kml_swath_dir, burst)
                     ground.visibility = visibility
 
-                    data = self._ground_overlay_data(correction, burst, dim,
-                                                     vmin, vmax,
-                                                     self._colorizing)
+                    data = self._ground_overlay_data(
+                        correction, burst, dim, vmin, vmax, self._colorizing
+                    )
 
                     if self._colorizing:
                         pixel_depth = gdal.GDT_Byte
@@ -271,46 +287,58 @@ class Sentinel1EtadKmlWriter:
 
                     b = burst
                     burst_img = (
-                        f'burst_{b.swath_id}_{b.burst_index:03d}_'
-                        f'{correction.value}_{dim}'
+                        f"burst_{b.swath_id}_{b.burst_index:03d}_"
+                        f"{correction.value}_{dim}"
                     )
 
-                    ds = array2raster(outpath / burst_img, data,
-                                      color_table=gdal_palette,
-                                      pixel_depth=pixel_depth,
-                                      driver='GTiff',
-                                      decimation_factor=self._decimation_factor,
-                                      gcp_list=None)
+                    ds = array2raster(
+                        outpath / burst_img,
+                        data,
+                        color_table=gdal_palette,
+                        pixel_depth=pixel_depth,
+                        driver="GTiff",
+                        decimation_factor=self._decimation_factor,
+                        gcp_list=None,
+                    )
 
                     ground.icon.href = pathlib.Path(ds.GetDescription()).name
 
-    def save(self, outpath='preview.kmz'):
+    def save(self, outpath="preview.kmz"):
         outpath = pathlib.Path(outpath)
 
-        assert outpath.suffix.lower() in {'.kml', '.kmz', ''}
+        assert outpath.suffix.lower() in {".kml", ".kmz", ""}
         if outpath.exists():
             raise FileExistsError(f'output path already exists "{outpath}"')
 
-        kmzdir = outpath.with_suffix('')
+        kmzdir = outpath.with_suffix("")
         if kmzdir.exists():
             raise FileExistsError(f'output path already exists "{kmzdir}"')
         kmzdir.mkdir()
 
         self.add_ground_overlays(kmzdir)
-        self.kml.save(kmzdir / 'doc.kml')
+        self.kml.save(kmzdir / "doc.kml")
 
-        if outpath.name.lower().endswith('.kmz'):
-            shutil.make_archive(str(outpath.with_suffix('')),
-                                format='zip', root_dir=str(kmzdir))
-            shutil.move(outpath.with_suffix('.zip'), outpath)
+        if outpath.name.lower().endswith(".kmz"):
+            shutil.make_archive(
+                str(outpath.with_suffix("")),
+                format="zip",
+                root_dir=str(kmzdir),
+            )
+            shutil.move(outpath.with_suffix(".zip"), outpath)
             shutil.rmtree(kmzdir)
         else:
             shutil.move(kmzdir, outpath)
 
 
-def array2raster(outfile, array, gcp_list=None, color_table=None,
-                 pixel_depth=gdal.GDT_Float32, driver='GTiff',
-                 decimation_factor=None):
+def array2raster(
+    outfile,
+    array,
+    gcp_list=None,
+    color_table=None,
+    pixel_depth=gdal.GDT_Float32,
+    driver="GTiff",
+    decimation_factor=None,
+):
     # http://osgeo-org.1560.x6.nabble.com/Transparent-PNG-with-color-table-palette-td3748906.html
     if decimation_factor is not None:
         array = array[::decimation_factor, ::decimation_factor]
@@ -318,12 +346,12 @@ def array2raster(outfile, array, gcp_list=None, color_table=None,
     cols = array.shape[1]
     rows = array.shape[0]
 
-    if driver == 'GTiff':
-        outfile = outfile.with_suffix('.tiff')
-    elif driver == 'PNG':
-        outfile = outfile.with_suffix('.png')
+    if driver == "GTiff":
+        outfile = outfile.with_suffix(".tiff")
+    elif driver == "PNG":
+        outfile = outfile.with_suffix(".png")
     else:
-        raise RuntimeError(f'unexpected driver: {driver}')
+        raise RuntimeError(f"unexpected driver: {driver}")
 
     driver = gdal.GetDriverByName(driver)
     outraster = driver.Create(str(outfile), cols, rows, 1, pixel_depth)
@@ -333,7 +361,7 @@ def array2raster(outfile, array, gcp_list=None, color_table=None,
     #     (originX, pixelWidth, 0, originY, 0, pixelHeight))
     outband = outraster.GetRasterBand(1)
     if color_table is not None:
-        assert(isinstance(color_table, gdal.ColorTable))
+        assert isinstance(color_table, gdal.ColorTable)
         outband.SetRasterColorTable(color_table)
     outband.WriteArray(array)
 
@@ -355,8 +383,8 @@ class Colorizer:
     def __init__(self, vmin, vmax, color_table=cm.viridis):
         # normalize item number values to colormap
         delta = np.abs(vmax - vmin)
-        self.vmin = vmin - 0.05*delta
-        self.vmax = vmax + 0.05*delta
+        self.vmin = vmin - 0.05 * delta
+        self.vmax = vmax + 0.05 * delta
         self.norm = mpl.colors.Normalize(vmin=self.vmin, vmax=self.vmax)
         self.color_table = color_table
 
@@ -369,7 +397,9 @@ class Colorizer:
 
     def gdal_palette(self):
         values = np.linspace(self.vmin, self.vmax, 255)
-        norm_values = 255 / np.abs(self.vmax - self.vmin) * (values - self.vmin)
+        norm_values = (
+            255 / np.abs(self.vmax - self.vmin) * (values - self.vmin)
+        )
         norm_values = norm_values.astype(np.uint8)
         palette = gdal.ColorTable()
         for v, vn in zip(values, norm_values):
@@ -381,13 +411,14 @@ class Colorizer:
         fig = pyplot.figure(figsize=(0.8, 3))
         ax1 = fig.add_axes([0.1, 0.075, 0.25, 0.85])
 
-        pyplot.tick_params(axis='y', which='major', labelsize=8)
+        pyplot.tick_params(axis="y", which="major", labelsize=8)
 
         norm = self.norm
 
-        cb1 = mpl.colorbar.ColorbarBase(ax1, cmap=self.color_table, norm=norm,
-                                        orientation='vertical')
-        cb1.set_label('[meters]', rotation=90, color='k')
+        cb1 = mpl.colorbar.ColorbarBase(
+            ax1, cmap=self.color_table, norm=norm, orientation="vertical"
+        )
+        cb1.set_label("[meters]", rotation=90, color="k")
         # This is called from plotpages, in <plotdir>.
         pathlib.Path(cb_filename).parent.mkdir(exist_ok=True)
         pyplot.savefig(str(cb_filename), transparent=False)
@@ -398,7 +429,7 @@ def etad_to_kmz(etad, outpath=None, *args, **kargs):
         etad = Sentinel1Etad(etad)
 
     if outpath is None:
-        outpath = etad.product.stem + '.kmz'
+        outpath = etad.product.stem + ".kmz"
 
     writer = Sentinel1EtadKmlWriter(etad, *args, **kargs)
     writer.save(outpath)

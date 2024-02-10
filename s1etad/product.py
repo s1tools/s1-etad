@@ -1283,7 +1283,8 @@ class Sentinel1EtadBurst:
                 "in the NetCDF data component this product. "
                 "Calibration constants have been added to the NetCDF "
                 "component in SETAP v1.6 (ETAD-DLR-PS-0014 - "
-                '"ETAD Product Format Specification" Issue 1.5).'
+                '"ETAD Product Format Specification" Issue 1.5).',
+                stacklevel=2,
             )
             return {"x": 0, "y": 0, "units": "s"}
 
@@ -1312,7 +1313,8 @@ class Sentinel1EtadBurst:
                 k = 1
                 warnings.warn(
                     f"the {name} is not a correction: "
-                    'the "meter" parameter will be ignored'
+                    f"the 'meter' parameter will be ignored",
+                    stacklevel=2,
                 )
             field *= k
 

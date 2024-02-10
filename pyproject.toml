@@ -41,8 +41,7 @@ dynamic = ["version"]
 kmz = ["simplekml", "gdal", "matplotlib"]
 ql = ["gdal", "matplotlib"]
 cli = ["argcomplete"]
-docs = ["sphinx", "nbsphinx", "sphinx-rtd-theme"]
-all = ["s1etad[kmz]", "s1etad[ql]", "s1etad[cli]", "s1etad[docs]"]
+all = ["s1etad[kmz]", "s1etad[ql]", "s1etad[cli]"]
 
 
 [project.scripts]

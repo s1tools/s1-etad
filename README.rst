@@ -1,13 +1,16 @@
 s1etad Python package
 ======================
 
-.. image:: https://img.shields.io/readthedocs/s1etad/latest.svg
-    :target: http://s1etad.readthedocs.org/
+.. badges
+
+|PyPI Status| |Documentation Status|
+
+.. |PyPI Status| image:: https://img.shields.io/pypi/v/s1etad.svg
+    :target: https://pypi.org/project/s1etad
+    :alt: PyPI Status
+.. |Documentation Status| image:: https://img.shields.io/readthedocs/s1etad/latest.svg
+    :target: https://pypi.org/project/s1etad
     :alt: Documentation Status
-
-
-:copyright: 2020-2023 Nuno Mirada, Antonio Valentino
-
 
 .. contents
 
@@ -85,7 +88,9 @@ In conda environments::
 License
 -------
 
-The s1etad package is distributed unthe the terms of the MIT License.
+:copyright: 2020-2024 Nuno Mirada, Antonio Valentino
+
+The s1etad package is distributed under the terms of the MIT License.
 
 See ``LICENSE.txt`` for mare details.
 

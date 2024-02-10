@@ -1,118 +1,147 @@
 # Configuration file for the Sphinx documentation builder.
 #
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
+# For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 # -- Path setup --------------------------------------------------------------
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
 import os
 import re
 import sys
-sys.path.insert(0, os.path.abspath('..'))
+
+sys.path.insert(0, os.path.abspath(".."))
 
 import sphinx_rtd_theme
 
 
 # -- Project information -----------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 's1etad'
-copyright = '2020-2023, s1etad Developers'
-author = 'Nuno Miranda, Antonio Valentino'
+project = "s1etad"
+copyright = "2020-2023, s1etad Developers"
+author = "Nuno Miranda, Antonio Valentino"
 
-with open('../s1etad/__init__.py') as fd:
+with open("../s1etad/__init__.py") as fd:
     s = fd.read()
 
 pattern = (
-    r'^__version__( )?=( )?'
+    r"^__version__( )?=( )?"
     r'(?P<q>[\'"])(?P<r>(?P<v>\d+\.\d+(\.\d+)?).*)(?P=q)'
 )
 
 # The short X.Y version
-version = re.search(pattern, s, re.M).group('v')
+version = re.search(pattern, s, re.M).group("v")
 
 # The full version, including alpha/beta/rc tags
-release = re.search(pattern, s, re.M).group('r')
+release = re.search(pattern, s, re.M).group("r")
 
 
 # -- General configuration ---------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
-    'nbsphinx',
-    'sphinx_rtd_theme',
+    "sphinx.ext.autodoc",
+    # "sphinx.ext.autosectionlabel",
+    # "sphinx.ext.autosummary",
+    "sphinx.ext.coverage",
+    "sphinx.ext.doctest",
+    "sphinx.ext.duration",
+    "sphinx.ext.extlinks",
+    # "sphinx.ext.githubpages",
+    # "sphinx.ext.graphviz",
+    "sphinx.ext.ifconfig",
+    # "sphinx.ext.imgconverter",
+    "sphinx.ext.inheritance_diagram",
+    "sphinx.ext.intersphinx",
+    # "sphinx.ext.linkcode",  # needs_sphinx = "1.2"
+    "sphinx.ext.napoleon",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
+    # "sphinx.ext.imgmath",
+    # "sphinx.ext.jsmath",
+    "sphinx.ext.mathjax",
+    "nbsphinx",
+    "sphinx_rtd_theme",
 ]
 
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+try:
+    import sphinxcontrib.spelling  # noqa: F401
+except ImportError:
+    pass
+else:
+    extensions.append("sphinxcontrib.spelling")
 
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+templates_path = ["_templates"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
 # -- Options for HTML output -------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
-# html_theme = 'alabaster'
-# html_theme = 'default'
-html_theme = 'sphinx_rtd_theme'
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
-
-
-# -- Extension configuration -------------------------------------------------
-
-# -- Options for intersphinx extension ---------------------------------------
-
-# Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/3/': None}
-
-# -- Options for todo extension ----------------------------------------------
-
-# If true, `todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = True
-
-# -- Options for autodoc extension -------------------------------------------
-autodoc_member_order = 'groupwise'
-autodoc_mock_imports = [
-    'numpy',
-    'scipy',
-    'lxml',
-    'netCDF4',
-    'pandas',
-    'dateutil',
-    'shapely',
-    'simplekml',
-    'osgeo',
-    'matplotlib',
-]
-
-# -- Options for ReadTheDocs integration -------------------------------------
-master_doc = 'index'
+html_theme = "sphinx_rtd_theme"
+html_static_path = ["_static"]
+html_theme_options = {
+    # 'vcs_pageview_mode': 'blob',
+}
 html_context = {
+    "github_url": "https://github.com/s1tools/s1-etad",
     "display_github": True,
     "github_user": "s1tools",
     "github_repo": "s1-etad",
     "github_version": "main",
     "conf_py_path": "docs",
 }
+
+# html_last_updated_fmt = ""
+
+
+# -- Extension configuration -------------------------------------------------
+
+# -- Options for autodoc extension -------------------------------------------
+# autoclass_content = 'both'
+autodoc_member_order = "groupwise"
+# autodoc_default_options = {
+#     "members": True,
+#     "undoc-members": True,
+#     "show-inheritance": True,
+# }
+autodoc_mock_imports = [
+    "numpy",
+    "scipy",
+    "lxml",
+    "netCDF4",
+    "pandas",
+    "dateutil",
+    "shapely",
+    "simplekml",
+    "osgeo",
+    "matplotlib",
+]
+
+
+# -- Options for autosummary extension ---------------------------------------
+autosummary_generate = True
+# autosummary_mock_imports = []
+# autosummary_ignore_module_all = False
+
+
+# -- Options for intersphinx extension ---------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#configuration
+
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+}
+
+
+# -- Options for extlinks extension ------------------------------------------
+
+extlinks = {
+    "issue": ("https://github.com/s1tools/s1-etad/issues/%s", "gh-%s"),
+}
+
+
+# -- Options for todo extension ----------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/extensions/todo.html#configuration
+
+todo_include_todos = True

@@ -11,11 +11,11 @@ sphinx:
 submodules:
   include: all
 
+
+formats: []
+
 python:
   install:
     - method: pip
       path: .
-      extra_requirements:
-        - docs
-
-formats: []
+    - requirements: docs/requirements-docs.txt

@@ -1,11 +1,13 @@
 [flake8]
 # max_line_length = 79
 # max-complexity = 10
-extend_ignore = E203,W503
-extend_select = W504
+doctests = true
+# extend-ignore = E203,W503,D105,D107  # D* are in pyproject.toml
+extend-ignore = E203,W503,D105
+extend-select = W504
 per-file-ignores =
-    */*: D105,D107
     tests/*: D
     */tests/*: D
+    s1etad/_s1utils.py: D102
 statistics = True
 count = True

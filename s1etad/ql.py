@@ -224,7 +224,7 @@ def etad2ql(
     direction: Literal["x", "y"] = "x",
     meter: bool = True,
     drv_name: str = "PNG",
-    creation_options=["WORLDFILE=YES"],
+    creation_options=("WORLDFILE=YES",),
 ):
     """Generate a geo-coded quick-look image starting from an ETAD product."""
     if not isinstance(etad, Sentinel1Etad):
@@ -250,5 +250,5 @@ def etad2ql(
         lon,
         height,
         drv_name=drv_name,
-        creation_options=creation_options,
+        creation_options=list(creation_options),
     )

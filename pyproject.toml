@@ -56,7 +56,7 @@ Issues = "https://github.com/s1tools/s1-etad/issues"
 
 
 [tool.setuptools]
-packages = ["s1etad"]
+packages = ["s1etad", "s1etad.cli"]
 
 
 [tool.setuptools.dynamic]

@@ -2,12 +2,7 @@
 
 import os
 import functools
-from typing import List, Optional, Tuple
-
-try:
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
+from typing import List, Literal, Optional, Tuple
 
 import numpy as np
 from osgeo import gdal, osr
@@ -126,7 +121,7 @@ def _compute_gcp_spacing(xsize, ysize, max_gcp_num: int = MAX_GCP_NUM):
     return gcp_step
 
 
-@functools.lru_cache()  # COMPATIBILITY with Python < 3.8
+@functools.lru_cache
 def _get_color_table(name=DEFAULT_COLOR_TABLE_NAME):
     from matplotlib import cm
 

@@ -63,7 +63,7 @@ Project links
 Requirements
 ------------
 
-* `Python <https://www.python.org>`_ >= 3.6
+* `Python <https://www.python.org>`_ >= 3.8
 * `numpy <https://numpy.org>`_
 * `scipy <https://scipy.org>`_
 * `lxml <https://lxml.de>`_

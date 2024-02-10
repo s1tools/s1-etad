@@ -117,7 +117,7 @@ class Sentinel1Etad:
         root = etree.parse(xml_file).getroot()
         return root
 
-    @functools.lru_cache()
+    @functools.lru_cache
     def __getitem__(self, index):
         assert index in self.swath_list, f"{index} is not in {self.swath_list}"
         return Sentinel1EtadSwath(self.ds[index])
@@ -745,7 +745,7 @@ class Sentinel1EtadSwath:
         """Initialize a `Sentinel1EtadSwath` object."""
         self._grp = nc_group
 
-    @functools.lru_cache()
+    @functools.lru_cache
     def __getitem__(self, burst_index):
         burst_name = f"Burst{burst_index:04d}"
         return Sentinel1EtadBurst(self._grp[burst_name])
@@ -1143,7 +1143,7 @@ class Sentinel1EtadBurst:
         """Return the index (int) of the burst."""
         return self._grp.bIndex
 
-    @functools.lru_cache()
+    @functools.lru_cache
     def get_footprint(self):
         """Return the footprint of the bursts as shapely.Polygon.
 

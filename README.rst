@@ -79,7 +79,7 @@ Requirements
 Installation
 ------------
 
-To install the ``s1etad`` package simpy run the following command::
+To install the ``s1etad`` package simply run the following command::
 
   $ python3 -m pip install s1etad[kmz,cli]
 

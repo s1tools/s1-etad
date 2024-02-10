@@ -50,7 +50,7 @@ s1etad v0.5.0 (16/07/2021)
     :meth:`s1etad.product.Sentinel1EtadBurst.get_timing_calibration_constants`)
     for retrieving timing calibration constants
 
-* new :mod:`s1etad.ql` module for geocoded quick-look images generation
+* new :mod:`s1etad.ql` module for geo-coded quick-look images generation
 
 
 s1etad v0.4.0 (01/12/2020)
@@ -107,7 +107,7 @@ s1etad v0.3.0 (27/10/2020)
 
 * New methods to find points (and geometries) intersecting
   the burst/swath/product footprint.
-* New method and functions for direct and inverse geocoding
+* New method and functions for direct and inverse geo-coding
   (approximated algorithm)
 * New Command Line Interface (CLI) for basic functions
   (only "export-kmz" at the moment).

@@ -293,7 +293,7 @@ class Sentinel1Etad:
         swath : str or list
             list of swathID e.g. 'IW1' or ['IW1'] or ['IW1', 'IW2']
         geometry : shapely.geometry.[Point, Polygon, ...]
-            A shapely geometry for which interstion will be searched
+            A shapely geometry for which intersection will be searched
 
         Returns
         -------
@@ -674,7 +674,7 @@ class Sentinel1Etad:
         iterates over selected swaths and bursts and stitches correction
         data together.
 
-        In overlapping regions, new data simpy overwrite the old ones.
+        In overlapping regions, new data simply overwrite the old ones.
         This is an easy algorithm and perfectly correct for atmospheric
         and geodetic correction.
 
@@ -1037,7 +1037,7 @@ class Sentinel1EtadSwath:
         iterates over selected bursts and stitches correction data
         together.
 
-        In overlapping regions, new data simpy overwrite the old ones.
+        In overlapping regions, new data simply overwrite the old ones.
         This is an easy algorithm and perfectly correct for atmospheric
         and geodetic correction.
 
@@ -1145,7 +1145,7 @@ class Sentinel1EtadBurst:
 
     @functools.lru_cache()
     def get_footprint(self):
-        """Return the footprint of ghe bursts as shapely.Polygon.
+        """Return the footprint of the bursts as shapely.Polygon.
 
         It gets the lat/lon/height grid and extract the 4 corners.
         """

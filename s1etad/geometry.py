@@ -1,4 +1,4 @@
-"""Tools for geometry management ond coordinate conversion."""
+"""Tools for geometry management and coordinate conversion."""
 
 import numpy as np
 from scipy.optimize import fsolve
@@ -135,12 +135,12 @@ class GridGeocoding:
         x : ndarray
             array [N] of x coordinates (or range time) for each input
             in the latitude_grid.
-            x shall be the same quantity as used for initialisation
+            x shall be the same quantity as used for initialization
             (coordinates or time).
         y : ndarray
             array [N] of y coordinates (or azimuth time) for each input
             in the latitude_grid.
-            y shall be the same quantity as used for initialisation
+            y shall be the same quantity as used for initialization
             (coordinates or time).
 
         Returns
@@ -158,12 +158,12 @@ class GridGeocoding:
         x : ndarray
             array [N] of x coordinates (or range time) for each input
             in the latitude_grid.
-            x shall be the same quantity as used for initialisation
+            x shall be the same quantity as used for initialization
             (coordinates or time).
         y : ndarray
             array [N] of y coordinates (or azimuth time) for each input
             in the latitude_grid.
-            y shall be the same quantity as used for initialisation
+            y shall be the same quantity as used for initialization
             (coordinates or time).
 
         Returns
@@ -181,12 +181,12 @@ class GridGeocoding:
         x : ndarray
             array [N] of x coordinates (or range time) for each input
             in the latitude_grid.
-            x shall be the same quantity as used for initialisation
+            x shall be the same quantity as used for initialization
             (coordinates or time).
         y : ndarray
             array [N] of y coordinates (or azimuth time) for each input
             in the latitude_grid.
-            y shall be the same quantity as used for initialisation
+            y shall be the same quantity as used for initialization
             (coordinates or time).
 
         Returns
@@ -254,10 +254,10 @@ class GridGeocoding:
 
         .. important::
 
-            The current implementation alway returns the solution of the
-            backward geocoding at the heigh corresponding to the reference
+            The current implementation always returns the solution of the
+            backward geocoding at the height corresponding to the reference
             surface included in the ETAD product (provides latitude longitude
-            and h grids), which is computed using the Coperficus DEM 90m.
+            and h grids), which is computed using the Copernicus DEM 90m.
 
         Parameters
         ----------
@@ -270,7 +270,7 @@ class GridGeocoding:
 
             .. warning::
 
-                this paraemter is not used in the current implementation.
+                this parameter is not used in the current implementation.
 
         deg : bool
             True if input geodetic coordinates are expressed in degrees,

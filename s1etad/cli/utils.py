@@ -57,7 +57,7 @@ def finalize_parser(parser):
 
     Arguments for logging control and version printing are added.
     If the "argcomplete" module is available the automatic completion for
-    the parser is also se-up.
+    the parser is also set-up.
 
     The updated parser is returned.
     """

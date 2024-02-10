@@ -1,0 +1,57 @@
+name: Docs
+
+on:
+  push:
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install docs dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install sphinx sphinxcontrib-spelling
+          python -m pip install .[all]
+          if [ -f requirements-docs.txt ]; then pip install -r requirements-docs.txt; fi
+          if [ -f docs/requirements-docs.txt ]; then pip install -r docs/requirements-docs.txt; fi
+
+      - name: Build docs
+        run: |
+          mkdir -p _static
+          python3 -m sphinx -W -b html . _build/html
+        working-directory: docs
+
+      - name: Check links
+        run: |
+          mkdir -p _static
+          python3 -m sphinx -W -b linkcheck . _build/linkcheck
+        working-directory: docs
+
+      - name: Doctest
+        run: |
+          mkdir -p _static
+          python3 -m sphinx -W -b doctest . _build/doctest
+        working-directory: docs
+
+      - name: Spellcheck
+        run: |
+          mkdir -p _static
+          python3 -m sphinx -W -b spelling . _build/spelling
+        working-directory: docs

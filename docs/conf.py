@@ -89,7 +89,7 @@ html_context = {
     "github_user": "s1tools",
     "github_repo": "s1-etad",
     "github_version": "main",
-    "conf_py_path": "docs",
+    "conf_py_path": "/docs/",
 }
 
 # html_last_updated_fmt = ""

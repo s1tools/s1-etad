@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from .product import Sentinel1Etad, Sentinel1EtadSwath, Sentinel1EtadBurst
 
 

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+"""Utility functions for the management of command line arguments."""
 
 import logging
 import importlib
@@ -12,8 +12,7 @@ except ImportError:
 
 
 def set_logging_control_args(parser, default_loglevel="WARNING"):
-    """Setup command line options for logging control."""
-
+    """Set up command line options for logging control."""
     loglevels = [logging.getLevelName(level) for level in range(10, 60, 10)]
 
     parser.add_argument(
@@ -54,6 +53,14 @@ def set_logging_control_args(parser, default_loglevel="WARNING"):
 
 
 def finalize_parser(parser):
+    """Finalize the argument parser provided in input.
+
+    Arguments for logging control and version printing are added.
+    If the "argcomplete" module is available the automatic completion for
+    the parser is also se-up.
+
+    The updated parser is returned.
+    """
     parser = set_logging_control_args(parser)
     parser.add_argument(
         "--version", action="version", version="%(prog)s v" + __version__
@@ -66,6 +73,15 @@ def finalize_parser(parser):
 
 
 def get_function(func):
+    """Return the function corresponding to the input.
+
+    If the input `func` parameter is already a callable then it is
+    immediately returned.
+
+    If the input is a string in the form "modname.[...].funcname" then the
+    required Python package/module is imported and the specified function
+    ("funcname" in the example) is returned.
+    """
     if callable(func):
         return func
 
@@ -81,6 +97,11 @@ def get_function(func):
 
 
 def get_kwargs(args):
+    """Convert an argparse.Namespace into a dictionary.
+
+    The "loglevel" and "func" arguments are never included in the output
+    dictionary.
+    """
     kwargs = vars(args).copy()
     kwargs.pop("func", None)
     kwargs.pop("loglevel", None)

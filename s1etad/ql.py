@@ -1,7 +1,7 @@
 """Geo-coded QuickLook image generation for ETAD."""
 
-import functools
 import os
+import functools
 from typing import List, Optional, Tuple
 
 try:
@@ -14,7 +14,6 @@ from osgeo import gdal, osr
 
 from . import Sentinel1Etad, ECorrectionType
 from .product import CorrectionType  # noqa
-
 
 MAX_GCP_NUM = 10000  # empirical threshold
 DEFAULT_LATLON_SPACING_DEG = 0.005  # deg --> 550m @ equator, 50 @ lat=85deg
@@ -130,6 +129,7 @@ def _compute_gcp_spacing(xsize, ysize, max_gcp_num: int = MAX_GCP_NUM):
 @functools.lru_cache()  # COMPATIBILITY with Python < 3.8
 def _get_color_table(name=DEFAULT_COLOR_TABLE_NAME):
     from matplotlib import cm
+
     from .kmz import Colorizer  # noqa
 
     cmap = getattr(cm, name)

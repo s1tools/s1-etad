@@ -6,24 +6,20 @@ import datetime
 import functools
 
 import numpy as np
-
-from simplekml import Kml, OverlayXY, ScreenXY, Units, RotationXY
-
-from osgeo import gdal
-from osgeo import osr
-
 import matplotlib as mpl
-from matplotlib import cm
-from matplotlib import pyplot
+from osgeo import gdal, osr
+from simplekml import Kml, OverlayXY, ScreenXY, Units, RotationXY
+from matplotlib import cm, pyplot
 
-from .product import Sentinel1Etad, ECorrectionType
 from .utils import iter_corrections
-
+from .product import Sentinel1Etad, ECorrectionType
 
 __all__ = ["etad_to_kmz", "Sentinel1EtadKmlWriter"]
 
 
 class Sentinel1EtadKmlWriter:
+    """Writer for ETAD KML/KMZ files."""
+
     # TODO: only SUM by default
     DEFAULT_CORRECTIONS = (ECorrectionType.SUM, ECorrectionType.TROPOSPHERIC)
     DEFAULT_TIMESPAN = 30  # [s]
@@ -40,6 +36,7 @@ class Sentinel1EtadKmlWriter:
         colorizing=True,
         open_folders=DEFAULT_OPEN_FOLDER,
     ):
+        """Initialize a `Sentinel1EtadKmlWriter` object."""
         assert isinstance(etad, Sentinel1Etad)
         self.etad = etad
 
@@ -73,6 +70,7 @@ class Sentinel1EtadKmlWriter:
     def set_timespan(
         self, duration=DEFAULT_TIMESPAN, range_=DEFAULT_LOOKAT_RANGE
     ):
+        """Set the time span in the KML file."""
         record = self._selection.iloc[0]
         swath = self.etad[record.swathID]
         burst = swath[record.bIndex]
@@ -98,6 +96,7 @@ class Sentinel1EtadKmlWriter:
         return corners
 
     def add_overall_footprint(self):
+        """Add the overall footprint to the KML file."""
         data_footprint = self.etad.get_footprint(self._selection, merge=True)
         if not hasattr(data_footprint, "exterior"):
             # it is a multipolygon
@@ -174,6 +173,7 @@ class Sentinel1EtadKmlWriter:
         polygon.timespan.end = t1.isoformat()
 
     def add_burst_footprints(self):
+        """Add the footprint of a burst to the KML file."""
         t_ref = self.etad.min_azimuth_time
         kml_footprint_dir = self.kml_root.newfolder(
             name="burst_footprint", open=self._open_folders
@@ -239,6 +239,7 @@ class Sentinel1EtadKmlWriter:
         return data
 
     def add_ground_overlays(self, outpath):
+        """Add the ground overlay to the KML file."""
         outpath = pathlib.Path(outpath)
         outpath.mkdir(exist_ok=True)
 
@@ -304,6 +305,7 @@ class Sentinel1EtadKmlWriter:
                     ground.icon.href = pathlib.Path(ds.GetDescription()).name
 
     def save(self, outpath="preview.kmz"):
+        """Save the KMZ file for the ETAD product."""
         outpath = pathlib.Path(outpath)
 
         assert outpath.suffix.lower() in {".kml", ".kmz", ""}
@@ -425,6 +427,7 @@ class Colorizer:
 
 
 def etad_to_kmz(etad, outpath=None, *args, **kargs):
+    """Generate a KMZ file from an ETAD product."""
     if not isinstance(etad, Sentinel1Etad):
         etad = Sentinel1Etad(etad)
 

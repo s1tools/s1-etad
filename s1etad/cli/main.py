@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
-# PYTHON_ARGCOMPLETE_OK
-
 """Simple CLI tool to access S1-ETAD products.
 
 The tool provides a set of sub-commands to perform basic tasks involving
 S1-ETAD products.
 """
+# PYTHON_ARGCOMPLETE_OK
 
 import logging
 import argparse
@@ -23,6 +21,7 @@ EX_INTERRUPT = 130
 PROG = __package__.split(".")[0]
 # LOGFMT = '%(asctime)s %(levelname)-8s -- %(message)s'
 LOGFMT = "%(asctime)s %(name)s %(levelname)s -- %(message)s"
+DEFAULT_LOGLEVEL = "INFO"
 
 
 def get_parser():
@@ -57,9 +56,11 @@ def parse_args(args=None, namespace=None, parser=None):
 
 
 def main(*argv):
-    """Main CLI interface."""
+    """Implement the main CLI interface."""
     # setup logging
-    logging.basicConfig(format=LOGFMT, level=logging.INFO)  # stream=sys.stdout
+    logging.basicConfig(
+        format=LOGFMT, level=DEFAULT_LOGLEVEL
+    )  # stream=sys.stdout
     logging.captureWarnings(True)
     log = logging.getLogger(PROG)
 
@@ -69,13 +70,15 @@ def main(*argv):
     # execute main tasks
     exit_code = EX_OK
     try:
-        log.setLevel(args.loglevel)
+        # NOTE: use the root logger to set the logging level
+        logging.getLogger().setLevel(args.loglevel)
+
         log.debug("args: %s", args)
 
         func = cliutils.get_function(args.func)
         kwargs = cliutils.get_kwargs(args)
         func(**kwargs)
-    except Exception as exc:
+    except Exception as exc:  # noqa: B902
         log.critical(
             "unexpected exception caught: {!r} {}".format(
                 type(exc).__name__, exc

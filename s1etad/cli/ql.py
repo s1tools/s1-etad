@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Generate a geo-coded quick-look image from ETAD correction."""
 
 import argparse

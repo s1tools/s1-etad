@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import pathlib
 
 
@@ -7,6 +5,7 @@ class Sentinel1ProductName:
     """Class to manipulate the filename of Sentinel 1 products."""
 
     def __init__(self, product_name):
+        """Initialize a`Sentinel1ProductName` object."""
         self.__product_name = pathlib.Path(product_name)
         self.suffix = self.__product_name.suffix
         self.file_name = self.__product_name.stem

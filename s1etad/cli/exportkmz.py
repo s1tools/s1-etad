@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Generate a KMZ file containing previews of the S1-ETAD corrections."""
 
 import argparse

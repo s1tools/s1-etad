@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
+"""Tools for geometry management ond coordinate conversion."""
 
 import numpy as np
-
 from scipy.optimize import fsolve
 from scipy.interpolate import interp2d
 
@@ -9,6 +8,7 @@ try:
     import pyproj as _pyproj
 
     def geodetic_to_ecef(lat, lon, h, ell="WGS84", deg=True):
+        """Convert geodetic coordinates into ECEF."""
         ecef = _pyproj.crs.CRS(proj="geocent", ellps=ell, datum=ell)
         geodetic = _pyproj.crs.CRS(proj="latlong", ellps=ell, datum=ell)
         transformer = _pyproj.Transformer.from_crs(geodetic, ecef)
@@ -16,6 +16,7 @@ try:
         return x, y, z
 
     def ecef_to_geodetic(x, y, z, ell="WGS84", deg=True):
+        """Convert ECEF coordinates into geodetic."""
         ecef = _pyproj.crs.CRS(proj="geocent", ellps=ell, datum=ell)
         geodetic = _pyproj.crs.CRS(proj="latlong", ellps=ell, datum=ell)
         transformer = _pyproj.Transformer.from_crs(geodetic, ecef)
@@ -26,12 +27,14 @@ except ImportError:
     import pymap3d as _pymap3d
 
     def geodetic_to_ecef(lat, lon, h, ell="WGS84", deg=True):
+        """Convert geodetic coordinates into ECEF."""
         if ell and not isinstance(ell, _pymap3d.ellipsoid.Ellipsoid):
             ell = _pymap3d.ellipsoid.Ellipsoid(ell.lower())
         x, y, z = _pymap3d.ecef.geodetic2ecef(lat, lon, h, ell=ell, deg=deg)
         return x, y, z
 
     def ecef_to_geodetic(x, y, z, ell="WGS84", deg=True):
+        """Convert ECEF coordinates into geodetic."""
         if ell and not isinstance(ell, _pymap3d.ellipsoid.Ellipsoid):
             ell = _pymap3d.ellipsoid.Ellipsoid(ell.lower())
         lat, lon, h = _pymap3d.ecef.ecef2geodetic(x, y, z, ell=ell, deg=deg)
@@ -84,6 +87,7 @@ class GridGeocoding:
         ellipsoid_name="WGS84",
         interpolation_kind="cubic",
     ):
+        """Initialize a `GridGeocoding` object."""
         self._grid_lats = np.asarray(grid_latitude)
         self._grid_lons = np.asarray(grid_longitude)
         self._grid_heights = np.asarray(grid_height)
@@ -246,7 +250,7 @@ class GridGeocoding:
         return self._xaxis[x], self._yaxis[y]
 
     def backward_geocode(self, lats, lons, heights=0, deg=True):
-        """Perform the back geocoding: (lat, lon, h) -> (x, y)
+        """Perform the back geocoding: (lat, lon, h) -> (x, y).
 
         .. important::
 

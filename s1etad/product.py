@@ -10,18 +10,15 @@ import collections
 from typing import Union
 
 import numpy as np
-from scipy import constants
-from lxml import etree
-from netCDF4 import Dataset
-
 import pandas as pd
-
+import shapely.ops
+from lxml import etree
+from scipy import constants
+from netCDF4 import Dataset
 from shapely.geometry import Polygon, MultiPolygon
 from shapely.geometry.base import BaseGeometry
-import shapely.ops
 
 from ._s1utils import Sentinel1ProductName
-
 
 __all__ = [
     "Sentinel1Etad",
@@ -32,6 +29,8 @@ __all__ = [
 
 
 class ECorrectionType(enum.Enum):
+    """Enumeration for correction types."""
+
     TROPOSPHERIC = "tropospheric"
     IONOSPHERIC = "ionospheric"
     GEODETIC = "geodetic"
@@ -95,6 +94,7 @@ class Sentinel1Etad:
     """
 
     def __init__(self, product):
+        """Initialize a `Sentinel1Etad` object."""
         # TODO: make this read-only (property)
         self.product = pathlib.Path(product)
         # TODO: ds should not be exposed
@@ -112,7 +112,7 @@ class Sentinel1Etad:
 
     def _init_annotation_dataset(self):
         """Open the xml annotation dataset."""
-        list_ = [i for i in self.product.glob("annotation/*.xml")]
+        list_ = list(self.product.glob("annotation/*.xml"))
         xml_file = str(list_[0])
         root = etree.parse(xml_file).getroot()
         return root
@@ -133,12 +133,12 @@ class Sentinel1Etad:
 
     @property
     def number_of_swath(self):
-        """The number of swaths in the product."""
+        """Return the number of swaths in the product."""
         return len(self.ds.groups)
 
     @property
     def swath_list(self):
-        """The list of swath identifiers (str) in the product."""
+        """Return the list of swath identifiers (str) in the product."""
         return list(self.ds.groups.keys())
 
     def s1_product_list(self):
@@ -180,22 +180,22 @@ class Sentinel1Etad:
 
     @property
     def min_azimuth_time(self):
-        """The minimum azimuth time of all bursts in the product."""
+        """Return the minimum azimuth time of all bursts in the product."""
         return datetime.datetime.fromisoformat(self.ds.azimuthTimeMin)
 
     @property
     def max_azimuth_time(self):
-        """The maximum azimuth time of all bursts in the product."""
+        """Return the maximum azimuth time of all bursts in the product."""
         return datetime.datetime.fromisoformat(self.ds.azimuthTimeMax)
 
     @property
     def min_range_time(self):
-        """The minimum range time of all bursts in the product."""
+        """Return the minimum range time of all bursts in the product."""
         return self.ds.rangeTimeMin
 
     @property
     def max_range_time(self):
-        """The maximum range time of all bursts in the product."""
+        """Return the maximum range time of all bursts in the product."""
         return self.ds.rangeTimeMax
 
     @property
@@ -742,6 +742,7 @@ class Sentinel1EtadSwath:
     """
 
     def __init__(self, nc_group):
+        """Initialize a `Sentinel1EtadSwath` object."""
         self._grp = nc_group
 
     @functools.lru_cache()
@@ -757,34 +758,34 @@ class Sentinel1EtadSwath:
 
     @property
     def burst_list(self):
-        """The list of burst identifiers (str) of all bursts in the swath."""
+        """Return the list of burst identifiers of all bursts in the swath."""
         return [burst.bIndex for burst in self._grp.groups.values()]
 
     @property
     def number_of_burst(self):
-        """The number of bursts in the swath."""
+        """Return the number of bursts in the swath."""
         return len(self._grp.groups)
 
     @property
     def swath_id(self):
-        """The swath identifier (str)."""
+        """Return the swath identifier (str)."""
         return self._grp.swathID
 
     @property
     def swath_index(self):
-        """The swath index (int)."""
+        """Return the swath index (int)."""
         return self._grp.sIndex
 
     @property
     def sampling_start(self):
-        """Relative sampling start times."""
+        """Return the relative sampling start times."""
         first_burst_index = self.burst_list[0]
         first_burst = self[first_burst_index]
         return first_burst.sampling_start
 
     @property
     def sampling(self):
-        """Sampling in seconds used for all bursts of the swath.
+        """Return the sampling in seconds used for all bursts of the swath.
 
         A dictionary containing the following keys:
 
@@ -1105,6 +1106,7 @@ class Sentinel1EtadBurst:
     """
 
     def __init__(self, nc_group):
+        """Initialize a `Sentinel1EtadBurst` object."""
         self._grp = nc_group
         self._geocoder = None
 
@@ -1112,33 +1114,33 @@ class Sentinel1EtadBurst:
         return f'{self.__class__.__name__}("{self._grp.path}")  0x{id(self):x}'
 
     @property
-    def product_id(self):
-        """The S1 product (str) to which the burst object is associated."""
+    def product_id(self) -> str:
+        """Return the S1 product name (str) to which the burst belongs."""
         return self._grp.productID
 
     @property
-    def swath_id(self):
-        """The swath identifier (str) to which the burst belongs."""
+    def swath_id(self) -> str:
+        """Return the swath identifier (str) to which the burst belongs."""
         return self._grp.swathID
 
     @property
-    def burst_id(self):
-        """The burst identifier (str)."""
+    def burst_id(self) -> str:
+        """Return the burst identifier."""
         return self._grp.name
 
     @property
     def product_index(self):
-        """Index (int) of the S1 product to which the burst is associated."""
+        """Return the index of the S1 product to which the burst belongs."""
         return self._grp.pIndex
 
     @property
     def swath_index(self):
-        """The index (int) of the swath to which the burst belongs."""
+        """Return the index (int) of the swath to which the burst belongs."""
         return self._grp.sIndex
 
     @property
     def burst_index(self):
-        """The index (int) of the burst."""
+        """Return the index (int) of the burst."""
         return self._grp.bIndex
 
     @functools.lru_cache()
@@ -1157,7 +1159,7 @@ class Sentinel1EtadBurst:
         return etaf_burst_footprint
 
     def intersects(self, geometry: BaseGeometry):
-        """Intersects the footprint of the burst with the provided shape
+        """Intersect the footprint of the burst with the provided shape.
 
         Parameters
         ----------
@@ -1187,15 +1189,15 @@ class Sentinel1EtadBurst:
         """
         # TODO: put a reference in the docstring to the proper
         #       Sentinel1Etad property.
-        return dict(
-            x=self._grp.gridStartRangeTime,
-            y=self._grp.gridStartAzimuthTime,
-            units="s",
-        )
+        return {
+            "x": self._grp.gridStartRangeTime,
+            "y": self._grp.gridStartAzimuthTime,
+            "units": "s",
+        }
 
     @property
     def sampling(self):
-        """Sampling in seconds used for all bursts of the swath.
+        """Return the sampling in seconds used for all bursts of the swath.
 
         A dictionary containing the following keys:
 
@@ -1203,20 +1205,20 @@ class Sentinel1EtadBurst:
         * "y": azimuth spacing,
         * "units": the measurement units used for "x' and "y"
         """
-        return dict(
-            x=self._grp.gridSamplingRange,
-            y=self._grp.gridSamplingAzimuth,
-            units="s",
-        )
+        return {
+            "x": self._grp.gridSamplingRange,
+            "y": self._grp.gridSamplingAzimuth,
+            "units": "s",
+        }
 
     @property
     def lines(self):
-        """The number of lines in  the burst."""
+        """Return the number of lines in  the burst."""
         return self._grp.dimensions["azimuthExtent"].size
 
     @property
     def samples(self):
-        """The number of samples in the burst."""
+        """Return the number of samples in the burst."""
         return self._grp.dimensions["rangeExtent"].size
 
     @property
@@ -1249,7 +1251,7 @@ class Sentinel1EtadBurst:
                 f"polarimetric channel not available: {channel!r}"
             )
 
-        data = dict(units="s")
+        data = {"units": "s"}
 
         if channel == "HH":
             data["x"] = (self._grp.rangeOffsetHH,)
@@ -1267,12 +1269,13 @@ class Sentinel1EtadBurst:
         return data
 
     def get_timing_calibration_constants(self) -> dict:
+        """Return the calibration constant for timing."""
         try:
-            return dict(
-                x=self._grp.instrumentTimingCalibrationRange,
-                y=self._grp.instrumentTimingCalibrationAzimuth,
-                units="s",
-            )
+            return {
+                "x": self._grp.instrumentTimingCalibrationRange,
+                "y": self._grp.instrumentTimingCalibrationAzimuth,
+                "units": "s",
+            }
         except AttributeError:
             # @COMPATIBILITY: with SETAP , v1.6
             warnings.warn(
@@ -1282,7 +1285,7 @@ class Sentinel1EtadBurst:
                 "component in SETAP v1.6 (ETAD-DLR-PS-0014 - "
                 '"ETAD Product Format Specification" Issue 1.5).'
             )
-            return dict(x=0, y=0, units="s")
+            return {"x": 0, "y": 0, "units": "s"}
 
     def _get_etad_param(
         self, name, set_auto_mask=False, transpose=False, meter=False

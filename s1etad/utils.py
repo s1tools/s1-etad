@@ -1,9 +1,10 @@
-# -*- coding: utf-8 -*-
+"""Utility functions."""
 
 from .product import ECorrectionType
 
 
 def iter_corrections(corrections=None):
+    """Iterate over corrections."""
     if corrections is None:
         corrections = ECorrectionType
 

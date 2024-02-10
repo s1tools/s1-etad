@@ -1,7 +1,7 @@
 Version history
 ===============
 
-s1etad v0.5.4 (UNRELEASED)
+s1etad v0.5.4 (10/02/2024)
 --------------------------
 
 * Project moved to GitHub

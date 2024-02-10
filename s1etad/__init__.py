@@ -18,7 +18,7 @@ from .product import (  # noqa: F401
     ECorrectionType,
 )
 
-__version__ = "0.5.4.dev0"
+__version__ = "0.5.4"
 
 
 # register display functions for Jupyter

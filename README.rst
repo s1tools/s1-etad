@@ -3,11 +3,14 @@ s1etad Python package
 
 .. badges
 
-|PyPI Status| |Documentation Status|
+|PyPI Status| |GHA Status| |Documentation Status|
 
 .. |PyPI Status| image:: https://img.shields.io/pypi/v/s1etad.svg
     :target: https://pypi.org/project/s1etad
     :alt: PyPI Status
+.. |GHA Status| image:: https://github.com/s1tools/s1-etad/actions/workflows/ci.yml/badge.svg
+    :target: https://github.com/s1tools/s1-etad/actions
+    :alt: GitHub Actions Status
 .. |Documentation Status| image:: https://img.shields.io/readthedocs/s1etad/latest.svg
     :target: https://pypi.org/project/s1etad
     :alt: Documentation Status

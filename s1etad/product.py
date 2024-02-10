@@ -392,7 +392,7 @@ class Sentinel1Etad:
 
         assert isinstance(selection, pd.DataFrame)
 
-        for idx, row in selection.iterrows():
+        for _, row in selection.iterrows():
             burst = self[row.swathID][row.bIndex]
             yield burst
 

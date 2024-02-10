@@ -3,7 +3,7 @@
 # max-complexity = 10
 doctests = true
 # extend-ignore = E203,W503,D105,D107  # D* are in pyproject.toml
-extend-ignore = E203,W503,D105
+extend-ignore = E203,W503,D105,B019
 extend-select = W504
 per-file-ignores =
     tests/*: D

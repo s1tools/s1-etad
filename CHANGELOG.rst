@@ -9,15 +9,14 @@ s1etad v0.5.4 (10/02/2024)
 * Drop support for Python 3.6 and 3.7
 * Enable CI workflows for GHA
 * Fix several spelling errors
-* Formatting (using black) and linting
+* Formatting (using `black`) and linting
 * Do not use mutable default parameters
 * Always set stacklevel for warnings
 * Add badges to the `README.rst` file
 * Update doc configuration
 * Update copyright dates
-* Add missing dependency on pymap3d
-* Update the documentation of back_geocode
-* Add 'all' to extas_require
+* Add missing dependency on `pymap3d`
+* Update the documentation of `back_geocode`
 * Improve example for Use Case 4
 
 

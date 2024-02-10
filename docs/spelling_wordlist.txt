@@ -10,9 +10,11 @@ dataframes
 de
 dev
 docstrings
+extras
 func
 funcname
 geo
+geocode
 geocoder
 geocoding
 getitem
@@ -39,10 +41,13 @@ Nx
 Ny
 polarimetric
 pre
+pyproject
 slc
+stacklevel
 Submodules
 Subpackages
 sumOfCorrectionsAz
 sumOfCorrectionsRg
 swathID
+toml
 xml

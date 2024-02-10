@@ -3,6 +3,7 @@
 The tool provides a set of sub-commands to perform basic tasks involving
 S1-ETAD products.
 """
+
 # PYTHON_ARGCOMPLETE_OK
 
 import logging

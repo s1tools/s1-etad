@@ -1,4 +1,5 @@
 """Main entripoint for s1etad CLI."""
+
 # PYTHON_ARGCOMPLETE_OK
 
 import sys

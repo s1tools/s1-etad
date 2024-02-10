@@ -10,14 +10,14 @@ authors = [
     {name = "Antonio Valentino"},
 ]
 description = "Reader for Sentinel-1 Extended Timing Annotation Dataset"
-readme = "README.rst"
+readme = {file = "README.rst", content-type = "text/x-rst"}
 requires-python = ">=3.6"
 keywords = [
     "sentinel", "copernicus", "esa", "remote-sensing", "satellite-imagery"
 ]
 license = {text = "MIT License"}
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
@@ -62,3 +62,22 @@ packages = ["s1etad"]
 
 [tool.setuptools.dynamic]
 version = {attr = "s1etad.__version__"}
+
+[tool.black]
+line-length = 79
+# target-version = ['py311']
+
+
+[tool.isort]
+profile = "black"
+length_sort = true
+no_inline_sort = true
+include_trailing_comma = true
+use_parentheses = true
+line_length = 79
+
+
+[tool.pydocstyle]
+add-ignore = ["D105"]
+# add-ignore = "D105", "D107"
+match='(?!(test_|_s1utils)).*\.py'

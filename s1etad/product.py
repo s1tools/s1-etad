@@ -32,8 +32,11 @@ class ECorrectionType(enum.Enum):
     """Enumeration for correction types."""
 
     TROPOSPHERIC = "tropospheric"
+    DIFFTROPO = "difftropo"
     IONOSPHERIC = "ionospheric"
     GEODETIC = "geodetic"
+    OCEANIC = "oceanloading"
+    POLETIDE = "poletide"
     BISTATIC = "bistatic"
     DOPPLER = "doppler"
     FMRATE = "fmrate"
@@ -45,8 +48,11 @@ CorrectionType = Union[ECorrectionType, str]
 
 _CORRECTION_NAMES_MAP = {
     "tropospheric": {"x": "troposphericCorrectionRg"},
-    "ionospheric": {"x": "ionosphericCorrectionRg"},
+    "difftropo": {"x": "differentialTroposphericCorrectionRg"},
+    "ionospheric": {"x": "ionosphericCorrectionRg", "y": "ionosphericCorrectionAz"},
     "geodetic": {"x": "geodeticCorrectionRg", "y": "geodeticCorrectionAz"},
+    "oceanloading": {"x": "oceanTidalLoadingCorrectionRg", "y": "oceanTidalLoadingCorrectionAz"},
+    "poletide": {"x": "poleTideCorrectionRg", "y": "poleTideCorrectionAz"},
     "bistatic": {"y": "bistaticCorrectionAz"},
     "doppler": {"x": "dopplerRangeShiftRg"},
     "fmrate": {"y": "fmMismatchCorrectionAz"},
@@ -56,8 +62,11 @@ _CORRECTION_NAMES_MAP = {
 
 _STATS_TAG_MAP = {
     ECorrectionType.TROPOSPHERIC: "troposphericCorrection",
+    ECorrectionType.DIFFTROPO: "differentialTroposphericCorrection",
     ECorrectionType.IONOSPHERIC: "ionosphericCorrection",
     ECorrectionType.GEODETIC: "geodeticCorrection",
+    ECorrectionType.GEODETIC: "oceanTidalLoadingCorrection",
+    ECorrectionType.GEODETIC: "poleTideCorrection",
     ECorrectionType.BISTATIC: "bistaticCorrection",
     ECorrectionType.DOPPLER: "dopplerRangeShift",
     ECorrectionType.FMRATE: "fmMismatchCorrection",

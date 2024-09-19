@@ -12,7 +12,8 @@ submodules:
   include: all
 
 
-formats: []
+formats:
+  - pdf
 
 python:
   install:

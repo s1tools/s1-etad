@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools >= 61.0.0"]
+requires = ["setuptools>=61.0.0"]
 build-backend = "setuptools.build_meta"
 
 
@@ -8,6 +8,7 @@ name = "s1etad"
 authors = [
     {name = "Nuno Miranda"},
     {name = "Antonio Valentino"},
+    {email = "s1etad@esa.int"},
 ]
 description = "Reader for Sentinel-1 Extended Timing Annotation Dataset"
 readme = {file = "README.rst", content-type = "text/x-rst"}
@@ -21,6 +22,7 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Scientific/Engineering",
 ]
@@ -61,6 +63,11 @@ packages = ["s1etad", "s1etad.cli"]
 
 [tool.setuptools.dynamic]
 version = {attr = "s1etad.__version__"}
+
+
+[tool.pytest.ini_options]
+addopts = "--ignore=examples/"
+
 
 [tool.black]
 line-length = 79

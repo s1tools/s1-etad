@@ -133,8 +133,3 @@ dmypy.json
 
 # VSCode
 /.vscode
-
-# s1etad
-old/
-SamplePFS1.1.zip
-.DS_Store

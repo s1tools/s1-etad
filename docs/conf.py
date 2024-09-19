@@ -84,7 +84,7 @@ html_theme_options = {
     # 'vcs_pageview_mode': 'blob',
 }
 html_context = {
-    "github_url": "https://github.com/s1tools/s1-etad",
+    # "github_url": "https://github.com/s1tools/s1-etad",
     "display_github": True,
     "github_user": "s1tools",
     "github_repo": "s1-etad",

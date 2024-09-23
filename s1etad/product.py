@@ -49,9 +49,11 @@ CorrectionType = Union[ECorrectionType, str]
 _CORRECTION_NAMES_MAP = {
     "tropospheric": {"x": "troposphericCorrectionRg"},
     "difftropo": {"x": "differentialTroposphericCorrectionRg"},
-    "ionospheric": {"x": "ionosphericCorrectionRg", "y": "ionosphericCorrectionAz"},
+    "ionospheric": {"x": "ionosphericCorrectionRg", 
+                    "y": "ionosphericCorrectionAz"},
     "geodetic": {"x": "geodeticCorrectionRg", "y": "geodeticCorrectionAz"},
-    "oceanloading": {"x": "oceanTidalLoadingCorrectionRg", "y": "oceanTidalLoadingCorrectionAz"},
+    "oceanloading": {"x": "oceanTidalLoadingCorrectionRg",
+                     "y": "oceanTidalLoadingCorrectionAz"},
     "poletide": {"x": "poleTideCorrectionRg", "y": "poleTideCorrectionAz"},
     "bistatic": {"y": "bistaticCorrectionAz"},
     "doppler": {"x": "dopplerRangeShiftRg"},

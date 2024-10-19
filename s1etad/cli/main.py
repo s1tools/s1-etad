@@ -9,8 +9,8 @@ S1-ETAD products.
 import logging
 import argparse
 
-from . import utils as cliutils
 from . import exportkmz, ql
+from . import utils as cliutils
 
 try:
     from os import EX_OK
@@ -59,9 +59,7 @@ def parse_args(args=None, namespace=None, parser=None):
 def main(*argv):
     """Implement the main CLI interface."""
     # setup logging
-    logging.basicConfig(
-        format=LOGFMT, level=DEFAULT_LOGLEVEL
-    )  # stream=sys.stdout
+    logging.basicConfig(format=LOGFMT, level=DEFAULT_LOGLEVEL)
     logging.captureWarnings(True)
     log = logging.getLogger(PROG)
 

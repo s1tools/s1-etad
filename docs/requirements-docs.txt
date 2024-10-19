@@ -1,4 +1,4 @@
-nbsphinx
 ipython
+nbsphinx
 sphinx
 sphinx-rtd-theme

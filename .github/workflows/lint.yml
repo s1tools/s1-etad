@@ -48,4 +48,3 @@ jobs:
       - name: Lint (black)
         run: |
           python -m black --check ${PACKAGE}
-

@@ -8,11 +8,11 @@ import functools
 import numpy as np
 import matplotlib as mpl
 from osgeo import gdal, osr
-from simplekml import Kml, OverlayXY, ScreenXY, Units, RotationXY
+from simplekml import Kml, OverlayXY, RotationXY, ScreenXY, Units
 from matplotlib import cm, pyplot
 
 from .utils import iter_corrections
-from .product import Sentinel1Etad, ECorrectionType
+from .product import ECorrectionType, Sentinel1Etad
 
 __all__ = ["etad_to_kmz", "Sentinel1EtadKmlWriter"]
 

@@ -7,8 +7,8 @@ from typing import List, Literal, Optional, Tuple
 import numpy as np
 from osgeo import gdal, osr
 
-from . import Sentinel1Etad, ECorrectionType
-from .product import CorrectionType  # noqa
+from . import ECorrectionType, Sentinel1Etad
+from .product import CorrectionType
 
 MAX_GCP_NUM = 10000  # empirical threshold
 DEFAULT_LATLON_SPACING_DEG = 0.005  # deg --> 550m @ equator, 50 @ lat=85deg

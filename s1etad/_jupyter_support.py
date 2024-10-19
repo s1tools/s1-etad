@@ -1,4 +1,4 @@
-from .product import Sentinel1Etad, Sentinel1EtadSwath, Sentinel1EtadBurst
+from .product import Sentinel1Etad, Sentinel1EtadBurst, Sentinel1EtadSwath
 
 
 def _sentinel1_etad_repr_pretty_(obj, p, cycle):

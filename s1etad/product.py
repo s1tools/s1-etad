@@ -975,7 +975,9 @@ class Sentinel1EtadSwath:
             # NOTE: use the private "Sentinel1EtadBurst._get_etad_param" method
             # to be able to work only on the specified NetCDF variable
             var_ = burst_._get_etad_param(
-                burst_var, set_auto_mask=set_auto_mask, meter=meter  # noqa
+                burst_var,
+                set_auto_mask=set_auto_mask,
+                meter=meter,
             )
 
             _, burst_samples = var_.shape

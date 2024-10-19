@@ -11,11 +11,11 @@ Basic elements are:
 * :class:`Sentinel1EtadBurst`
 """
 
+from .product import Sentinel1Etad  # noqa: F401
 from .product import (  # noqa: F401
-    Sentinel1Etad,
-    Sentinel1EtadSwath,
-    Sentinel1EtadBurst,
     ECorrectionType,
+    Sentinel1EtadBurst,
+    Sentinel1EtadSwath,
 )
 
 __version__ = "0.5.5.dev0"

@@ -39,6 +39,7 @@ api:
 	  $(TARGET) $(TARGET)/tests
 
 docs:
+	mkdir -p docs/_static
 	$(MAKE) -C docs html
 
 clean:

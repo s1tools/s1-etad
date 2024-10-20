@@ -12,7 +12,6 @@ help:
 	@echo "Usage: make <TARGET>"
 	@echo "Available targets:"
 	@echo "  help      - print this help message"
-	@echo "  ext       - built the cython extension inplace"
 	@echo "  dist      - generate the distribution packages (source and wheel)"
 	@echo "  lint      - perform check with code linter (flake8, black)"
 	@echo "  api       - update the API source files in the documentation"
@@ -26,11 +25,11 @@ dist:
 	$(PYTHON) -m twine check dist/*.tar.gz dist/*.whl
 
 lint:
-	$(PYTHON) -m flake8 --count --statistics $(TARGET)
+	$(PYTHON) -m flake8 --count --statistics $(TARGET) tests
 	$(PYTHON) -m pydocstyle --count $(TARGET)
-	$(PYTHON) -m isort --check $(TARGET)
-	$(PYTHON) -m black --check $(TARGET)
-	# $(PYTHON) -m mypy --check-untyped-defs --ignore-missing-imports $(TARGET)
+	$(PYTHON) -m isort --check $(TARGET) tests
+	$(PYTHON) -m black --check $(TARGET) tests
+	# $(PYTHON) -m mypy $(TARGET) tests
 
 api:
 	$(RM) -r docs/api
@@ -50,7 +49,10 @@ clean:
 	$(RM) -r docs/_build
 
 cleaner: clean
-	$(RM) -r .coverage htmlcov .pytest_cache .mypy_cache .tox .ipynb_checkpoints
+	$(RM) -r .coverage htmlcov
+	$(RM) -r .pytest_cache .tox
+	$(RM) -r .mypy_cache .ruff_cache
+	$(RM) -r .ipynb_checkpoints
 
 distclean: cleaner
 	$(RM) -r dist

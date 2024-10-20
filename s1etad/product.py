@@ -97,6 +97,8 @@ class Sentinel1Etad:
         """Initialize a `Sentinel1Etad` object."""
         # TODO: make this read-only (property)
         self.product = pathlib.Path(product)
+        if not self.product.is_dir():
+            raise FileNotFoundError(str(product))
         # TODO: ds should not be exposed
         self.ds = self._init_measurement_dataset()
         self._annot = self._init_annotation_dataset()
@@ -105,15 +107,29 @@ class Sentinel1Etad:
     def _init_measurement_dataset(self):
         """Open the nc dataset."""
         # @TODO: retrieve form manifest
-        netcdf_file = next(self.product.glob("measurement/*.nc"))
+        netcdf_files = list(self.product.glob("measurement/*.nc"))
+        if not netcdf_files:
+            raise FileNotFoundError(
+                f"Unable to find NetCDF files in "
+                f"{self.product.joinpath('measurement')}"
+            )
+        assert len(netcdf_files) == 1
+        netcdf_file = netcdf_files[0]
         rootgrp = Dataset(netcdf_file, "r")
         rootgrp.set_auto_mask(False)
         return rootgrp
 
     def _init_annotation_dataset(self):
         """Open the xml annotation dataset."""
-        list_ = list(self.product.glob("annotation/*.xml"))
-        xml_file = str(list_[0])
+        # @TODO: retrieve form manifest
+        xml_files = list(self.product.glob("annotation/*.xml"))
+        if not xml_files:
+            raise FileNotFoundError(
+                f"Unable to find XML files in "
+                f"{self.product.joinpath('annotation')}"
+            )
+        assert len(xml_files) == 1
+        xml_file = str(xml_files[0])
         root = etree.parse(xml_file).getroot()
         return root
 
@@ -759,7 +775,7 @@ class Sentinel1EtadSwath:
     @property
     def burst_list(self):
         """Return the list of burst identifiers of all bursts in the swath."""
-        return [burst.bIndex for burst in self._grp.groups.values()]
+        return [int(burst.bIndex) for burst in self._grp.groups.values()]
 
     @property
     def number_of_burst(self):

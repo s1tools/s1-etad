@@ -49,4 +49,5 @@ sumOfCorrectionsAz
 sumOfCorrectionsRg
 swathID
 toml
+vh
 xml

@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.abspath(".."))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "s1etad"
-copyright = "2020-2023, s1etad Developers"
+copyright = "2020-2024, s1etad Developers"
 author = "Nuno Miranda, Antonio Valentino"
 
 with open("../s1etad/__init__.py") as fd:
@@ -143,3 +143,6 @@ extlinks = {
 # https://www.sphinx-doc.org/en/master/usage/extensions/todo.html#configuration
 
 todo_include_todos = True
+
+
+# nbsphinx_execute = "always"  # "nener", "always", "auto"

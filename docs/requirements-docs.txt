@@ -1,4 +1,6 @@
+cartopy>=0.17
 ipython
 nbsphinx
 sphinx
 sphinx-rtd-theme
+sphinxcontrib-spelling

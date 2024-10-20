@@ -5,6 +5,7 @@ s1etad v0.5.5 (UNRELEASED)
 --------------------------
 
 * Fix `shapely` warnings (Closes: #2).
+* No longer use the deprecated `scipy.interpolation.interp2d` function.
 
 
 s1etad v0.5.4 (10/02/2024)

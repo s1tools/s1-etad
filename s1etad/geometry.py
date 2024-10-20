@@ -2,7 +2,7 @@
 
 import numpy as np
 from scipy.optimize import fsolve
-from scipy.interpolate import interp2d
+from scipy.interpolate import RegularGridInterpolator
 
 try:
     import pyproj as _pyproj
@@ -112,19 +112,20 @@ class GridGeocoding:
 
         # the backward geocoding will be performed by interpolating the input
         # regular grid
-        # TODO: interp2d is the simplest interpolator.
-        #       Other interpolators could be used.
-        self._f_lat = interp2d(
-            self._xaxis, self._yaxis, self._grid_lats, kind=interpolation_kind
+        self._f_lat = RegularGridInterpolator(
+            (self._xaxis, self._yaxis),
+            self._grid_lats.T,
+            method=interpolation_kind,
         )
-        self._f_lon = interp2d(
-            self._xaxis, self._yaxis, self._grid_lons, kind=interpolation_kind
+        self._f_lon = RegularGridInterpolator(
+            (self._xaxis, self._yaxis),
+            self._grid_lons.T,
+            method=interpolation_kind,
         )
-        self._f_h = interp2d(
-            self._xaxis,
-            self._yaxis,
-            self._grid_heights,
-            kind=interpolation_kind,
+        self._f_h = RegularGridInterpolator(
+            (self._xaxis, self._yaxis),
+            self._grid_heights.T,
+            method=interpolation_kind,
         )
 
     def latitude(self, x, y):
@@ -148,7 +149,7 @@ class GridGeocoding:
         ndarray
             interpolated latitude ([deg])
         """
-        return self._f_lat(x, y)
+        return self._f_lat((x, y))
 
     def longitude(self, x, y):
         """Interpolate the longitude grid at the (x, y) coordinates.
@@ -171,7 +172,7 @@ class GridGeocoding:
         ndarray
             interpolated longitude ([deg])
         """
-        return self._f_lon(x, y)
+        return self._f_lon((x, y))
 
     def height(self, x, y):
         """Interpolate the height grid at the (x, y) coordinates.
@@ -194,7 +195,7 @@ class GridGeocoding:
         ndarray
             interpolated height
         """
-        return self._f_h(x, y)
+        return self._f_h((x, y))
 
     def _back_equation(self, xy, lat0, lon0):  # , h0=0):
         """Equation to minimise for back geocoding based on the grid.

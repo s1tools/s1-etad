@@ -1,10 +1,10 @@
 Version history
 ===============
 
-s1etad v0.5.4 (UNRELEASED)
+s1etad v0.5.5 (UNRELEASED)
 --------------------------
 
-* TBW
+* Fix `shapely` warnings (Closes: #2).
 
 
 s1etad v0.5.4 (10/02/2024)

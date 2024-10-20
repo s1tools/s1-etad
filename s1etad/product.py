@@ -487,10 +487,10 @@ class Sentinel1Etad:
         polys = []
         swath_list, burst_selection = self._selection_to_swath_list(selection)
         for swath in self.iter_swaths(swath_list):
-            polys.extend(swath.get_footprint(burst_selection))
+            polys.extend(swath.get_footprint(burst_selection).geoms)
 
         if merge:
-            polys = shapely.ops.cascaded_union(polys)
+            polys = shapely.ops.unary_union(polys)
         else:
             polys = MultiPolygon(polys)
 
@@ -842,7 +842,7 @@ class Sentinel1EtadSwath:
             burst.get_footprint() for burst in self.iter_bursts(selection)
         ]
         if merge:
-            polys = shapely.ops.cascaded_union(polys)
+            polys = shapely.ops.unary_union(polys)
         else:
             polys = MultiPolygon(polys)
 

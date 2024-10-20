@@ -106,7 +106,7 @@ class Sentinel1EtadKmlWriter:
 
             # option 2
             # import shapely.ops
-            # data_footprint = shapely.ops.cascaded_union(
+            # data_footprint = shapely.ops.unary_union(
             #     [data_footprint, data_footprint.convex_hull])
 
             # option 3: write multiple footprints

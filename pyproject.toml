@@ -32,7 +32,7 @@ dependencies = [
     "lxml",
     "netCDF4",
     "pandas",
-    "shapely",
+    "shapely>=1.8",
     "pymap3d",
 ]
 dynamic = ["version"]

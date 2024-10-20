@@ -44,6 +44,7 @@ clean:
 	$(RM) $(TARGET)/*.c $(TARGET)/*.cpp $(TARGET)/*.so $(TARGET)/*.o
 	if [ -f docs/Makefile ] ; then $(MAKE) -C docs clean; fi
 	$(RM) -r docs/_build
+	$(RM) -r docs/_static
 
 cleaner: clean
 	$(RM) -r .coverage htmlcov
@@ -52,10 +53,12 @@ cleaner: clean
 	$(RM) -r .mypy_cache
 	$(RM) -r .ruff_cache
 	$(RM) -r .ipynb_checkpoints
-	$(RM) docs/notebooks/data
+	$(RM) -r docs/notebooks/data
 
 distclean: cleaner
 	$(RM) -r dist
+	env PYTHONPATH=. \
+	    $(PYTHON) -c "from tests.dataset import clean_cache; clean_cache()"
 	find . -name __pycache__ -type d -exec $(RM) -r {} +
 
 lint:
@@ -66,8 +69,9 @@ lint:
 	# $(PYTHON) -m mypy --check-untyped-defs --ignore-missing-imports $(TARGET) tests
 	# ruff check $(TARGET) tests
 
-docs:
-	ln -s ../tests/data docs/notebooks/data
+docs:  # data
+	# mkdir docs/notebooks/data
+	# ln -sr tests/data/*/*.SAFE docs/notebooks/data/
 	mkdir -p docs/_static
 	$(MAKE) -C docs html
 

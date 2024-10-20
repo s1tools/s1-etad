@@ -133,3 +133,6 @@ dmypy.json
 
 # VSCode
 /.vscode
+
+# project
+docs/notebooks/data

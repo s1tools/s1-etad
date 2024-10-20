@@ -4,7 +4,7 @@ PYTHON=python3
 SPHINX_APIDOC=sphinx-apidoc
 TARGET=s1etad
 
-.PHONY: default help dist lint api docs clean cleaner distclean
+.PHONY: default help dist lint data api docs clean cleaner distclean
 
 default: help
 
@@ -31,6 +31,10 @@ lint:
 	$(PYTHON) -m black --check $(TARGET) tests
 	# $(PYTHON) -m mypy $(TARGET) tests
 
+data:
+	env PYTHONPATH=. \
+	    $(PYTHON) -c "from tests.dataset import download_all; download_all()"
+
 api:
 	$(RM) -r docs/api
 	$(SPHINX_APIDOC) --module-first --separate --no-toc -o docs/api \
@@ -38,6 +42,7 @@ api:
 	  $(TARGET) $(TARGET)/tests
 
 docs:
+	ln -s ../tests/data docs/notebooks/data
 	mkdir -p docs/_static
 	$(MAKE) -C docs html
 
@@ -53,6 +58,10 @@ cleaner: clean
 	$(RM) -r .pytest_cache .tox
 	$(RM) -r .mypy_cache .ruff_cache
 	$(RM) -r .ipynb_checkpoints
+	$(RM) docs/notebooks/data
 
 distclean: cleaner
 	$(RM) -r dist
+	env PYTHONPATH=. \
+	    $(PYTHON) -c "from tests.dataset import clean_cache; clean_cache()"
+	find . -name __pycache__ -type d -exec $(RM) -r {} +

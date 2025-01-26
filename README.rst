@@ -91,7 +91,7 @@ In conda environments::
 License
 -------
 
-:copyright: 2020-2024 Nuno Mirada, Antonio Valentino
+:copyright: 2020-2025 Nuno Mirada, Antonio Valentino
 
 The s1etad package is distributed under the terms of the MIT License.
 

@@ -3,4 +3,3 @@ ipython
 nbsphinx
 sphinx
 sphinx-rtd-theme
-sphinxcontrib-spelling

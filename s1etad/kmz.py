@@ -238,19 +238,25 @@ class Sentinel1EtadKmlWriter:
 
         return data
 
+    @staticmethod
+    def _get_visibility(correction, dim) -> bool:
+        if correction == ECorrectionType.SUM and dim == "x":
+            return True
+        else:
+            return False
+
     def add_ground_overlays(self, outpath):
         """Add the ground overlay to the KML file."""
         outpath = pathlib.Path(outpath)
         outpath.mkdir(exist_ok=True)
 
+        pixel_depth = gdal.GDT_Byte if self._colorizing else gdal.GDT_Float32
+
         for correction, dim in iter_corrections(self._corrections):
             # only enable sum of corrections in range
             # TODO: make configurable
             # TODO: support cases in which SUM is not in the corrections list
-            if correction == ECorrectionType.SUM and dim == "x":
-                visibility = True
-            else:
-                visibility = False
+            visibility = self._get_visibility(correction, dim)
 
             kml_correction_dir = self.kml_root.newfolder(
                 name=f"{correction.value}_{dim}", open=self._open_folders
@@ -280,11 +286,6 @@ class Sentinel1EtadKmlWriter:
                     data = self._ground_overlay_data(
                         correction, burst, dim, vmin, vmax, self._colorizing
                     )
-
-                    if self._colorizing:
-                        pixel_depth = gdal.GDT_Byte
-                    else:
-                        pixel_depth = gdal.GDT_Float32
 
                     b = burst
                     burst_img = (

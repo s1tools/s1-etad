@@ -588,7 +588,7 @@ class Sentinel1Etad:
             # to be able to work only on the specified NetCDF variable
             dd_ = swath._burst_merger(
                 burst_var,
-                selection=df,  # noqa
+                selection=df,
                 set_auto_mask=set_auto_mask,
                 meter=meter,
             )

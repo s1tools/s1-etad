@@ -125,7 +125,7 @@ def _compute_gcp_spacing(xsize, ysize, max_gcp_num: int = MAX_GCP_NUM):
 def _get_color_table(name=DEFAULT_COLOR_TABLE_NAME):
     from matplotlib import cm
 
-    from .kmz import Colorizer  # noqa
+    from .kmz import Colorizer  # noqa: F401
 
     cmap = getattr(cm, name)
     # return Colorizer(1, 255, color_table=cmap).gdal_palette()

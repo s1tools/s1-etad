@@ -1,18 +1,27 @@
 """Utility functions for the management of command line arguments."""
 
 import logging
+import argparse
 import importlib
 
 from .. import __version__
 
-try:
-    import argcomplete
-except ImportError:
-    argcomplete = None
+DEFAULT_LOGLEVEL = "WARNING"
 
 
-def set_logging_control_args(parser, default_loglevel="WARNING"):
-    """Set up command line options for logging control."""
+def _autocomplete(parser: argparse.ArgumentParser) -> None:
+    try:
+        import argcomplete
+    except ImportError:
+        pass
+    else:
+        argcomplete.autocomplete(parser)
+
+
+def _add_logging_control_args(
+    parser: argparse.ArgumentParser, default_loglevel: str = DEFAULT_LOGLEVEL
+) -> argparse.ArgumentParser:
+    """Add command line options for logging control."""
     loglevels = [logging.getLevelName(level) for level in range(10, 60, 10)]
 
     parser.add_argument(
@@ -29,7 +38,7 @@ def set_logging_control_args(parser, default_loglevel="WARNING"):
         const="ERROR",
         help=(
             "suppress standard output messages, "
-            "only errors are printed to screen"
+            "only errors are printed to screen (set 'loglevel' to 'ERROR')"
         ),
     )
     parser.add_argument(
@@ -38,7 +47,7 @@ def set_logging_control_args(parser, default_loglevel="WARNING"):
         dest="loglevel",
         action="store_const",
         const="INFO",
-        help="print verbose output messages",
+        help="print verbose output messages (set 'loglevel' to 'INFO')",
     )
     parser.add_argument(
         "-d",
@@ -46,7 +55,7 @@ def set_logging_control_args(parser, default_loglevel="WARNING"):
         dest="loglevel",
         action="store_const",
         const="DEBUG",
-        help="print debug messages",
+        help="print debug messages (set 'loglevel' to 'DEBUG')",
     )
 
     return parser
@@ -61,13 +70,12 @@ def finalize_parser(parser):
 
     The updated parser is returned.
     """
-    parser = set_logging_control_args(parser)
+    parser = _add_logging_control_args(parser)
     parser.add_argument(
         "--version", action="version", version="%(prog)s v" + __version__
     )
 
-    if argcomplete:
-        argcomplete.autocomplete(parser)
+    _autocomplete(parser)
 
     return parser
 
@@ -94,15 +102,3 @@ def get_function(func):
     modulename, funcname = fullname.rsplit(".", maxsplit=1)
     module = importlib.import_module(modulename)
     return getattr(module, funcname)
-
-
-def get_kwargs(args):
-    """Convert an argparse.Namespace into a dictionary.
-
-    The "loglevel" and "func" arguments are never included in the output
-    dictionary.
-    """
-    kwargs = vars(args).copy()
-    kwargs.pop("func", None)
-    kwargs.pop("loglevel", None)
-    return kwargs

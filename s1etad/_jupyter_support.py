@@ -97,7 +97,7 @@ def _sentinel1_etad_burst_repr_pretty_(obj, p, cycle):
 
 def _register_jupyter_formatters():
     try:
-        ipy = get_ipython()  # noqa
+        ipy = get_ipython()
     except NameError:
         return False
     else:

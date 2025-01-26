@@ -8,7 +8,9 @@ def iter_corrections(corrections=None):
     if corrections is None:
         corrections = ECorrectionType
 
-    if isinstance(corrections, str) or corrections in ECorrectionType:
+    if isinstance(corrections, str) or isinstance(
+        corrections, ECorrectionType
+    ):
         corrections = [corrections]
 
     for correction in corrections:

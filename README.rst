@@ -3,7 +3,7 @@ s1etad Python package
 
 .. badges
 
-|PyPI Status| |GHA Status| |Documentation Status|
+|PyPI Status| |GHA Status| |Documentation Status| |Python Versions| |License|
 
 .. |PyPI Status| image:: https://img.shields.io/pypi/v/s1etad.svg
     :target: https://pypi.org/project/s1etad
@@ -11,9 +11,15 @@ s1etad Python package
 .. |GHA Status| image:: https://github.com/s1tools/s1-etad/actions/workflows/ci.yml/badge.svg
     :target: https://github.com/s1tools/s1-etad/actions
     :alt: GitHub Actions Status
-.. |Documentation Status| image:: https://img.shields.io/readthedocs/s1etad/latest.svg
-    :target: https://pypi.org/project/s1etad
+.. |Documentation Status| image:: https://readthedocs.org/projects/s1etad/badge
+    :target: https://s1etad.readthedocs.io
     :alt: Documentation Status
+.. |Python Versions| image:: https://img.shields.io/pypi/pyversions/s1etad
+    :target: https://pypi.org/project/s1etad
+    :alt: Supported Python versions
+.. |License| image:: https://img.shields.io/pypi/l/s1etad
+    :target: https://pypi.org/project/s1etad
+    :alt: License
 
 .. contents
 

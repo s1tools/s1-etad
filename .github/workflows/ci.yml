@@ -21,6 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           submodules: 'true'
 
       - name: Set up Python
@@ -33,7 +34,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install build twine
 
-      - name: Build package
+      - name: Build the package
         run: |
           python -m build
           python -m twine check dist/*
@@ -52,7 +53,7 @@ jobs:
   #   needs: build
   #   strategy:
   #     matrix:
-  #       python-version: ["3.8", "3.x"]  #  pypy3.9
+  #       python-version: ["3.9", "3.x"]  #  pypy3.9
   #       os: [ubuntu-latest, macos-latest, windows-latest]
 
   #   steps:
@@ -62,7 +63,7 @@ jobs:
   #         submodules: 'true'
 
   #     - name: Get distribution
-  #       uses: actions/download-artifact@v4
+  #       uses: actions/download-artifact@v4.1.8
   #       with:
   #         name: dist
   #         path: dist

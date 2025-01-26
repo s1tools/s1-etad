@@ -12,16 +12,16 @@ authors = [
 ]
 description = "Reader for Sentinel-1 Extended Timing Annotation Dataset"
 readme = {file = "README.rst", content-type = "text/x-rst"}
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 keywords = [
     "sentinel", "copernicus", "esa", "remote-sensing", "satellite-imagery"
 ]
 license = {text = "MIT License"}
 classifiers = [
     "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Scientific/Engineering",
@@ -67,6 +67,9 @@ version = {attr = "s1etad.__version__"}
 
 [tool.pytest.ini_options]
 addopts = "--ignore=examples/"
+markers = [
+    "remote_data: marks tests using data from the internet (via pooch)",
+]
 
 
 [tool.black]
@@ -85,9 +88,12 @@ line_length = 79
 
 [tool.pydocstyle]
 add-ignore = ["D105"]
-# add-ignore = "D105", "D107"
+# add-ignore = ["D105", "D107"]
 match='(?!(test_|_s1utils|conf)).*\.py'
 
+
+[tool.mypy]
+plugins = ["numpy.typing.mypy_plugin"]
 
 
 [tool.ruff]

@@ -104,12 +104,17 @@ class TestEtadProduct:
             "ionospheric",
             "geodetic",
             "bistatic",
-            # "doppler",
-            # "fmrate",
+            "doppler",
+            "fmrate",
             "sum",
         ],
     )
     def test_get_statistics(etad_product, correction_type):
+        if _get_mode_id(etad_product.product) == "SM" and correction_type in {
+            "doppler",
+            "fmrate",
+        }:
+            pytest.xfail(reason="layer not available for SM")
         stats = etad_product.get_statistics(correction_type)
         assert set(stats.keys()).issubset({"x", "y", "unit"})
         assert stats["unit"] == "s"

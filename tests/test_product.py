@@ -53,11 +53,12 @@ def _get_n_swaths(mode_id):
     return n_swaths
 
 
+@pytest.mark.network
 @pytest.mark.parametrize(
     "filename",
     [
-        lazy_fixture("sm_etad_filename"),
-        lazy_fixture("iw_etad_filename"),
+        pytest.param(lazy_fixture("sm_etad_filename"), id="SM"),
+        pytest.param(lazy_fixture("iw_etad_filename"), id="IW"),
     ],
 )
 def test_open_etad_product(filename):
@@ -65,11 +66,12 @@ def test_open_etad_product(filename):
     assert eta
 
 
+@pytest.mark.network
 @pytest.mark.parametrize(
     "etad_product",
     [
-        lazy_fixture("sm_etad_product"),
-        lazy_fixture("iw_etad_product"),
+        pytest.param(lazy_fixture("sm_etad_product"), id="SM"),
+        pytest.param(lazy_fixture("iw_etad_product"), id="IW"),
     ],
 )
 class TestEtadProduct:
@@ -204,6 +206,7 @@ class TestEtadProduct:
         assert 6000 <= etad_product.vg <= 8000
 
 
+@pytest.mark.network
 @pytest.mark.parametrize(
     ("etad_product", "etad_filename"),
     [

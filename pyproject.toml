@@ -68,7 +68,7 @@ version = {attr = "s1etad.__version__"}
 [tool.pytest.ini_options]
 addopts = "--ignore=examples/"
 markers = [
-    "remote_data: marks tests using data from the internet (via pooch)",
+    "network: marks tests that require internet access (via pooch)",
 ]
 
 

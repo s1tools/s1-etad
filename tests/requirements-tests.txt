@@ -1,0 +1,3 @@
+pooch
+pytest >=6
+pytest-lazy-fixtures

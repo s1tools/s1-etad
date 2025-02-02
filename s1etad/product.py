@@ -880,9 +880,10 @@ class Sentinel1EtadSwath:
             list of the indexes of all bursts intersecting with the input
             geometry
         """
-        assert isinstance(
-            geometry, BaseGeometry
-        ), "The input shape is not a shapely BaseGeometry object"
+        if not isinstance(geometry, BaseGeometry):
+            raise TypeError(
+                "The input shape is not a shapely.BaseGeometry object"
+            )
         burst_index_list = []
         swath_footprint = self.get_footprint(merge=True)
         if swath_footprint.intersects(geometry):
@@ -976,12 +977,15 @@ class Sentinel1EtadSwath:
         )
 
         for burst_ in self.iter_bursts(burst_index_list):
-            assert (
-                dt == burst_.sampling["y"]
-            ), "The azimuth sampling is changing long azimuth"
-            assert (
-                first_burst.sampling_start["x"] == burst_.sampling_start["x"]
-            ), "The 2-way range gridStartRangeTime is changing long azimuth"
+            if dt != burst_.sampling["y"]:
+                raise RuntimeError(
+                    "The azimuth sampling is changing long azimuth"
+                )
+            if first_burst.sampling_start["x"] != burst_.sampling_start["x"]:
+                raise RuntimeError(
+                    "The 2-way range gridStartRangeTime is changing "
+                    "long azimuth"
+                )
 
             # get the timing of the burst and convert into line index
             az_time_, rg_time_ = burst_.get_burst_grid()
@@ -1188,9 +1192,8 @@ class Sentinel1EtadBurst:
         bool
             True if intersects, False otherwise
         """
-        assert isinstance(
-            geometry, BaseGeometry
-        ), "Not a shapely BaseGeometry object"
+        if not isinstance(geometry, BaseGeometry):
+            raise TypeError("Not a shapely BaseGeometry object")
         return self.get_footprint().intersects(geometry)
 
     def get_burst_grid(self):
@@ -1309,9 +1312,8 @@ class Sentinel1EtadBurst:
     def _get_etad_param(
         self, name, set_auto_mask=False, transpose=False, meter=False
     ):
-        assert (
-            name in self._grp.variables
-        ), f"Parameter {name!r} is not allowed"
+        if name not in self._grp.variables:
+            raise RuntimeError(f"Parameter {name!r} is not allowed")
 
         self._grp.set_auto_mask(set_auto_mask)
 

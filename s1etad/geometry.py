@@ -300,9 +300,10 @@ class GridGeocoding:
         if heights.size == 1:
             heights = np.full_like(lons, heights.item())
 
-        assert (
-            lats.shape == lons.shape == heights.shape
-        ), "'lats' shall be of the same shape as 'lons'"
+        if not (lats.shape == lons.shape == heights.shape):
+            raise RuntimeError(
+                "'lats', 'lons' and 'heights' have inconsistent shape"
+            )
 
         x0 = np.zeros(lats.shape)
         y0 = np.zeros(lats.shape)

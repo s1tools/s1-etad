@@ -790,7 +790,7 @@ class Sentinel1EtadSwath:
     @property
     def swath_index(self):
         """Return the swath index (int)."""
-        return self._grp.sIndex
+        return int(self._grp.sIndex)
 
     @property
     def sampling_start(self):
@@ -1151,19 +1151,19 @@ class Sentinel1EtadBurst:
         return self._grp.name
 
     @property
-    def product_index(self):
+    def product_index(self) -> int:
         """Return the index of the S1 product to which the burst belongs."""
-        return self._grp.pIndex
+        return int(self._grp.pIndex)
 
     @property
-    def swath_index(self):
+    def swath_index(self) -> int:
         """Return the index (int) of the swath to which the burst belongs."""
-        return self._grp.sIndex
+        return int(self._grp.sIndex)
 
     @property
-    def burst_index(self):
+    def burst_index(self) -> int:
         """Return the index (int) of the burst."""
-        return self._grp.bIndex
+        return int(self._grp.bIndex)
 
     @functools.lru_cache
     def get_footprint(self):
@@ -1250,7 +1250,10 @@ class Sentinel1EtadBurst:
     @property
     def reference_polarization(self) -> str:
         """Reverence polarization (string)."""
-        return self._grp.referencePolarization
+        try:
+            return self._grp.referencePolarisation
+        except AttributeError:
+            return self._grp.referencePolarization
 
     def get_polarimetric_channel_offset(self, channel: str) -> dict:
         """Polarimetric channel delay.
@@ -1267,7 +1270,7 @@ class Sentinel1EtadBurst:
         if channel not in {"HH", "HV", "VV", "VH"}:
             raise ValueError(f"invalid channel ID: {channel!r}")
 
-        if channel[0] != self._grp.referencePolarization[0]:
+        if channel[0] != self.reference_polarization[0]:
             raise ValueError(
                 f"polarimetric channel not available: {channel!r}"
             )
@@ -1275,17 +1278,17 @@ class Sentinel1EtadBurst:
         data = {"units": "s"}
 
         if channel == "HH":
-            data["x"] = (self._grp.rangeOffsetHH,)
-            data["y"] = (self._grp.rangeOffsetHH,)
+            data["x"] = self._grp.rangeOffsetHH
+            data["y"] = self._grp.azimuthOffsetHH
         elif channel == "HV":
-            data["x"] = (self._grp.rangeOffsetHV,)
-            data["y"] = (self._grp.rangeOffsetHV,)
+            data["x"] = self._grp.rangeOffsetHV
+            data["y"] = self._grp.azimuthOffsetHV
         elif channel == "VH":
-            data["x"] = (self._grp.rangeOffsetVH,)
-            data["y"] = (self._grp.rangeOffsetVH,)
+            data["x"] = self._grp.rangeOffsetVH
+            data["y"] = self._grp.azimuthOffsetVH
         elif channel == "VV":
-            data["x"] = (self._grp.rangeOffsetVV,)
-            data["y"] = (self._grp.rangeOffsetVV,)
+            data["x"] = self._grp.rangeOffsetVV
+            data["y"] = self._grp.azimuthOffsetVV
 
         return data
 

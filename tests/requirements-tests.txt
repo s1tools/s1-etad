@@ -1,3 +1,6 @@
+netCDF4
+pandas
 pooch
 pytest >=6
 pytest-lazy-fixtures
+shapely

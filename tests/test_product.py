@@ -1,4 +1,4 @@
-"""Unit tests for Stripmap etad_products."""
+"""Unit tests for ETAD products."""
 
 import re
 import pathlib
@@ -226,6 +226,15 @@ def test_product(etad_product, etad_filename):
 
 """
 TODO:
-    merge_correction
-    query_burst
+
+    Sentinel1Etad
+        merge_correction(name, selection, set_auto_mask, meter, direction)
+        query_burst(first_time, product_name, last_time, swath, geometry)
+        __getitem__
+        __iter__
+        __repr__
+        __str__
+        + iter_bursts(selection)
+        + iter_swaths(selection)
+        + get_footprint(selection, merge)
 """

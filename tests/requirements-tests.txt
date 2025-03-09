@@ -2,5 +2,7 @@ netCDF4
 pandas
 pooch
 pytest >=6
+pytest-cov
+pytest-doctestplus
 pytest-lazy-fixtures
 shapely

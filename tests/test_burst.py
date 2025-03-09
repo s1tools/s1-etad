@@ -1,6 +1,7 @@
 import numpy as np
 
 import pytest
+import shapely
 from pytest_lazy_fixtures import lf as lazy_fixture
 
 
@@ -32,6 +33,12 @@ class TestBurst:
         assert rg.dtype == np.float64
         assert len(az) == etad_burst.lines
         assert len(rg) == etad_burst.samples
+
+    @staticmethod
+    def test_get_footprint(etad_burst):
+        footprint = etad_burst.get_footprint()
+        assert isinstance(footprint, shapely.Polygon)
+        assert footprint.has_z
 
     @staticmethod
     @pytest.mark.parametrize("channel", ["H", "V"])
@@ -131,7 +138,6 @@ TODO:
 
     Sentinel1EtadBurst
         get_correction(name, set_auto_mask, transpose, meter, direction)
-        get_footprint
         get_lat_lon_height(transpose)
         geodetic_to_radar(lat, lon, h, deg)
         image_to_radar

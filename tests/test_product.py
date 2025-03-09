@@ -96,6 +96,18 @@ class TestEtadProduct:
         for geom in footprint.geoms:
             assert geom.has_z
 
+        footprint_no_merge = etad_product.get_footprint(merge=False)
+        assert isinstance(footprint_no_merge, shapely.MultiPolygon)
+        for geom in footprint_no_merge.geoms:
+            assert geom.has_z
+        assert footprint == footprint_no_merge
+
+    @staticmethod
+    def test_get_footprint_merge(etad_product):
+        footprint = etad_product.get_footprint(merge=True)
+        assert isinstance(footprint, shapely.Polygon)
+        assert footprint.has_z
+
     @staticmethod
     @pytest.mark.parametrize(
         "correction_type",
@@ -236,5 +248,5 @@ TODO:
         __str__
         + iter_bursts(selection)
         + iter_swaths(selection)
-        + get_footprint(selection, merge)
+        + get_footprint(selection)
 """

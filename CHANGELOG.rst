@@ -8,10 +8,10 @@ s1etad v0.5.5 (10/03/2025)
 * No longer use the deprecated `scipy.interpolation.interp2d` function.
 * Update the documentation to use recent sample products.
 * Code linting.
-* Start using `pre-cpmmit`_ for development.
+* Start using `pre-commit`_ for development.
 * Setup automatic dataset download with `pooch`_.
-* Basic unittests added to teh project.
-* Enable CI jobs for linting and unittesting.
+* Basic unit tests added to the project.
+* Enable CI jobs for linting and unit testing.
 
 
 .. _`pre-commit`: https://pre-commit.com

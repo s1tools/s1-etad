@@ -6,7 +6,6 @@ import pathlib
 import pooch
 
 BASEURL = "https://sentiwiki.copernicus.eu/__attachments/1673968"
-# BASEURL = "file:///home/antonio/projects/esa/s1-etad/_local_test_data_repo"
 DATADIR = pathlib.Path(__file__).parent / "data"
 REGISTRY = DATADIR.joinpath("registry.txt")
 

@@ -1,7 +1,7 @@
 Version history
 ===============
 
-s1etad v0.5.5 (UNRELEASED)
+s1etad v0.5.5 (10/03/2025)
 --------------------------
 
 * Fix `shapely` warnings (Closes: #2 and #5).

@@ -75,6 +75,7 @@ jobs:
           conda-remove-defaults: "true"
           channel-priority: true
           auto-update-conda: true
+          use-mamba: true
 
       - name: Install conda dependencies
         shell: bash -el {0}

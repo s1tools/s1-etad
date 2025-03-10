@@ -4,9 +4,18 @@ Version history
 s1etad v0.5.5 (UNRELEASED)
 --------------------------
 
-* Fix `shapely` warnings (Closes: #2).
+* Fix `shapely` warnings (Closes: #2 and #5).
 * No longer use the deprecated `scipy.interpolation.interp2d` function.
 * Update the documentation to use recent sample products.
+* Code linting.
+* Start using `pre-cpmmit`_ for development.
+* Setup automatic dataset download with `pooch`_.
+* Basic unittests added to teh project.
+* Enable CI jobs for linting and unittesting.
+
+
+.. _`pre-commit`: https://pre-commit.com
+.. _`pooch`: https://www.fatiando.org/pooch
 
 
 s1etad v0.5.4 (10/02/2024)

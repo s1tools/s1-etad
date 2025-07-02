@@ -1,4 +1,4 @@
-"""PyTests fixtures for s1-etad testing."""
+"""pytest fixtures for s1-etad testing."""
 
 import pathlib
 
@@ -9,6 +9,9 @@ import s1etad
 
 from . import dataset
 
+S1_ETAD_IW_NAME = "s1_setap_3-0-0_2025-05-30_etad_iw-tar"
+S1_ETAD_SM_NAME = "s1_setap_3-0-0_2025-05-30_etad_sm-tar"
+
 
 def _get_product_path(name: str) -> pathlib.Path:
     files = dataset.datarepo.fetch(name, pooch.Untar())
@@ -18,12 +21,12 @@ def _get_product_path(name: str) -> pathlib.Path:
 
 @pytest.fixture
 def sm_etad_filename() -> pathlib.Path:
-    return _get_product_path("S1_SETAP_2.1.0_2023-03-10_ETAD_SM.tar.gz")
+    return _get_product_path(S1_ETAD_SM_NAME)
 
 
 @pytest.fixture(scope="session")
 def sm_etad_product():
-    filename = _get_product_path("S1_SETAP_2.1.0_2023-03-10_ETAD_SM.tar.gz")
+    filename = _get_product_path(S1_ETAD_SM_NAME)
     return s1etad.Sentinel1Etad(filename)
 
 
@@ -41,12 +44,12 @@ def sm_etad_burst(sm_etad_swath):
 
 @pytest.fixture
 def iw_etad_filename() -> pathlib.Path:
-    return _get_product_path("S1_SETAP_2.1.0_2023-03-10_ETAD_IW.tar.gz")
+    return _get_product_path(S1_ETAD_IW_NAME)
 
 
 @pytest.fixture(scope="session")
 def iw_etad_product():
-    filename = _get_product_path("S1_SETAP_2.1.0_2023-03-10_ETAD_IW.tar.gz")
+    filename = _get_product_path(S1_ETAD_IW_NAME)
     return s1etad.Sentinel1Etad(filename)
 
 

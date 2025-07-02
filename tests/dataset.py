@@ -5,7 +5,7 @@ import pathlib
 
 import pooch
 
-BASEURL = "https://sentiwiki.copernicus.eu/__attachments/1673968"
+BASEURL = "https://sentinels.copernicus.eu/documents/d/sentinel"
 DATADIR = pathlib.Path(__file__).parent / "data"
 REGISTRY = DATADIR.joinpath("registry.txt")
 

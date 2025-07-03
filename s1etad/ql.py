@@ -2,7 +2,7 @@
 
 import os
 import functools
-from typing import List, Literal, Optional, Tuple
+from typing import Literal
 
 import numpy as np
 from osgeo import gdal, osr
@@ -22,7 +22,7 @@ def _write_band_data(band, data, nodata: float = -9999.0):
     band.SetNoDataValue(nodata)
 
 
-def create_gcps(lat, lon, h=None, gcp_step=(10, 10)) -> List[gdal.GCP]:
+def create_gcps(lat, lon, h=None, gcp_step=(10, 10)) -> list[gdal.GCP]:
     """Generate a sub-sampled grid of GCPs form input coordinate matrices."""
     assert lat.shape == lon.shape
     ysize, xsize = lat.shape
@@ -32,7 +32,7 @@ def create_gcps(lat, lon, h=None, gcp_step=(10, 10)) -> List[gdal.GCP]:
         data.mask if hasattr(data, "mask") else None for data in (lat, lon, h)
     ]
 
-    mask: Optional[np.array] = None
+    mask: np.array | None = None
     if masks:
         mask = functools.reduce(np.logical_or, masks)
 
@@ -144,7 +144,7 @@ def save_geocoded_data(
     lon,
     h=None,
     *,
-    gcp_step: Optional[Tuple[int, int]] = None,
+    gcp_step: tuple[int, int] | None = None,
     srs="wgs84",
     out_spacing=DEFAULT_LATLON_SPACING_DEG,
     drv_name="GTIFF",

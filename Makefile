@@ -66,14 +66,18 @@ lint:
 	$(PYTHON) -m pydocstyle --count $(TARGET)
 	$(PYTHON) -m isort --check $(TARGET) tests
 	$(PYTHON) -m black --check $(TARGET) tests
+	# $(PYTHON) -m fawltydeps
 	# $(PYTHON) -m mypy --check-untyped-defs --ignore-missing-imports $(TARGET) tests
-	# ruff check $(TARGET) tests
+	ruff check $(TARGET) tests
+	codespell $(TARGET) tests/*.py docs/*.rst
 
 docs:  # data
 	# mkdir docs/notebooks/data
 	# ln -sr tests/data/*/*.SAFE docs/notebooks/data/
 	mkdir -p docs/_static
 	$(MAKE) -C docs html
+	$(MAKE) -C docs linkcheck
+	$(MAKE) -C docs spelling
 
 api:
 	$(RM) -r docs/api

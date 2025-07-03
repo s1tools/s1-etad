@@ -15,17 +15,17 @@ repos:
     -   id: detect-private-key
 
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.4
+    rev: v0.12.1
     hooks:
     -   id: ruff
-        args: [ --fix ]
+        args: [--fix]
     -   id: ruff-format
 
-# -   repo: https://github.com/asottile/pyupgrade
-#     rev: v3.19.1
-#     hooks:
-#     -   id: pyupgrade
-#         args: [--py39-plus]
+-   repo: https://github.com/asottile/pyupgrade
+    rev: v3.20.0
+    hooks:
+    -   id: pyupgrade
+        args: [--py310-plus]
 #         exclude: |
 #             (?x)^(
 #                 file1.txt|
@@ -33,7 +33,7 @@ repos:
 #             )
 
 # -   repo: https://github.com/pycqa/flake8
-#     rev: 7.1.1
+#     rev: 7.2.0
 #     hooks:
 #     -   id: flake8
 
@@ -44,24 +44,39 @@ repos:
 #         exclude: tests|examples|data|docs
 
 # -   repo: https://github.com/pycqa/isort
-#     rev: 5.13.2
+#     rev: 6.0.1
 #     hooks:
 #     -   id: isort
 #         name: isort (python)
 
 # -   repo: https://github.com/psf/black-pre-commit-mirror
-#     rev: 24.10.0
+#     rev: 25.1.0
 #     hooks:
 #     -   id: black
 #         language_version: python3.9
+#     -   id: black-jupyter
+#         language_version: python3.9
+
+# -   repo: https://github.com/tweag/FawltyDeps
+#     rev: v0.20.0
+#     hooks:
+#     -   id: check-undeclared
+#     -   id: check-unused
 
 # -   repo: https://github.com/pre-commit/mirrors-mypy
-#     rev: v1.12.0
+#     rev: v1.15.0
 #     hooks:
 #     -   id: mypy
+#         additional_dependencies:
+#         -   tokenize-rt==3.2.0
+#         -   numpy>=1.21
 
-# -   repo: https://github.com/codespell-project/codespell
-#     rev: v2.2.4
-#     hooks:
-#     -   id: codespell
-#         additional_dependencies: [tomli]
+-   repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+    -   id: codespell
+        additional_dependencies: [tomli]
+        exclude: |
+            (?x)^(
+                docs/spelling_wordlist.txt
+            )

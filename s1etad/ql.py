@@ -188,7 +188,7 @@ def save_geocoded_data(
         noData=0,
         scaleParams=scale_params,
     )
-    # attache the color palette
+    # attach the color palette
     if isinstance(palette, str):
         palette = _get_color_table()
 

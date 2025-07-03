@@ -110,7 +110,7 @@ class Sentinel1Etad:
         netcdf_files = list(self.product.glob("measurement/*.nc"))
         if not netcdf_files:
             raise FileNotFoundError(
-                f"Unable to find NetCDF files in "
+                "Unable to find NetCDF files in "
                 f"{self.product.joinpath('measurement')}"
             )
         assert len(netcdf_files) == 1
@@ -125,7 +125,7 @@ class Sentinel1Etad:
         xml_files = list(self.product.glob("annotation/*.xml"))
         if not xml_files:
             raise FileNotFoundError(
-                f"Unable to find XML files in "
+                "Unable to find XML files in "
                 f"{self.product.joinpath('annotation')}"
             )
         assert len(xml_files) == 1
@@ -700,7 +700,7 @@ class Sentinel1Etad:
 
         Parameters
         ----------
-        name : str or CorrectionType
+        name : str or ECorrectionType
             the name of the desired correction
         selection : list or pandas.DataFrame
             list of selected bursts (by default all bursts are selected)
@@ -915,10 +915,10 @@ class Sentinel1EtadSwath:
             one of the burst netcdf variables
         selection : list or pandas.DataFrame
             list of selected bursts (by default all bursts are selected)
-        az_time_min : float
+        az_time_min : float | None
             minimum azimuth time of the merged swath
              (relative to the reference annotated in the NetCDF root)
-        az_time_max : float
+        az_time_max : float | None
             maximum azimuth tim eof the merged swath
             (relative to the reference annotated in the NetCDF root)
         set_auto_mask : bool
@@ -1336,7 +1336,7 @@ class Sentinel1EtadBurst:
                 k = 1
                 warnings.warn(
                     f"the {name} is not a correction: "
-                    f"the 'meter' parameter will be ignored",
+                    "the 'meter' parameter will be ignored",
                     stacklevel=2,
                 )
             field *= k

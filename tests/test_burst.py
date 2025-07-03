@@ -1,5 +1,4 @@
 import numpy as np
-
 import pytest
 import shapely
 from pytest_lazy_fixtures import lf as lazy_fixture

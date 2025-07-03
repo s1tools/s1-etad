@@ -11,8 +11,8 @@ Basic elements are:
 * :class:`Sentinel1EtadBurst`
 """
 
-from .product import Sentinel1Etad  # noqa: F401
 from .product import (  # noqa: F401
+    Sentinel1Etad,
     ECorrectionType,
     Sentinel1EtadBurst,
     Sentinel1EtadSwath,

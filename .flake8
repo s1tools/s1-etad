@@ -3,14 +3,27 @@
 # max-complexity = 10
 doctests = true
 # https://github.com/psf/black/blob/main/docs/guides/using_black_with_other_tools.md
+# - E203: whitespace before ‘,’, ‘;’, or ‘:’
+# - E701: multiple statements on one line (colon)
+# - E704: multiple statements on one line (def)
+# + W504: line break after binary operator
+# https://www.pydocstyle.org/en/stable/error_codes.html
+# - D105: undocumented-magic-method
+# - D107: undocumented-public-init
+# https://github.com/gforcada/flake8-builtins?tab=readme-ov-file#rules
+# - A003: A class attribute is shadowing a Python builtin.
+# - A005: A module is shadowing a Python builtin module (e.g: logging or socket)
+# https://github.com/PyCQA/flake8-bugbear?tab=readme-ov-file#list-of-warnings
+# + B950: (smart) Line too long
+# https://github.com/orsinium-labs/flake8-todos
+# - T003: add link on issue into TODO.
+# https://github.com/plinss/flake8-noqa?tab=readme-ov-file#error-codes
+# NQA102: "# noqa: X000" has no matching violations
+# misc
+# - I  # flake8-import-order: not compatible with isort
+# - SC  # flake8-spellcheck: too aggressive
+# - CNL  # flake8-class-newline: incompatible with black
 extend-ignore = E203,W503,D105,B019,SC
-# extend-ignore = I  # flake8-import-order: not compatible with isort
-# extend-ignore = SC  # flake8-spellcheck: too aggressive
-# extend-ignore = CNL  # flake8-class-newline: incompatible with black
-# extend-ignore = A003,A005  # Python builtin is shadowed by class attribute / module
-# https://docs.astral.sh/ruff/rules/#pydocstyle-d
-# extend-ignore = D105  # undocumented-magic-method
-# extend-ignore = D107  # undocumented-public-init
 extend-select = W504
 per-file-ignores =
     tests/*: D

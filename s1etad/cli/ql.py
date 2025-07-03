@@ -30,9 +30,11 @@ def get_parser(subparsers=None):
     parser.add_argument(
         "outpath",
         nargs="?",
-        help="the pathname of the generated KMZ file. "
-        "If not provided then a PNG file having the same input product "
-        "basename is generated in the current working directory",
+        help=(
+            "the pathname of the generated KMZ file. "
+            "If not provided then a PNG file having the same input product "
+            "basename is generated in the current working directory"
+        ),
     )
 
     if not subparsers:

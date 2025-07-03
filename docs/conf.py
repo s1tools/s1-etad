@@ -112,7 +112,7 @@ autodoc_mock_imports = [
     "dateutil",
     "shapely",
     "simplekml",
-    "osgeo",
+    # "osgeo",
     "matplotlib",
 ]
 

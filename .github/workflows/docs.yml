@@ -18,21 +18,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
       - name: Install docs dependencies
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install pandoc
-          python -m pip install --upgrade pip
-          python -m pip install sphinx sphinxcontrib-spelling
-          python -m pip install .
-          if [ -f requirements-docs.txt ]; then pip install -r requirements-docs.txt; fi
-          if [ -f docs/requirements-docs.txt ]; then pip install -r docs/requirements-docs.txt; fi
+          sudo apt-get install pandoc \
+            python3-gdal python3-sphinx python3-sphinxcontrib.spelling \
+            python3-cartopy python3-ipython python3-nbsphinx \
+            python3-sphinx-rtd-theme
+          python -m pip install .[all]
 
       - name: Build docs
         run: |

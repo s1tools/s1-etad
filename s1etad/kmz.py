@@ -11,7 +11,8 @@ import numpy as np
 import matplotlib as mpl
 from osgeo import gdal, osr
 from simplekml import Kml, OverlayXY, RotationXY, ScreenXY, Units
-from matplotlib import cm, pyplot
+from matplotlib import cm
+from matplotlib import pyplot as plt
 
 from .utils import iter_corrections
 from .product import ECorrectionType, Sentinel1Etad
@@ -97,7 +98,7 @@ class Sentinel1EtadKmlWriter:
     @staticmethod
     def _get_footprint_corners(footprint):
         x, y = footprint.exterior.xy
-        corners = list(zip(x, y))
+        corners = list(zip(x, y, strict=True))
         return corners
 
     def add_overall_footprint(self):
@@ -128,7 +129,7 @@ class Sentinel1EtadKmlWriter:
                 polygon.polystyle.fill = 0
                 polygon.style.linestyle.width = 2
 
-            return
+            return None
             # TODO: find a better solution
 
         corners = Sentinel1EtadKmlWriter._get_footprint_corners(data_footprint)
@@ -422,16 +423,16 @@ class Colorizer:
         )
         norm_values = norm_values.astype(np.uint8)
         palette = gdal.ColorTable()
-        for v, vn in zip(values, norm_values):
+        for v, vn in zip(values, norm_values, strict=True):
             palette.SetColorEntry(int(vn), self.rgba_color(v)[0:3])
         return palette
 
     def build_colorbar(self, cb_filename):
         # https://ocefpaf.github.io/python4oceanographers/blog/2014/03/10/gearth/
-        fig = pyplot.figure(figsize=(0.8, 3))
+        fig = plt.figure(figsize=(0.8, 3))
         ax1 = fig.add_axes(rect=(0.1, 0.075, 0.25, 0.85))
 
-        pyplot.tick_params(axis="y", which="major", labelsize=8)
+        plt.tick_params(axis="y", which="major", labelsize=8)
 
         norm = self.norm
 
@@ -441,7 +442,7 @@ class Colorizer:
         cb1.set_label("[meters]", rotation=90, color="k")
         # This is called from plotpages, in <plotdir>.
         pathlib.Path(cb_filename).parent.mkdir(exist_ok=True)
-        pyplot.savefig(str(cb_filename), transparent=False)
+        plt.savefig(str(cb_filename), transparent=False)
 
 
 def etad_to_kmz(etad, outpath=None, *args, **kargs):

@@ -4,10 +4,9 @@ import enum
 import pathlib
 import datetime
 import warnings
-import functools
 import itertools
 import collections
-from typing import Literal, Union
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -40,7 +39,7 @@ class ECorrectionType(enum.Enum):
     SUM = "sum"
 
 
-CorrectionType = Union[ECorrectionType, str]
+CorrectionType = ECorrectionType | str
 
 
 _CORRECTION_NAMES_MAP = {
@@ -91,6 +90,7 @@ class Sentinel1Etad:
         the product
     ds : netCDF.Dataset
         (provisional) the NetCDF.Dataset in which data are stored
+
     """
 
     def __init__(self, product):
@@ -103,6 +103,7 @@ class Sentinel1Etad:
         self.ds = self._init_measurement_dataset()
         self._annot = self._init_annotation_dataset()
         self.burst_catalogue = self._init_burst_catalogue()
+        self._swaths = {}
 
     def _init_measurement_dataset(self):
         """Open the nc dataset."""
@@ -133,10 +134,11 @@ class Sentinel1Etad:
         root = etree.parse(xml_file).getroot()
         return root
 
-    @functools.lru_cache
     def __getitem__(self, index):
         assert index in self.swath_list, f"{index} is not in {self.swath_list}"
-        return Sentinel1EtadSwath(self.ds[index])
+        if index not in self._swaths:
+            self._swaths[index] = Sentinel1EtadSwath(self.ds[index])
+        return self._swaths[index]
 
     def __iter__(self):
         yield from self.iter_swaths()
@@ -163,7 +165,10 @@ class Sentinel1Etad:
 
         # this ensures that each product name is located at the correct pIndex
         product_list = [
-            item[1] for item in sorted(set(zip(df["pIndex"], df["productID"])))
+            item[1]
+            for item in sorted(
+                set(zip(df["pIndex"], df["productID"], strict=True))
+            )
         ]
 
         return product_list
@@ -315,6 +320,7 @@ class Sentinel1Etad:
         -------
         pandas.DataFrame
             Filtered panda dataframe
+
         """
         # first sort the burst by time
         df = self.burst_catalogue.sort_values(by=["azimuthTimeMin"])
@@ -380,6 +386,7 @@ class Sentinel1Etad:
             Sentinel1Etad.query_burst query.
             If the selection is None (default) the iteration is performed
             on all the swaths of the product.
+
         """
         swath_list, _ = self._selection_to_swath_list(selection)
         for swath_name in swath_list:
@@ -395,6 +402,7 @@ class Sentinel1Etad:
             Sentinel1Etad.query_burst query.
             If the selection is None (default) the iteration is performed
             on all the bursts of the product.
+
         """
         if selection is None:
             selection = self.burst_catalogue
@@ -455,6 +463,7 @@ class Sentinel1Etad:
                 component of the specified correction
             :unit:
                 the units of the returned statistics ("m" or "s")
+
         """
         units = "m" if meter else "s"
 
@@ -500,6 +509,7 @@ class Sentinel1Etad:
         merge : bool
             if set to True return a single polygon that is the union of the
             footprints of all bursts
+
         """
         poly_list = []
         swath_list, burst_selection = self._selection_to_swath_list(selection)
@@ -522,11 +532,13 @@ class Sentinel1Etad:
         Parameters
         ----------
         geometry : shapely.geometry.[Point, Polygon, MultiPolygon, line]
+            shapely geometry
 
         Returns
         -------
         list
             list of all the burst intersecting with the input shape geometry
+
         """
         lists_of_burst_indexes = [
             swath.intersects(geometry) for swath in self.iter_swaths()
@@ -740,6 +752,7 @@ class Sentinel1Etad:
                 the matrix of longitude values (in degrees) for each point
             :height:
                 the matrix of height values (in meters) for each point
+
         """
         correction_type = ECorrectionType(name)  # check values
         prm_list = _CORRECTION_NAMES_MAP[correction_type.value]
@@ -765,11 +778,14 @@ class Sentinel1EtadSwath:
     def __init__(self, nc_group):
         """Initialize a `Sentinel1EtadSwath` object."""
         self._grp = nc_group
+        self._bursts = {}
 
-    @functools.lru_cache
     def __getitem__(self, burst_index):
-        burst_name = f"Burst{burst_index:04d}"
-        return Sentinel1EtadBurst(self._grp[burst_name])
+        if burst_index not in self._bursts:
+            burst_name = f"Burst{burst_index:04d}"
+            group = self._grp[burst_name]
+            self._bursts[burst_index] = Sentinel1EtadBurst(group)
+        return self._bursts[burst_index]
 
     def __iter__(self):
         yield from self.iter_bursts()
@@ -838,6 +854,7 @@ class Sentinel1EtadSwath:
             Sentinel1Etad.query_burst query.
             If the selection is None (default) the iteration is performed
             on all the burst of the swath.
+
         """
         index_list = self._selection_to_burst_index_list(selection)
         for burst_index in index_list:
@@ -858,6 +875,7 @@ class Sentinel1EtadSwath:
         merge : bool
             if set to True return a single polygon that is the union of the
             footprints of all bursts
+
         """
         poly_list = [
             burst.get_footprint() for burst in self.iter_bursts(selection)
@@ -878,12 +896,14 @@ class Sentinel1EtadSwath:
         Parameters
         ----------
         geometry : shapely.geometry.[Point, Polygon, MultiPolygon, line]
+            shapely geometry
 
         Returns
         -------
         list
             list of the indexes of all bursts intersecting with the input
             geometry
+
         """
         if not isinstance(geometry, BaseGeometry):
             raise TypeError(
@@ -930,6 +950,8 @@ class Sentinel1EtadSwath:
             requested for netCDF4 to avoid retrieving a masked array
         meter : bool
             transform the result in meters
+        fill_value: float
+            fill value to be used in areas not covered by data (default: 0.0)
 
         Returns
         -------
@@ -941,6 +963,7 @@ class Sentinel1EtadSwath:
             :first_slant_range_time: the relative (slant) range first time
             :sampling: a dictionary containing the sampling along the
             'x' and 'y' directions and the 'unit'
+
         """
         burst_index_list = self._selection_to_burst_index_list(selection)
 
@@ -1113,6 +1136,7 @@ class Sentinel1EtadSwath:
                 the matrix of longitude values (in degrees) for each point
             :height:
                 the matrix of height values (in meters) for each point
+
         """
         correction_type = ECorrectionType(name)  # check values
         prm_list = _CORRECTION_NAMES_MAP[correction_type.value]
@@ -1140,6 +1164,7 @@ class Sentinel1EtadBurst:
         """Initialize a `Sentinel1EtadBurst` object."""
         self._grp = nc_group
         self._geocoder = None
+        self._footprint = None
 
     def __repr__(self):
         return f'{self.__class__.__name__}("{self._grp.path}")  0x{id(self):x}'
@@ -1174,19 +1199,20 @@ class Sentinel1EtadBurst:
         """Return the index (int) of the burst."""
         return int(self._grp.bIndex)
 
-    @functools.lru_cache
     def get_footprint(self):
         """Return the footprint of the bursts as shapely.Polygon.
 
         It gets the lat/lon/height grid and extract the 4 corners.
         """
-        lats, lons, heights = self.get_lat_lon_height()
-        corner_list = [(0, 0), (0, -1), (-1, -1), (-1, 0)]
-        etad_burst_footprints = []
-        for corner in corner_list:
-            lat_, lon_, h_ = lats[corner], lons[corner], heights[corner]
-            etad_burst_footprints.append((lon_, lat_, h_))
-        return Polygon(etad_burst_footprints)
+        if self._footprint is None:
+            lats, lons, heights = self.get_lat_lon_height()
+            corner_list = [(0, 0), (0, -1), (-1, -1), (-1, 0)]
+            etad_burst_footprints = []
+            for corner in corner_list:
+                lat_, lon_, h_ = lats[corner], lons[corner], heights[corner]
+                etad_burst_footprints.append((lon_, lat_, h_))
+            self._footprint = Polygon(etad_burst_footprints)
+        return self._footprint
 
     def intersects(self, geometry: BaseGeometry):
         """Intersect the footprint of the burst with the provided shape.
@@ -1194,11 +1220,13 @@ class Sentinel1EtadBurst:
         Parameters
         ----------
         geometry : shapely.geometry.[Point, Polygon, MultiPolygon, line]
+            shapely geometry
 
         Returns
         -------
         bool
             True if intersects, False otherwise
+
         """
         if not isinstance(geometry, BaseGeometry):
             raise TypeError("Not a shapely BaseGeometry object")
@@ -1431,6 +1459,7 @@ class Sentinel1EtadBurst:
             :y: correction in azimuth (if applicable)
             :unit: 'm' or 's'
             :name: name of the correction
+
         """
         correction_type = ECorrectionType(name)  # check values
         name = correction_type.value

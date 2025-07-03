@@ -84,7 +84,7 @@ def main(*argv: str) -> int:
         func = cliutils.get_function(args.func)
         kwargs = _get_kwargs(args)
         func(**kwargs)
-    except Exception as exc:  # noqa: B902
+    except Exception as exc:  # noqa: B902, BLE001
         log.critical(
             "unexpected exception caught: %r %s", type(exc).__name__, exc
         )

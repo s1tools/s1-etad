@@ -75,6 +75,7 @@ class GridGeocoding:
         conversion. Default: "WGS84"
     interpolation_kind : str
         Default: "cubic"
+
     """
 
     def __init__(
@@ -148,6 +149,7 @@ class GridGeocoding:
         -------
         ndarray
             interpolated latitude ([deg])
+
         """
         return self._f_lat((x, y))
 
@@ -171,6 +173,7 @@ class GridGeocoding:
         -------
         ndarray
             interpolated longitude ([deg])
+
         """
         return self._f_lon((x, y))
 
@@ -194,6 +197,7 @@ class GridGeocoding:
         -------
         ndarray
             interpolated height
+
         """
         return self._f_h((x, y))
 
@@ -217,7 +221,8 @@ class GridGeocoding:
         Returns
         -------
         (float, float)
-            realisation of f and g function at x,y
+            realization of f and g function at x, y
+
         """
         x, y = xy
 
@@ -284,6 +289,7 @@ class GridGeocoding:
                  in lats, lons, heights
             :y0: array [N] of y coordinates (or azimuth time) for each input
                  in lats, lons, heights
+
         """
         lats = np.asarray(lats)
         lons = np.asarray(lons)
@@ -312,7 +318,9 @@ class GridGeocoding:
             self._grid_lats, self._grid_lons, self._grid_heights, deg=True
         )
 
-        for idx, (lat, lon, h) in enumerate(zip(lats, lons, heights)):
+        for idx, (lat, lon, h) in enumerate(
+            zip(lats, lons, heights, strict=True)
+        ):
             x_guess, y_guess = self._initial_guess(
                 lat, lon, h, deg=deg, ecef_grid=ecef_grid
             )
@@ -350,6 +358,7 @@ class GridGeocoding:
             :latitude: array [N] of latitudes for each input coordinate
             :longitude: array [N] of longitudes for each input coordinate
             :height: array [N] of heights for each input coordinate
+
         """
         lat = self.latitude(x, y)
         lon = self.longitude(x, y)

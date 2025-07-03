@@ -3,7 +3,7 @@
 import logging
 import argparse
 import importlib
-from typing import Callable
+from collections.abc import Callable
 
 from .. import __version__
 

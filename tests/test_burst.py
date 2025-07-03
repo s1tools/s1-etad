@@ -66,7 +66,7 @@ class TestBurst:
     def test_reference_polarization(etad_burst):
         rp = etad_burst.reference_polarization
         assert isinstance(rp, str)
-        assert rp in {"HH", "HV", "VV", "VV"}
+        assert rp in {"HH", "HV", "VH", "VV"}
 
     @staticmethod
     def test_lines(etad_burst):

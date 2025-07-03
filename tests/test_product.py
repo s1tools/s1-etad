@@ -184,7 +184,7 @@ class TestEtadProduct:
     def test_range_time(etad_product):
         assert isinstance(etad_product.min_range_time, float)
         assert isinstance(etad_product.max_range_time, float)
-        etad_product.min_range_time <= etad_product.max_range_time
+        assert etad_product.min_range_time <= etad_product.max_range_time
 
     @staticmethod
     def test_number_of_swaths(etad_product):

@@ -96,18 +96,21 @@ def _sentinel1_etad_burst_repr_pretty_(obj, p, cycle):
 
 
 def _register_jupyter_formatters():
-    from IPython import get_ipython
-
-    ipy = get_ipython()
-    if ipy is None:
-        return False
+    try:
+        from IPython import get_ipython
+    except ImportError:
+        pass
     else:
-        formatter = ipy.display_formatter.formatters["text/plain"]
-        formatter.for_type(Sentinel1Etad, _sentinel1_etad_repr_pretty_)
-        formatter.for_type(
-            Sentinel1EtadSwath, _sentinel1_etad_swath_repr_pretty_
-        )
-        formatter.for_type(
-            Sentinel1EtadBurst, _sentinel1_etad_burst_repr_pretty_
-        )
-        return True
+        ipy = get_ipython()
+
+        if ipy is not None:
+            formatter = ipy.display_formatter.formatters["text/plain"]
+            formatter.for_type(Sentinel1Etad, _sentinel1_etad_repr_pretty_)
+            formatter.for_type(
+                Sentinel1EtadSwath, _sentinel1_etad_swath_repr_pretty_
+            )
+            formatter.for_type(
+                Sentinel1EtadBurst, _sentinel1_etad_burst_repr_pretty_
+            )
+            return True
+    return False

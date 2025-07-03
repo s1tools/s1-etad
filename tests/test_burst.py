@@ -3,6 +3,8 @@ import pytest
 import shapely
 from pytest_lazy_fixtures import lf as lazy_fixture
 
+import s1etad
+
 
 @pytest.mark.network
 @pytest.mark.parametrize(
@@ -124,12 +126,34 @@ class TestBurst:
         assert isinstance(etad_burst.vg, float)
         assert etad_burst.vg > 0
 
-    # @staticmethod
-    # @pytest.mark.parametrize("name", list(s1etad.ECorrectionType))
-    # def test_get_correction_name(etad_burst, name):
-    #     data = etad_burst.get_correction(name)
-    #     assert isinstance(data, np.ndarray)
-    #     assert data.dtype == np.float64
+    @staticmethod
+    @pytest.mark.parametrize("name", list(s1etad.ECorrectionType))
+    def test_get_correction_name(etad_burst, name):
+        data = etad_burst.get_correction(name)
+        assert data["name"] == name.value
+        assert data["unit"] == "s"
+        assert "x" in data or "y" in data
+        if "x" in data:
+            assert isinstance(data["x"], np.ndarray)
+            assert data["x"].dtype == np.float64
+        if "y" in data:
+            assert isinstance(data["y"], np.ndarray)
+            assert data["y"].dtype == np.float64
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "name",
+        [
+            s1etad.ECorrectionType.TROPOSPHERIC_GRADIENT,
+            s1etad.ECorrectionType.OTL,
+        ],
+    )
+    def test_get_correction_name_pre_3(etad_burst, name, monkeypatch):
+        with monkeypatch.context() as m:
+            etad_product = etad_burst._parent._parent
+            m.setattr(etad_product, "_processor_version", "002.92")
+            with pytest.raises(RuntimeError, match="processor_version"):
+                etad_burst.get_correction(name)
 
 
 """

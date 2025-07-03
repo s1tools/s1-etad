@@ -2,6 +2,7 @@
 
 import enum
 import pathlib
+import weakref
 import datetime
 import warnings
 import itertools
@@ -31,8 +32,10 @@ class ECorrectionType(enum.Enum):
     """Enumeration for correction types."""
 
     TROPOSPHERIC = "tropospheric"
+    TROPOSPHERIC_GRADIENT = "tropospheric_gradient"
     IONOSPHERIC = "ionospheric"
     GEODETIC = "geodetic"
+    OTL = "otl"
     BISTATIC = "bistatic"
     DOPPLER = "doppler"
     FMRATE = "fmrate"
@@ -44,8 +47,13 @@ CorrectionType = ECorrectionType | str
 
 _CORRECTION_NAMES_MAP = {
     "tropospheric": {"x": "troposphericCorrectionRg"},
+    "tropospheric_gradient": {"x": "troposphericCorrectionHeightGradientRg"},
     "ionospheric": {"x": "ionosphericCorrectionRg"},
     "geodetic": {"x": "geodeticCorrectionRg", "y": "geodeticCorrectionAz"},
+    "otl": {
+        "x": "oceanTidalLoadingCorrectionRg",
+        "y": "oceanTidalLoadingCorrectionAz",
+    },
     "bistatic": {"y": "bistaticCorrectionAz"},
     "doppler": {"x": "dopplerRangeShiftRg"},
     "fmrate": {"y": "fmMismatchCorrectionAz"},
@@ -55,8 +63,12 @@ _CORRECTION_NAMES_MAP = {
 
 _STATS_TAG_MAP = {
     ECorrectionType.TROPOSPHERIC: "troposphericCorrection",
+    ECorrectionType.TROPOSPHERIC_GRADIENT: (
+        "troposphericCorrectionHeightGradient"
+    ),
     ECorrectionType.IONOSPHERIC: "ionosphericCorrection",
     ECorrectionType.GEODETIC: "geodeticCorrection",
+    ECorrectionType.OTL: "oceanTidalLoadingCorrection",
     ECorrectionType.BISTATIC: "bistaticCorrection",
     ECorrectionType.DOPPLER: "dopplerRangeShift",
     ECorrectionType.FMRATE: "fmMismatchCorrection",
@@ -102,6 +114,7 @@ class Sentinel1Etad:
         # TODO: ds should not be exposed
         self.ds = self._init_measurement_dataset()
         self._annot = self._init_annotation_dataset()
+        self._processor_version = self._init_processor_version()
         self.burst_catalogue = self._init_burst_catalogue()
         self._swaths = {}
 
@@ -134,10 +147,16 @@ class Sentinel1Etad:
         root = etree.parse(xml_file).getroot()
         return root
 
+    def _init_processor_version(self) -> str:
+        processor_version = self._annot.findtext(".//processorVersion")
+        if processor_version is None:
+            raise RuntimeError("unable to detect the processor version")
+        return processor_version
+
     def __getitem__(self, index):
         assert index in self.swath_list, f"{index} is not in {self.swath_list}"
         if index not in self._swaths:
-            self._swaths[index] = Sentinel1EtadSwath(self.ds[index])
+            self._swaths[index] = Sentinel1EtadSwath(self.ds[index], self)
         return self._swaths[index]
 
     def __iter__(self):
@@ -242,6 +261,7 @@ class Sentinel1Etad:
             "troposphericDelayCorrection",
             "ionosphericDelayCorrection",
             "solidEarthTideCorrection",
+            "oceanTidalLoadingCorrection",
             "bistaticAzimuthCorrection",
             "dopplerShiftRangeCorrection",
             "FMMismatchAzimuthCorrection",
@@ -256,8 +276,10 @@ class Sentinel1Etad:
             ret = self._xpath_to_list(self._annot, xp)
             if ret == "true":
                 ret = True
-            else:
+            elif ret == "false":
                 ret = False
+            else:
+                continue
             dd[correction] = ret
         return dd
 
@@ -465,18 +487,20 @@ class Sentinel1Etad:
                 the units of the returned statistics ("m" or "s")
 
         """
-        units = "m" if meter else "s"
-
         stat_xp = "./qualityAndStatistics"
         target = ECorrectionType(correction)
         target_tag = _STATS_TAG_MAP[target]
+
+        if target is ECorrectionType.TROPOSPHERIC_GRADIENT:
+            units = "m/m" if meter else "s/m"
+        else:
+            units = "m" if meter else "s"
 
         statistics: dict[str, Statistics | str] = {}
         statistics["unit"] = units
 
         # NOTE: looping on element and heuristic test on tags is necessary
         #       due to inconsistent naming of range and azimuth element
-        # TODO: report the inconsistency to DLR? (TBD)
         correction_elem = self._annot.find(f"{stat_xp}/{target_tag}")
         for elem in correction_elem:
             if "range" in elem.tag:
@@ -491,6 +515,9 @@ class Sentinel1Etad:
                 float(elem.findtext(f'mean[@unit="{units}"]')),
                 float(elem.findtext(f'max[@unit="{units}"]')),
             )
+
+        if len(statistics) == 1:
+            return {}
 
         return statistics
 
@@ -775,16 +802,17 @@ class Sentinel1EtadSwath:
     It is not expected that the user instantiates this objects directly.
     """
 
-    def __init__(self, nc_group):
+    def __init__(self, nc_group, parent):
         """Initialize a `Sentinel1EtadSwath` object."""
         self._grp = nc_group
+        self._parent = weakref.proxy(parent)
         self._bursts = {}
 
     def __getitem__(self, burst_index):
         if burst_index not in self._bursts:
             burst_name = f"Burst{burst_index:04d}"
             group = self._grp[burst_name]
-            self._bursts[burst_index] = Sentinel1EtadBurst(group)
+            self._bursts[burst_index] = Sentinel1EtadBurst(group, self)
         return self._bursts[burst_index]
 
     def __iter__(self):
@@ -1160,9 +1188,10 @@ class Sentinel1EtadBurst:
     It is not expected that the user instantiates this objects directly.
     """
 
-    def __init__(self, nc_group):
+    def __init__(self, nc_group, parent):
         """Initialize a `Sentinel1EtadBurst` object."""
         self._grp = nc_group
+        self._parent = weakref.proxy(parent)
         self._geocoder = None
         self._footprint = None
 
@@ -1462,6 +1491,17 @@ class Sentinel1EtadBurst:
 
         """
         correction_type = ECorrectionType(name)  # check values
+        processor_version = self._parent._parent._processor_version
+        if processor_version < "003.00" and correction_type in {
+            ECorrectionType.OTL,
+            ECorrectionType.TROPOSPHERIC_GRADIENT,
+        }:
+            raise RuntimeError(
+                f"correction {correction_type} is not available for "
+                "processor version lower than '003.00' "
+                f"(processor_version: {processor_version!r})"
+            )
+
         name = correction_type.value
         prm_list = _CORRECTION_NAMES_MAP[name]
         if direction is not None:

@@ -11,6 +11,7 @@ import shapely
 from pytest_lazy_fixtures import lf as lazy_fixture
 
 import s1etad
+from s1etad import ECorrectionType
 
 COLUMNS = (
     "bIndex",
@@ -27,6 +28,7 @@ CORRECTION_SETTINGS = {
     "troposphericDelayCorrection",
     "ionosphericDelayCorrection",
     "solidEarthTideCorrection",
+    "oceanTidalLoadingCorrection",
     "bistaticAzimuthCorrection",
     "dopplerShiftRangeCorrection",
     "FMMismatchAzimuthCorrection",
@@ -76,6 +78,11 @@ def test_open_etad_product(filename):
 )
 class TestEtadProduct:
     @staticmethod
+    def test_processor_version(etad_product):
+        assert isinstance(etad_product._processor_version, str)
+        assert re.match(r"\d{3}\.\d{2}", etad_product._processor_version)
+
+    @staticmethod
     def test_burst_catalogue(etad_product):
         burst_catalogue = etad_product.burst_catalogue
         assert isinstance(burst_catalogue, pd.DataFrame)
@@ -113,8 +120,10 @@ class TestEtadProduct:
         "correction_type",
         [
             "tropospheric",
+            "tropospheric_gradient",
             "ionospheric",
             "geodetic",
+            "otl",
             "bistatic",
             "doppler",
             "fmrate",
@@ -127,9 +136,27 @@ class TestEtadProduct:
             "fmrate",
         }:
             pytest.xfail(reason="layer not available for SM")
+
+        if etad_product._processor_version < "003.00" and correction_type in {
+            "tropospheric_gradient",
+            "otl",
+        }:
+            pytest.xfail(
+                reason=(
+                    f"correction {correction_type!r} not available for "
+                    "processor version smaller than '003.00' "
+                    f"(processot_version: {etad_product._processor_version!r})"
+                )
+            )
+
         stats = etad_product.get_statistics(correction_type)
         assert set(stats.keys()).issubset({"x", "y", "unit"})
-        assert stats["unit"] == "s"
+
+        correction = ECorrectionType(correction_type)
+        if correction is ECorrectionType.TROPOSPHERIC_GRADIENT:
+            assert stats["unit"] == "s/m"
+        else:
+            assert stats["unit"] == "s"
 
     @staticmethod
     def test_get_statistics_units(etad_product):
@@ -193,7 +220,10 @@ class TestEtadProduct:
 
     @staticmethod
     def test_processing_setting(etad_product):
-        assert set(etad_product.processing_setting()) == CORRECTION_SETTINGS
+        settings = CORRECTION_SETTINGS.copy()
+        if etad_product._processor_version < "003.00":
+            settings.pop("oceanTidalLoadingCorrection")
+        assert set(etad_product.processing_setting()) == settings
 
     @staticmethod
     def test_s1_etad_product_list(etad_product):

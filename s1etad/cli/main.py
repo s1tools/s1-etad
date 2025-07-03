@@ -8,6 +8,7 @@ S1-ETAD products.
 
 import logging
 import argparse
+from collections.abc import Sequence
 
 from . import exportkmz, ql
 from . import utils as cliutils
@@ -36,30 +37,34 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def parse_args(args=None, namespace=None, parser=None):
+def parse_args(
+    args: Sequence[str] | None = None,
+    namespace: argparse.Namespace | None = None,
+    parser: argparse.ArgumentParser | None = None,
+) -> argparse.Namespace:
     """Parse command line arguments."""
     if parser is None:
         parser = get_parser()
 
-    args = parser.parse_args(args, namespace)
+    out_args = parser.parse_args(args, namespace)
 
     # Common pre-processing of parsed arguments and consistency checks
     # ...
 
-    if getattr(args, "func", None) is None:
+    if getattr(out_args, "func", None) is None:
         parser.error("no sub-command specified.")
 
-    return args
+    return out_args
 
 
-def _get_kwargs(args):
+def _get_kwargs(args) -> dict:
     kwargs = vars(args).copy()
     kwargs.pop("func", None)
     kwargs.pop("loglevel", None)
     return kwargs
 
 
-def main(*argv):
+def main(*argv: str) -> int:
     """Implement the main CLI interface."""
     # setup logging
     logging.basicConfig(format=LOGFMT, level=DEFAULT_LOGLEVEL)

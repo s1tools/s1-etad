@@ -3,6 +3,7 @@
 import os
 import functools
 from typing import Literal
+from collections.abc import Sequence
 
 import numpy as np
 from osgeo import gdal, osr
@@ -10,9 +11,10 @@ from osgeo import gdal, osr
 from . import ECorrectionType, Sentinel1Etad
 from .product import CorrectionType
 
-MAX_GCP_NUM = 10000  # empirical threshold
-DEFAULT_LATLON_SPACING_DEG = 0.005  # deg --> 550m @ equator, 50 @ lat=85deg
-DEFAULT_COLOR_TABLE_NAME = "jet"  # form matplotlib
+MAX_GCP_NUM: int = 10000  # empirical threshold
+# 0.005 [deg] --> 550m @ equator, 50 @ lat=85deg
+DEFAULT_LATLON_SPACING_DEG: float = 0.005  # deg
+DEFAULT_COLOR_TABLE_NAME: str = "jet"  # form matplotlib
 
 
 def _write_band_data(band, data, nodata: float = -9999.0):
@@ -22,7 +24,12 @@ def _write_band_data(band, data, nodata: float = -9999.0):
     band.SetNoDataValue(nodata)
 
 
-def create_gcps(lat, lon, h=None, gcp_step=(10, 10)) -> list[gdal.GCP]:
+def create_gcps(
+    lat,
+    lon,
+    h=None,
+    gcp_step: tuple[int, int] = (10, 10),
+) -> list[gdal.GCP]:
     """Generate a sub-sampled grid of GCPs form input coordinate matrices."""
     assert lat.shape == lon.shape
     ysize, xsize = lat.shape
@@ -32,11 +39,11 @@ def create_gcps(lat, lon, h=None, gcp_step=(10, 10)) -> list[gdal.GCP]:
         data.mask if hasattr(data, "mask") else None for data in (lat, lon, h)
     ]
 
-    mask: np.array | None = None
+    mask = None
     if masks:
         mask = functools.reduce(np.logical_or, masks)
 
-    gcps = []
+    gcps: list[gdal.GCP] = []
     for line in range(0, ysize, ystep):
         for pix in range(0, xsize, xstep):
             if mask is None or mask[line, pix]:
@@ -69,9 +76,9 @@ def save_with_gcps(
     *,
     drv_name: str = "GTIFF",
     nodata: float = -9999.0,
-    gcp_step=(10, 10),
-    srs="wgs84",
-    creation_options=None,
+    gcp_step: tuple[int, int] = (10, 10),
+    srs: str | osr.SpatialReference = "wgs84",
+    creation_options: Sequence[str] | None = None,
 ):
     """Save data into a GDAL dataset and GCPs for coordinates matrices."""
     drv = gdal.GetDriverByName(drv_name)
@@ -110,7 +117,9 @@ def _clip_bbox(bbox, q, margin=0):
     )
 
 
-def _compute_gcp_spacing(xsize, ysize, max_gcp_num: int = MAX_GCP_NUM):
+def _compute_gcp_spacing(
+    xsize: int, ysize: int, max_gcp_num: int = MAX_GCP_NUM
+) -> tuple[int, int]:
     # assume 200 x 200 m ground spacing for ETAD products
     gcp_step = (25, 25)  # 5 x 5 km
     # gcp_step = (50, 50)  # 10 x 10 km
@@ -122,7 +131,7 @@ def _compute_gcp_spacing(xsize, ysize, max_gcp_num: int = MAX_GCP_NUM):
 
 
 @functools.lru_cache
-def _get_color_table(name=DEFAULT_COLOR_TABLE_NAME):
+def _get_color_table(name: str = DEFAULT_COLOR_TABLE_NAME):
     from matplotlib import cm
 
     from .kmz import Colorizer  # noqa: F401
@@ -145,11 +154,11 @@ def save_geocoded_data(
     h=None,
     *,
     gcp_step: tuple[int, int] | None = None,
-    srs="wgs84",
-    out_spacing=DEFAULT_LATLON_SPACING_DEG,
+    srs: str | osr.SpatialReference = "wgs84",
+    out_spacing: float = DEFAULT_LATLON_SPACING_DEG,
     drv_name="GTIFF",
-    creation_options=None,
-    palette=DEFAULT_COLOR_TABLE_NAME,
+    creation_options: Sequence[str] | None = None,
+    palette: str = DEFAULT_COLOR_TABLE_NAME,
     margin=100,
 ):
     """Save a geo-coded version of input data into a GDAL dataset."""
@@ -219,7 +228,7 @@ def etad2ql(
     direction: Literal["x", "y"] = "x",
     meter: bool = True,
     drv_name: str = "PNG",
-    creation_options=("WORLDFILE=YES",),
+    creation_options: Sequence[str] = ("WORLDFILE=YES",),
 ):
     """Generate a geo-coded quick-look image starting from an ETAD product."""
     if not isinstance(etad, Sentinel1Etad):

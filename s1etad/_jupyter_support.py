@@ -96,9 +96,10 @@ def _sentinel1_etad_burst_repr_pretty_(obj, p, cycle):
 
 
 def _register_jupyter_formatters():
-    try:
-        ipy = get_ipython()
-    except NameError:
+    from IPython import get_ipython
+
+    ipy = get_ipython()
+    if ipy is None:
         return False
     else:
         formatter = ipy.display_formatter.formatters["text/plain"]

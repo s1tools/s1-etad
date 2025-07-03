@@ -3,6 +3,7 @@
 import logging
 import argparse
 import importlib
+from typing import Callable
 
 from .. import __version__
 
@@ -61,7 +62,9 @@ def _add_logging_control_args(
     return parser
 
 
-def finalize_parser(parser):
+def finalize_parser(
+    parser: argparse.ArgumentParser,
+) -> argparse.ArgumentParser:
     """Finalize the argument parser provided in input.
 
     Arguments for logging control and version printing are added.
@@ -80,7 +83,7 @@ def finalize_parser(parser):
     return parser
 
 
-def get_function(func):
+def get_function(func: str | Callable) -> Callable:
     """Return the function corresponding to the input.
 
     If the input `func` parameter is already a callable then it is
@@ -93,7 +96,7 @@ def get_function(func):
     if callable(func):
         return func
 
-    fullname = func
+    fullname: str = func
     if "." not in fullname:
         raise ValueError(
             f"unable to retrieve the module name from: {fullname}"

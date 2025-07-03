@@ -7,7 +7,7 @@ from scipy.interpolate import RegularGridInterpolator
 try:
     import pyproj as _pyproj
 
-    def geodetic_to_ecef(lat, lon, h, ell="WGS84", deg=True):
+    def geodetic_to_ecef(lat, lon, h, ell: str = "WGS84", deg: bool = True):
         """Convert geodetic coordinates into ECEF."""
         ecef = _pyproj.crs.CRS(proj="geocent", ellps=ell, datum=ell)
         geodetic = _pyproj.crs.CRS(proj="latlong", ellps=ell, datum=ell)
@@ -15,7 +15,7 @@ try:
         x, y, z = transformer.transform(lon, lat, h, radians=bool(not deg))
         return x, y, z
 
-    def ecef_to_geodetic(x, y, z, ell="WGS84", deg=True):
+    def ecef_to_geodetic(x, y, z, ell: str = "WGS84", deg: bool = True):
         """Convert ECEF coordinates into geodetic."""
         ecef = _pyproj.crs.CRS(proj="geocent", ellps=ell, datum=ell)
         geodetic = _pyproj.crs.CRS(proj="latlong", ellps=ell, datum=ell)
@@ -26,14 +26,14 @@ try:
 except ImportError:
     import pymap3d as _pymap3d
 
-    def geodetic_to_ecef(lat, lon, h, ell="WGS84", deg=True):
+    def geodetic_to_ecef(lat, lon, h, ell: str = "WGS84", deg: bool = True):
         """Convert geodetic coordinates into ECEF."""
         if ell and not isinstance(ell, _pymap3d.ellipsoid.Ellipsoid):
             ell = _pymap3d.ellipsoid.Ellipsoid(ell.lower())
         x, y, z = _pymap3d.ecef.geodetic2ecef(lat, lon, h, ell=ell, deg=deg)
         return x, y, z
 
-    def ecef_to_geodetic(x, y, z, ell="WGS84", deg=True):
+    def ecef_to_geodetic(x, y, z, ell: str = "WGS84", deg: bool = True):
         """Convert ECEF coordinates into geodetic."""
         if ell and not isinstance(ell, _pymap3d.ellipsoid.Ellipsoid):
             ell = _pymap3d.ellipsoid.Ellipsoid(ell.lower())
@@ -84,8 +84,8 @@ class GridGeocoding:
         grid_height=0,
         xaxis=None,
         yaxis=None,
-        ellipsoid_name="WGS84",
-        interpolation_kind="cubic",
+        ellipsoid_name: str = "WGS84",
+        interpolation_kind: str = "cubic",
     ):
         """Initialize a `GridGeocoding` object."""
         self._grid_lats = np.asarray(grid_latitude)
@@ -231,7 +231,7 @@ class GridGeocoding:
 
         return [eq1, eq2]
 
-    def _initial_guess(self, lat, lon, h=0, deg=True, ecef_grid=None):
+    def _initial_guess(self, lat, lon, h=0, deg: bool = True, ecef_grid=None):
         """Return the initial tentative solution for the iterative solver.
 
         Compute the distance between the point defined by its
@@ -250,7 +250,7 @@ class GridGeocoding:
         y, x = np.unravel_index(ixmin, self._grid_lats.shape)
         return self._xaxis[x], self._yaxis[y]
 
-    def backward_geocode(self, lats, lons, heights=0, deg=True):
+    def backward_geocode(self, lats, lons, heights=0, deg: bool = True):
         """Perform the back geocoding: (lat, lon, h) -> (x, y).
 
         .. important::
@@ -328,7 +328,7 @@ class GridGeocoding:
         # TODO: output the convergence flag
         return x0, y0
 
-    def forward_geocode(self, x, y, deg=True):
+    def forward_geocode(self, x, y, deg: bool = True):
         """Perform forward geocoding (x, y) -> (lat, lon, h).
 
         This is simply obtained by re-interpolating the latitude,

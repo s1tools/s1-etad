@@ -5,7 +5,7 @@ import argparse
 from . import utils as cliutils
 
 
-def get_parser(subparsers=None):
+def get_parser(subparsers=None) -> argparse.ArgumentParser:
     """Instantiate the command line argument parser."""
     name = "ql"
     synopsis = __doc__.splitlines()[0]

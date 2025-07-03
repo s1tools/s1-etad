@@ -4,6 +4,8 @@ import shutil
 import pathlib
 import datetime
 import functools
+from typing import Literal
+from collections.abc import Sequence
 
 import numpy as np
 import matplotlib as mpl
@@ -21,10 +23,13 @@ class Sentinel1EtadKmlWriter:
     """Writer for ETAD KML/KMZ files."""
 
     # TODO: only SUM by default
-    DEFAULT_CORRECTIONS = (ECorrectionType.SUM, ECorrectionType.TROPOSPHERIC)
+    DEFAULT_CORRECTIONS: Sequence[ECorrectionType] = (
+        ECorrectionType.SUM,
+        ECorrectionType.TROPOSPHERIC,
+    )
     DEFAULT_TIMESPAN = 30  # [s]
     DEFAULT_LOOKAT_RANGE = 1500000
-    DEFAULT_OPEN_FOLDER = False
+    DEFAULT_OPEN_FOLDER: bool = False
 
     def __init__(
         self,
@@ -32,9 +37,9 @@ class Sentinel1EtadKmlWriter:
         corrections=None,
         timespan=DEFAULT_TIMESPAN,
         selection=None,
-        decimation_factor=1,
-        colorizing=True,
-        open_folders=DEFAULT_OPEN_FOLDER,
+        decimation_factor: int = 1,
+        colorizing: bool = True,
+        open_folders: bool = DEFAULT_OPEN_FOLDER,
     ):
         """Initialize a `Sentinel1EtadKmlWriter` object."""
         assert isinstance(etad, Sentinel1Etad)
@@ -184,7 +189,12 @@ class Sentinel1EtadKmlWriter:
                 self._add_burst_footprint(burst, kml_swath_dir, t_ref)
 
     def _colorbar_overlay(
-        self, correction, dim, kml_cor_dir, color_table, outpath
+        self,
+        correction,
+        dim: Literal["x", "y"],
+        kml_cor_dir,
+        color_table,
+        outpath,
     ):
         assert isinstance(correction, ECorrectionType)
 
@@ -224,7 +234,14 @@ class Sentinel1EtadKmlWriter:
         return ground
 
     @staticmethod
-    def _ground_overlay_data(correction, burst, dim, vmin, vmax, colorizing):
+    def _ground_overlay_data(
+        correction,
+        burst,
+        dim: Literal["x", "y"],
+        vmin: float,
+        vmax: float,
+        colorizing: bool,
+    ):
         func = functools.partial(
             burst.get_correction, name=correction, direction=dim
         )
@@ -239,7 +256,7 @@ class Sentinel1EtadKmlWriter:
         return data
 
     @staticmethod
-    def _get_visibility(correction, dim) -> bool:
+    def _get_visibility(correction, dim: Literal["x", "y"]) -> bool:
         if correction == ECorrectionType.SUM and dim == "x":
             return True
         else:
@@ -339,8 +356,8 @@ def array2raster(
     gcp_list=None,
     color_table=None,
     pixel_depth=gdal.GDT_Float32,
-    driver="GTiff",
-    decimation_factor=None,
+    driver: str = "GTiff",
+    decimation_factor: int | None = None,
 ):
     # http://osgeo-org.1560.x6.nabble.com/Transparent-PNG-with-color-table-palette-td3748906.html
     if decimation_factor is not None:
@@ -356,8 +373,8 @@ def array2raster(
     else:
         raise RuntimeError(f"unexpected driver: {driver}")
 
-    driver = gdal.GetDriverByName(driver)
-    outraster = driver.Create(str(outfile), cols, rows, 1, pixel_depth)
+    drv = gdal.GetDriverByName(driver)
+    outraster = drv.Create(str(outfile), cols, rows, 1, pixel_depth)
     assert outraster is not None
 
     # outRaster.SetGeoTransform(
@@ -383,7 +400,7 @@ def array2raster(
 
 # http://osgeo-org.1560.x6.nabble.com/Transparent-PNG-with-color-table-palette-td3748906.html
 class Colorizer:
-    def __init__(self, vmin, vmax, color_table=cm.viridis):
+    def __init__(self, vmin: float, vmax: float, color_table=cm.viridis):
         # normalize item number values to colormap
         delta = np.abs(vmax - vmin)
         self.vmin = vmin - 0.05 * delta
@@ -412,7 +429,7 @@ class Colorizer:
     def build_colorbar(self, cb_filename):
         # https://ocefpaf.github.io/python4oceanographers/blog/2014/03/10/gearth/
         fig = pyplot.figure(figsize=(0.8, 3))
-        ax1 = fig.add_axes([0.1, 0.075, 0.25, 0.85])
+        ax1 = fig.add_axes(rect=(0.1, 0.075, 0.25, 0.85))
 
         pyplot.tick_params(axis="y", which="major", labelsize=8)
 

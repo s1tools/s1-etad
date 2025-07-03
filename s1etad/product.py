@@ -7,7 +7,7 @@ import warnings
 import functools
 import itertools
 import collections
-from typing import Union
+from typing import Literal, Union
 
 import numpy as np
 import pandas as pd
@@ -420,14 +420,14 @@ class Sentinel1Etad:
         if parse_time_func is not None:
             ll = [datetime.datetime.fromisoformat(t) for t in ll]
             ll = parse_time_func(ll)  # TODO: check
-        ll = np.asarray(ll, dtype=dtype)
+        arr = np.asarray(ll, dtype=dtype)
 
-        if ll.size == 1:
-            return ll.item(0)
+        if arr.size == 1:
+            return arr.item(0)
         else:
-            return ll
+            return arr
 
-    def get_statistics(self, correction, meter=False):
+    def get_statistics(self, correction, meter: bool = False):
         """Return the global statistic value of the specified correction.
 
         The returned value is the pre-computed one that is stored in the
@@ -462,7 +462,8 @@ class Sentinel1Etad:
         target = ECorrectionType(correction)
         target_tag = _STATS_TAG_MAP[target]
 
-        statistics = {"unit": units}
+        statistics: dict[str, Statistics | str] = {}
+        statistics["unit"] = units
 
         # NOTE: looping on element and heuristic test on tags is necessary
         #       due to inconsistent naming of range and azimuth element
@@ -484,7 +485,7 @@ class Sentinel1Etad:
 
         return statistics
 
-    def get_footprint(self, selection=None, merge=False):
+    def get_footprint(self, selection=None, merge: bool = False):
         """Return the footprints of all the bursts as MultiPolygon.
 
         It calls in the back the get_footprint of the Sentinel1EtadBurst class.
@@ -500,15 +501,15 @@ class Sentinel1Etad:
             if set to True return a single polygon that is the union of the
             footprints of all bursts
         """
-        polys = []
+        poly_list = []
         swath_list, burst_selection = self._selection_to_swath_list(selection)
         for swath in self.iter_swaths(swath_list):
-            polys.extend(swath.get_footprint(burst_selection).geoms)
+            poly_list.extend(swath.get_footprint(burst_selection).geoms)
 
         if merge:
-            polys = shapely.ops.unary_union(polys)
+            polys = shapely.ops.unary_union(poly_list)
         else:
-            polys = MultiPolygon(polys)
+            polys = MultiPolygon(poly_list)
 
         return polys
 
@@ -537,9 +538,9 @@ class Sentinel1Etad:
         self,
         burst_var,
         selection=None,
-        set_auto_mask=False,
-        meter=False,
-        fill_value=0.0,
+        set_auto_mask: bool = False,
+        meter: bool = False,
+        fill_value: float = 0.0,
     ):
         if selection is None:
             df = self.burst_catalogue
@@ -610,7 +611,11 @@ class Sentinel1Etad:
         }
 
     def _core_merge_correction(
-        self, prm_list, selection=None, set_auto_mask=True, meter=False
+        self,
+        prm_list,
+        selection=None,
+        set_auto_mask: bool = True,
+        meter: bool = False,
     ):
         dd = {}
         for dim, field in prm_list.items():
@@ -673,9 +678,9 @@ class Sentinel1Etad:
         self,
         name: CorrectionType = ECorrectionType.SUM,
         selection=None,
-        set_auto_mask=True,
-        meter=False,
-        direction=None,
+        set_auto_mask: bool = True,
+        meter: bool = False,
+        direction: Literal["x", "y"] | None = None,
     ):
         """Merge multiple swaths of the specified correction variable.
 
@@ -838,7 +843,7 @@ class Sentinel1EtadSwath:
         for burst_index in index_list:
             yield self[burst_index]
 
-    def get_footprint(self, selection=None, merge=False):
+    def get_footprint(self, selection=None, merge: bool = False):
         """Return the footprints of all the bursts as MultiPolygon.
 
         It calls in the back the get_footprint of the Sentinel1EtadBurst class.
@@ -854,13 +859,13 @@ class Sentinel1EtadSwath:
             if set to True return a single polygon that is the union of the
             footprints of all bursts
         """
-        polys = [
+        poly_list = [
             burst.get_footprint() for burst in self.iter_bursts(selection)
         ]
         if merge:
-            polys = shapely.ops.unary_union(polys)
+            polys = shapely.ops.unary_union(poly_list)
         else:
-            polys = MultiPolygon(polys)
+            polys = MultiPolygon(poly_list)
 
         return polys
 
@@ -900,9 +905,9 @@ class Sentinel1EtadSwath:
         selection=None,
         az_time_min=None,
         az_time_max=None,
-        set_auto_mask=False,
-        meter=False,
-        fill_value=0.0,
+        set_auto_mask: bool = False,
+        meter: bool = False,
+        fill_value: float = 0.0,
     ):
         """Low level method to de-burst a NetCDF variable.
 
@@ -1011,7 +1016,11 @@ class Sentinel1EtadSwath:
         }
 
     def _core_merge_correction(
-        self, prm_list, selection=None, set_auto_mask=True, meter=False
+        self,
+        prm_list,
+        selection=None,
+        set_auto_mask: bool = True,
+        meter: bool = False,
     ):
         dd = {}
         for dim, field in prm_list.items():
@@ -1042,9 +1051,9 @@ class Sentinel1EtadSwath:
         self,
         name: CorrectionType = ECorrectionType.SUM,
         selection=None,
-        set_auto_mask=True,
-        meter=False,
-        direction=None,
+        set_auto_mask: bool = True,
+        meter: bool = False,
+        direction: Literal["x", "y"] | None = None,
     ):
         """Merge multiple bursts of the specified correction variable.
 
@@ -1173,12 +1182,11 @@ class Sentinel1EtadBurst:
         """
         lats, lons, heights = self.get_lat_lon_height()
         corner_list = [(0, 0), (0, -1), (-1, -1), (-1, 0)]
-        etaf_burst_footprint = []
+        etad_burst_footprints = []
         for corner in corner_list:
             lat_, lon_, h_ = lats[corner], lons[corner], heights[corner]
-            etaf_burst_footprint.append((lon_, lat_, h_))
-        etaf_burst_footprint = Polygon(etaf_burst_footprint)
-        return etaf_burst_footprint
+            etad_burst_footprints.append((lon_, lat_, h_))
+        return Polygon(etad_burst_footprints)
 
     def intersects(self, geometry: BaseGeometry):
         """Intersect the footprint of the burst with the provided shape.
@@ -1313,7 +1321,11 @@ class Sentinel1EtadBurst:
             return {"x": 0, "y": 0, "units": "s"}
 
     def _get_etad_param(
-        self, name, set_auto_mask=False, transpose=False, meter=False
+        self,
+        name: str,
+        set_auto_mask: bool = False,
+        transpose: bool = False,
+        meter: bool = False,
     ):
         if name not in self._grp.variables:
             raise RuntimeError(f"Parameter {name!r} is not allowed")
@@ -1343,7 +1355,7 @@ class Sentinel1EtadBurst:
 
         return field
 
-    def get_lat_lon_height(self, transpose=False):
+    def get_lat_lon_height(self, transpose: bool = False):
         """Return the latitude, longitude and height for each point.
 
         Data are returned as (3) matrices (lines x samples).
@@ -1362,7 +1374,11 @@ class Sentinel1EtadBurst:
         return lats, lons, h
 
     def _core_get_correction(
-        self, prm_list, set_auto_mask=False, transpose=False, meter=False
+        self,
+        prm_list,
+        set_auto_mask: bool = False,
+        transpose: bool = False,
+        meter: bool = False,
     ):
         correction = {}
         for dim, field in prm_list.items():
@@ -1380,10 +1396,10 @@ class Sentinel1EtadBurst:
     def get_correction(
         self,
         name: CorrectionType = ECorrectionType.SUM,
-        set_auto_mask=False,
-        transpose=False,
-        meter=False,
-        direction=None,
+        set_auto_mask: bool = False,
+        transpose: bool = False,
+        meter: bool = False,
+        direction: Literal["x", "y"] | None = None,
     ):
         """Retrieve the correction for the specified correction "name".
 
@@ -1441,7 +1457,7 @@ class Sentinel1EtadBurst:
             )
         return self._geocoder
 
-    def radar_to_geodetic(self, tau, t, deg=True):
+    def radar_to_geodetic(self, tau, t, deg: bool = True):
         """Convert RADAR coordinates into geodetic coordinates.
 
         Compute the geodetic coordinates (lat, lon, h) corresponding to
@@ -1463,7 +1479,7 @@ class Sentinel1EtadBurst:
         """
         return self._get_geocoder().forward_geocode(tau, t, deg=deg)
 
-    def geodetic_to_radar(self, lat, lon, h=0, deg=True):
+    def geodetic_to_radar(self, lat, lon, h=0, deg: bool = True):
         """Convert geodetic coordinates into RADAR coordinates.
 
         Compute the RADAR coordinates (tau, t), i.e. fast time (range time)

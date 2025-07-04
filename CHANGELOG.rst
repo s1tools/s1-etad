@@ -4,7 +4,16 @@ Version history
 s1etad v0.5.6 (UNRELEASED)
 --------------------------
 
-* TBW
+* Basic support to the new product layers introduced with the version 3.0
+  of the ETAD processor:
+
+  - Ocean Tidal Loading (OTL), range and azimuth correction
+  - Tropospheric Gradient support layer to be used for high resolution
+    tropospheric delays interpolation
+
+* The minimum supported Python version is now 3.10
+* Improvements in type hints
+* Linting and formatting
 
 
 s1etad v0.5.5 (10/03/2025)

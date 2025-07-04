@@ -259,6 +259,7 @@ class Sentinel1Etad:
         """
         correction_list = [
             "troposphericDelayCorrection",
+            "troposphericDelayCorrectionGradient",
             "ionosphericDelayCorrection",
             "solidEarthTideCorrection",
             "oceanTidalLoadingCorrection",

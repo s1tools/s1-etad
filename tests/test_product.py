@@ -26,6 +26,7 @@ COLUMNS = (
 
 CORRECTION_SETTINGS = {
     "troposphericDelayCorrection",
+    "troposphericDelayCorrectionGradient",
     "ionosphericDelayCorrection",
     "solidEarthTideCorrection",
     "oceanTidalLoadingCorrection",

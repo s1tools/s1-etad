@@ -1,6 +1,7 @@
 recursive-include docs *.py *.rst *.ipynb Makefile make.bat
 include CHANGELOG.rst
 include docs/*.txt
+include tests/*.py tests/requirements-tests.txt
 prune docs/_build
 prune sample-products
 prune templates

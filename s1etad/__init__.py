@@ -18,7 +18,7 @@ from .product import (  # noqa: F401
     Sentinel1EtadSwath,
 )
 
-__version__ = "0.5.6.dev0"
+__version__ = "0.6.0"
 
 
 # register display functions for Jupyter

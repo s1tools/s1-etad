@@ -1,7 +1,7 @@
 Version history
 ===============
 
-s1etad v0.5.6 (UNRELEASED)
+s1etad v0.6.0 (04/07/2025)
 --------------------------
 
 * Basic support to the new product layers introduced with the version 3.0

@@ -72,8 +72,8 @@ lint:
 	codespell $(TARGET) tests/*.py docs/*.rst
 
 docs:  # data
-	# mkdir docs/notebooks/data
-	# ln -sr tests/data/*/*.SAFE docs/notebooks/data/
+	# mkdir -p docs/notebooks/data
+	# ln -srf tests/data/*/*.SAFE docs/notebooks/data/
 	mkdir -p docs/_static
 	$(MAKE) -C docs html
 	$(MAKE) -C docs linkcheck

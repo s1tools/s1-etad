@@ -1,6 +1,7 @@
 arange
 argcomplete
 argparse
+AXDV
 bursted
 catalogue
 conda
@@ -10,6 +11,7 @@ dataframes
 de
 dev
 docstrings
+FBCB
 func
 funcname
 geo

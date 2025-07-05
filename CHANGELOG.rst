@@ -11,7 +11,8 @@ s1etad v0.6.0 (04/07/2025)
 --------------------------
 
 * Basic support to the new product layers introduced with the version 3.0
-  of the ETAD processor:
+  of the ETAD processor SETAP v3.0 ("ETAD Product Format Specification",
+  ETAD-DLR-PS-0014, Issue 1.12):
 
   - Ocean Tidal Loading (OTL), range and azimuth correction
   - Tropospheric Gradient support layer to be used for high resolution

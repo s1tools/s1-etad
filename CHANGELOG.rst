@@ -1,10 +1,11 @@
 Version history
 ===============
 
-s1etad v0.6.1 (UNRELEASED)
+s1etad v0.6.1 (05/07/2025)
 --------------------------
 
 * Fix MANIFEST.in to include the pooch registry file.
+* Update references to the ETAD product specification document.
 
 
 s1etad v0.6.0 (04/07/2025)

@@ -4,7 +4,7 @@ Version history
 s1etad v0.6.1 (UNRELEASED)
 --------------------------
 
-* TBW
+* Fix MANIFEST.in to include the pooch registry file.
 
 
 s1etad v0.6.0 (04/07/2025)

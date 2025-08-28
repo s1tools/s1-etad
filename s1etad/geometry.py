@@ -6,6 +6,9 @@ from scipy.interpolate import RegularGridInterpolator
 
 try:
     import pyproj as _pyproj
+    from pyproj.enums import TransformDirection as _TransformerDirection
+
+    assert _pyproj.__version__ > "2.2.0"
 
     def geodetic_to_ecef(lat, lon, h, ell: str = "WGS84", deg: bool = True):
         """Convert geodetic coordinates into ECEF."""
@@ -20,7 +23,13 @@ try:
         ecef = _pyproj.crs.CRS(proj="geocent", ellps=ell, datum=ell)
         geodetic = _pyproj.crs.CRS(proj="latlong", ellps=ell, datum=ell)
         transformer = _pyproj.Transformer.from_crs(geodetic, ecef)
-        lon, lat, h = transformer.itransform(x, y, z, radians=bool(not deg))
+        lon, lat, h = transformer.transform(
+            x,
+            y,
+            z,
+            radians=bool(not deg),
+            direction=_TransformerDirection.INVERSE,
+        )
         return lat, lon, h
 
 except ImportError:
@@ -29,14 +38,14 @@ except ImportError:
     def geodetic_to_ecef(lat, lon, h, ell: str = "WGS84", deg: bool = True):
         """Convert geodetic coordinates into ECEF."""
         if ell and not isinstance(ell, _pymap3d.ellipsoid.Ellipsoid):
-            ell = _pymap3d.ellipsoid.Ellipsoid(ell.lower())
+            ell = _pymap3d.ellipsoid.Ellipsoid.from_name(ell.lower())
         x, y, z = _pymap3d.ecef.geodetic2ecef(lat, lon, h, ell=ell, deg=deg)
         return x, y, z
 
     def ecef_to_geodetic(x, y, z, ell: str = "WGS84", deg: bool = True):
         """Convert ECEF coordinates into geodetic."""
         if ell and not isinstance(ell, _pymap3d.ellipsoid.Ellipsoid):
-            ell = _pymap3d.ellipsoid.Ellipsoid(ell.lower())
+            ell = _pymap3d.ellipsoid.Ellipsoid.from_name(ell.lower())
         lat, lon, h = _pymap3d.ecef.ecef2geodetic(x, y, z, ell=ell, deg=deg)
         return lat, lon, h
 

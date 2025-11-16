@@ -96,6 +96,8 @@ class GridGeocoding:
         yaxis=None,
         ellipsoid_name: str = "WGS84",
         interpolation_kind: str = "cubic",
+        *,
+        bounds_error: bool = False,
     ):
         """Initialize a `GridGeocoding` object."""
         self._grid_lats = np.asarray(grid_latitude)
@@ -110,11 +112,13 @@ class GridGeocoding:
         assert self._grid_lons.shape == shape
         assert self._grid_heights.shape == shape
 
+        # slow time
         if yaxis is not None:
             self._yaxis = np.asarray(yaxis)
         else:
             self._yaxis = np.arange(shape[0])
 
+        # fast times
         if xaxis is not None:
             self._xaxis = np.asarray(xaxis)
         else:
@@ -126,16 +130,19 @@ class GridGeocoding:
             (self._xaxis, self._yaxis),
             self._grid_lats.T,
             method=interpolation_kind,
+            bounds_error=bounds_error,
         )
         self._f_lon = RegularGridInterpolator(
             (self._xaxis, self._yaxis),
             self._grid_lons.T,
             method=interpolation_kind,
+            bounds_error=bounds_error,
         )
         self._f_h = RegularGridInterpolator(
             (self._xaxis, self._yaxis),
             self._grid_heights.T,
             method=interpolation_kind,
+            bounds_error=bounds_error,
         )
 
     def latitude(self, x, y):
